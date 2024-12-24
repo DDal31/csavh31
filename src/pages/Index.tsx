@@ -37,6 +37,23 @@ const Index = () => {
           Club Sportif de l'Association Valentin Haüy
         </h1>
 
+        {/* Presentation Section */}
+        <section className="mb-16">
+          <div className="bg-primary text-white p-8 rounded-lg shadow-lg max-w-4xl mx-auto">
+            <h2 className="text-3xl font-bold mb-6 text-center">Présentation du Club</h2>
+            {isLoading ? (
+              <div className="flex justify-center items-center h-24">
+                <Loader2 className="h-8 w-8 animate-spin" />
+              </div>
+            ) : (
+              <p className="text-lg leading-relaxed text-center">
+                {getContentForSection("presentation")}
+              </p>
+            )}
+          </div>
+        </section>
+
+        {/* Cards Grid */}
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
