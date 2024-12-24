@@ -3,6 +3,8 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -29,40 +31,77 @@ const Login = () => {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-8">
-          Connexion au Club Sportif AVH
-        </h2>
-        <Auth
-          supabaseClient={supabase}
-          appearance={{
-            theme: ThemeSupa,
-            variables: {
-              default: {
-                colors: {
-                  brand: '#1e40af',
-                  brandAccent: '#1e3a8a',
+    <div className="min-h-screen bg-gray-900">
+      <Navbar />
+      <div className="container mx-auto px-4 py-24">
+        <div className="max-w-md mx-auto bg-white/10 rounded-lg shadow-xl backdrop-blur-sm p-8">
+          <h2 className="text-3xl font-bold text-center text-white mb-8">
+            Espace Membre CSAVH
+          </h2>
+          <Auth
+            supabaseClient={supabase}
+            appearance={{
+              theme: ThemeSupa,
+              variables: {
+                default: {
+                  colors: {
+                    brand: '#4169E1',
+                    brandAccent: '#364fd1',
+                    brandButtonText: 'white',
+                    defaultButtonBackground: 'transparent',
+                    defaultButtonBackgroundHover: '#ffffff20',
+                    inputBackground: 'transparent',
+                    inputBorder: '#ffffff40',
+                    inputBorderHover: '#ffffff60',
+                    inputBorderFocus: '#ffffff80',
+                  },
+                  space: {
+                    buttonPadding: '12px 16px',
+                    inputPadding: '12px 16px',
+                  },
+                  borderWidths: {
+                    buttonBorderWidth: '1px',
+                    inputBorderWidth: '1px',
+                  },
+                  radii: {
+                    borderRadiusButton: '8px',
+                    buttonBorderRadius: '8px',
+                    inputBorderRadius: '8px',
+                  },
                 },
               },
-            },
-          }}
-          localization={{
-            variables: {
-              sign_in: {
-                email_label: 'Adresse email',
-                password_label: 'Mot de passe',
-                button_label: 'Se connecter',
+              className: {
+                container: 'text-white',
+                label: 'text-white',
+                button: 'bg-primary hover:bg-primary/90 text-white',
+                input: 'bg-white/10 border border-white/20 text-white placeholder:text-white/60',
               },
-              sign_up: {
-                email_label: 'Adresse email',
-                password_label: 'Mot de passe',
-                button_label: "S'inscrire",
+            }}
+            providers={[]}
+            localization={{
+              variables: {
+                sign_in: {
+                  email_label: 'Adresse email',
+                  password_label: 'Mot de passe',
+                  button_label: 'Se connecter',
+                  loading_button_label: 'Connexion en cours...',
+                  email_input_placeholder: 'Votre adresse email',
+                  password_input_placeholder: 'Votre mot de passe',
+                },
+                sign_up: {
+                  email_label: 'Adresse email',
+                  password_label: 'Mot de passe',
+                  button_label: "S'inscrire",
+                  loading_button_label: 'Inscription en cours...',
+                  email_input_placeholder: 'Votre adresse email',
+                  password_input_placeholder: 'Choisissez un mot de passe',
+                },
               },
-            },
-          }}
-        />
+            }}
+          />
+        </div>
       </div>
+      <Footer />
     </div>
   );
 };
