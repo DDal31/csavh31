@@ -45,15 +45,28 @@ const ProfileEdit = () => {
 
         const { data, error } = await supabase
           .from("profiles")
-          .select()
+          .select("id, first_name, last_name, club_role, team, sport, site_role")
           .eq("id", session.user.id)
           .maybeSingle();
 
-        if (error) throw error;
-        if (data) {
-          setProfile(data as Profile);
+        if (error) {
+          console.error("Erreur de requête:", error);
+          throw error;
         }
-      } catch (error) {
+        
+        if (data) {
+          console.log("Profil chargé:", data);
+          setProfile(data as Profile);
+        } else {
+          console.error("Aucun profil trouvé");
+          toast({
+            variant: "destructive",
+            title: "Erreur",
+            description: "Profil non trouvé"
+          });
+          navigate("/profile");
+        }
+      } catch (error: any) {
         console.error("Erreur lors du chargement du profil:", error);
         toast({
           variant: "destructive",
@@ -74,7 +87,17 @@ const ProfileEdit = () => {
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Non authentifié");
+      if (!session) {
+        throw new Error("Non authentifié");
+      }
+
+      console.log("Mise à jour du profil avec:", {
+        first_name: profile.first_name,
+        last_name: profile.last_name,
+        club_role: profile.club_role,
+        team: profile.team,
+        sport: profile.sport
+      });
 
       const { error } = await supabase
         .from("profiles")
@@ -85,17 +108,27 @@ const ProfileEdit = () => {
           team: profile.team,
           sport: profile.sport
         })
-        .eq("id", session.user.id);
+        .eq("id", session.user.id)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erreur Supabase:", error);
+        throw error;
+      }
 
+      console.log("Profil mis à jour avec succès");
       toast({
         title: "Succès",
         description: "Votre profil a été mis à jour"
       });
       navigate("/profile");
     } catch (error: any) {
-      console.error("Erreur lors de la mise à jour du profil:", error);
+      console.error("Erreur détaillée lors de la mise à jour du profil:", {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
       toast({
         variant: "destructive",
         title: "Erreur",
