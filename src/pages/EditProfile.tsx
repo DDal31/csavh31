@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import type { Profile } from "@/types/profile";
 import ProfileForm from "@/components/profile/ProfileForm";
 
@@ -26,33 +26,22 @@ const EditProfile = () => {
           return;
         }
 
-        console.log("Fetching profile data for editing, user:", session.user.id);
-        const { data: profileData, error: profileError } = await supabase
+        console.log("Fetching profile data for user:", session.user.id);
+        const { data, error } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", session.user.id)
           .single();
 
-        if (profileError) {
-          console.error("Error fetching profile for edit:", profileError);
-          throw profileError;
+        if (error) {
+          console.error("Error fetching profile:", error);
+          throw error;
         }
 
-        if (!profileData) {
-          console.error("No profile found");
-          toast({
-            variant: "destructive",
-            title: "Erreur",
-            description: "Profil non trouvé",
-          });
-          navigate("/dashboard");
-          return;
-        }
-
-        console.log("Profile data retrieved for editing:", profileData);
-        setProfile(profileData);
+        console.log("Profile data retrieved:", data);
+        setProfile(data);
       } catch (error) {
-        console.error("Error loading profile for edit:", error);
+        console.error("Error loading profile:", error);
         toast({
           variant: "destructive",
           title: "Erreur",
