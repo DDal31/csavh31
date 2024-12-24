@@ -18,7 +18,7 @@ const EditProfile = () => {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const fetchProfile = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
@@ -27,18 +27,18 @@ const EditProfile = () => {
         }
 
         console.log("Fetching profile data for editing, user:", session.user.id);
-        const { data, error } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", session.user.id)
-          .maybeSingle();
+          .single();
 
-        if (error) {
-          console.error("Error fetching profile for edit:", error);
-          throw error;
+        if (profileError) {
+          console.error("Error fetching profile for edit:", profileError);
+          throw profileError;
         }
 
-        if (!data) {
+        if (!profileData) {
           console.error("No profile found");
           toast({
             variant: "destructive",
@@ -49,8 +49,8 @@ const EditProfile = () => {
           return;
         }
 
-        console.log("Profile data retrieved for editing:", data);
-        setProfile(data);
+        console.log("Profile data retrieved for editing:", profileData);
+        setProfile(profileData);
       } catch (error) {
         console.error("Error loading profile for edit:", error);
         toast({
@@ -63,7 +63,7 @@ const EditProfile = () => {
       }
     };
 
-    checkAuth();
+    fetchProfile();
   }, [navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -101,10 +101,7 @@ const EditProfile = () => {
     }
   };
 
-  const handleChange = (
-    field: keyof Profile,
-    value: string
-  ) => {
+  const handleChange = (field: keyof Profile, value: string) => {
     if (profile) {
       setProfile({ ...profile, [field]: value });
     }
