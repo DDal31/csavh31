@@ -3,9 +3,12 @@ import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, FileText, Newspaper, Mail } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const navigate = useNavigate();
+  
   const { data: contents, isLoading } = useQuery({
     queryKey: ["pages-content"],
     queryFn: async () => {
@@ -27,6 +30,30 @@ const Index = () => {
   const getContentForSection = (section: string) => {
     return contents?.find((content) => content.section === section)?.content || "";
   };
+
+  const tiles = [
+    {
+      title: "Présentation",
+      icon: FileText,
+      route: "/presentation",
+      bgColor: "bg-blue-600 hover:bg-blue-700",
+      description: getContentForSection("presentation").substring(0, 100) + "..."
+    },
+    {
+      title: "Actualités",
+      icon: Newspaper,
+      route: "/actualites",
+      bgColor: "bg-green-600 hover:bg-green-700",
+      description: getContentForSection("actualites").substring(0, 100) + "..."
+    },
+    {
+      title: "Contact",
+      icon: Mail,
+      route: "/contact",
+      bgColor: "bg-purple-600 hover:bg-purple-700",
+      description: getContentForSection("contact").substring(0, 100) + "..."
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100">
@@ -53,47 +80,30 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Cards Grid */}
-        {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-white" />
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="bg-gray-800 border-gray-700 hover:shadow-lg transition-shadow duration-300">
-              <CardHeader>
-                <CardTitle className="text-2xl text-white">Présentation</CardTitle>
+        {/* App-style Tiles Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {tiles.map((tile) => (
+            <Card 
+              key={tile.title}
+              className={`${tile.bgColor} border-none cursor-pointer transform transition-all duration-300 hover:scale-105`}
+              onClick={() => navigate(tile.route)}
+            >
+              <CardHeader className="text-center pb-2">
+                <tile.icon className="w-16 h-16 mx-auto mb-4 text-white" />
+                <CardTitle className="text-2xl font-bold text-white">{tile.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-300 leading-relaxed">
-                  {getContentForSection("presentation")}
+                <p className="text-gray-100 text-center">
+                  {isLoading ? (
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                  ) : (
+                    tile.description
+                  )}
                 </p>
               </CardContent>
             </Card>
-
-            <Card className="bg-gray-800 border-gray-700 hover:shadow-lg transition-shadow duration-300">
-              <CardHeader>
-                <CardTitle className="text-2xl text-white">Actualités</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-300 leading-relaxed">
-                  {getContentForSection("actualites")}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gray-800 border-gray-700 hover:shadow-lg transition-shadow duration-300">
-              <CardHeader>
-                <CardTitle className="text-2xl text-white">Contact</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-300 leading-relaxed">
-                  {getContentForSection("contact")}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+          ))}
+        </div>
       </main>
 
       <Footer />
