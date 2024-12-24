@@ -4,21 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, User, Activity, Calendar, FileText, MessageSquare } from "lucide-react";
-
-interface Profile {
-  first_name: string;
-  last_name: string;
-  email: string;
-  club_role: string;
-  sport: string;
-  team: string;
-  site_role: string;
-}
+import { Loader2, Activity, Calendar, FileText, MessageSquare } from "lucide-react";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,21 +17,7 @@ const Dashboard = () => {
         navigate("/login");
         return;
       }
-
-      try {
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .single();
-
-        if (error) throw error;
-        setProfile(data);
-      } catch (error) {
-        console.error("Erreur lors du chargement du profil:", error);
-      } finally {
-        setLoading(false);
-      }
+      setLoading(false);
     };
 
     checkAuth();
@@ -54,13 +29,6 @@ const Dashboard = () => {
   };
 
   const tiles = [
-    {
-      title: "Profil",
-      icon: User,
-      route: "/profile",
-      bgColor: "bg-blue-600 hover:bg-blue-700",
-      description: `${profile?.first_name} ${profile?.last_name}`
-    },
     {
       title: "Inscription entraînement",
       icon: Activity,
@@ -106,7 +74,7 @@ const Dashboard = () => {
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-12">
             <h1 className="text-4xl font-bold text-white">
-              Bienvenue, {profile?.first_name} !
+              Bienvenue !
             </h1>
             <button
               onClick={handleLogout}
@@ -116,7 +84,7 @@ const Dashboard = () => {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-8">
             {tiles.map((tile) => (
               <Card 
                 key={tile.title}
