@@ -7,42 +7,56 @@ import { useToast } from "@/components/ui/use-toast";
 import { ProfileEditForm } from "@/components/ProfileEditForm";
 import type { Profile } from "@/types/profile";
 import type { ProfileFormValues } from "@/schemas/profileSchema";
+import { Loader2 } from "lucide-react";
 
 const ProfileEdit = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: profile, isLoading: isLoadingProfile, error: profileError } = useQuery({
+  const { data: profile, isLoading: isLoadingProfile } = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) throw new Error("Non connecté");
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/login");
+        return null;
+      }
 
+      console.log("Fetching profile for edit:", user.id);
       const { data, error } = await supabase
         .from("profiles")
-        .select("*")
-        .eq("id", user.user.id)
-        .single();
+        .select()
+        .eq("id", user.id)
+        .maybeSingle();
 
       if (error) {
-        console.error("Error fetching profile:", error);
+        console.error("Error fetching profile for edit:", error);
         throw error;
       }
+
+      if (!data) {
+        console.log("No profile found for edit:", user.id);
+        return null;
+      }
+
+      console.log("Profile data fetched for edit:", data);
       return data as Profile;
     },
+    retry: 1,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 
   const mutation = useMutation({
     mutationFn: async (values: ProfileFormValues) => {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) throw new Error("Non connecté");
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Non connecté");
 
       console.log("Updating profile with values:", values);
       const { data, error } = await supabase
         .from("profiles")
         .update(values)
-        .eq("id", user.user.id)
+        .eq("id", user.id)
         .select()
         .single();
 
@@ -71,19 +85,24 @@ const ProfileEdit = () => {
     },
   });
 
-  if (isLoadingProfile) return <div>Chargement...</div>;
-  
-  if (profileError) {
-    console.error("Profile error:", profileError);
-    toast({
-      variant: "destructive",
-      title: "Erreur",
-      description: "Impossible de charger le profil",
-    });
-    return <div>Erreur de chargement</div>;
+  if (isLoadingProfile) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
   }
-  
-  if (!profile) return <div>Profil non trouvé</div>;
+
+  if (!profile) {
+    return (
+      <div className="container mx-auto p-4 text-center">
+        <p>Profil non trouvé</p>
+        <button onClick={() => navigate("/profile")} className="mt-4">
+          Retour
+        </button>
+      </div>
+    );
+  }
 
   const handleSubmit = (values: ProfileFormValues) => {
     console.log("Form submitted with values:", values);

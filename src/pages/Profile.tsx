@@ -15,11 +15,9 @@ const ProfilePage = () => {
   const { data: profile, isLoading, error } = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
-      console.log("Fetching profile data...");
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        console.log("No user found, redirecting to login");
         navigate("/login");
         return null;
       }
@@ -27,7 +25,7 @@ const ProfilePage = () => {
       console.log("Fetching profile for user:", user.id);
       const { data, error } = await supabase
         .from("profiles")
-        .select("*")
+        .select()
         .eq("id", user.id)
         .maybeSingle();
 
@@ -35,14 +33,20 @@ const ProfilePage = () => {
         console.error("Error fetching profile:", error);
         throw error;
       }
+
+      if (!data) {
+        console.log("No profile found for user:", user.id);
+        return null;
+      }
       
       console.log("Profile data fetched:", data);
       return data as Profile;
     },
-    retry: false,
+    retry: 1,
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 
+  // Utiliser useEffect pour gérer les erreurs
   React.useEffect(() => {
     if (error) {
       console.error("Profile error:", error);
@@ -66,6 +70,9 @@ const ProfilePage = () => {
     return (
       <div className="container mx-auto p-4 text-center">
         <p>Profil non trouvé</p>
+        <Button onClick={() => navigate("/login")} className="mt-4">
+          Se connecter
+        </Button>
       </div>
     );
   }
