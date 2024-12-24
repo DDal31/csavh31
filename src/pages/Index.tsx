@@ -64,22 +64,6 @@ const Index = () => {
           Club Sportif de l'Association Valentin Haüy
         </h1>
 
-        {/* Presentation Section */}
-        <section className="mb-16">
-          <div className="bg-gray-800 text-white p-8 rounded-lg shadow-lg max-w-4xl mx-auto border border-gray-700">
-            <h2 className="text-3xl font-bold mb-6 text-center">Présentation du Club</h2>
-            {isLoading ? (
-              <div className="flex justify-center items-center h-24">
-                <Loader2 className="h-8 w-8 animate-spin" />
-              </div>
-            ) : (
-              <p className="text-lg leading-relaxed text-center">
-                {getContentForSection("presentation")}
-              </p>
-            )}
-          </div>
-        </section>
-
         {/* App-style Tiles Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {tiles.map((tile) => (
