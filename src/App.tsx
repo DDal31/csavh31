@@ -10,8 +10,7 @@ import Actualites from "./pages/Actualites";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
-import Profile from "./pages/Profile";
-import ProfileEdit from "./pages/ProfileEdit";
+import ProfilePage from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -29,8 +28,7 @@ const App = () => (
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/profile/edit" element={<ProfileEdit />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

@@ -9,23 +9,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, User, Pencil } from "lucide-react";
 import type { Profile } from "@/types/profile";
 
-const Profile = () => {
+const ProfilePage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        navigate("/login");
-        return;
-      }
-
+    const fetchProfile = async () => {
       try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          navigate("/login");
+          return;
+        }
+
         console.log("Fetching profile for user:", session.user.id);
+        
         const { data, error } = await supabase
           .from("profiles")
           .select("*")
@@ -38,7 +39,7 @@ const Profile = () => {
         }
 
         if (!data) {
-          console.log("No profile found for user");
+          console.log("No profile found");
           toast({
             title: "Erreur",
             description: "Profil non trouvé",
@@ -61,7 +62,7 @@ const Profile = () => {
       }
     };
 
-    checkAuth();
+    fetchProfile();
   }, [navigate, toast]);
 
   if (loading) {
@@ -151,4 +152,4 @@ const Profile = () => {
   );
 };
 
-export default Profile;
+export default ProfilePage;
