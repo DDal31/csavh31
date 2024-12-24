@@ -7,7 +7,6 @@ import { formSchema } from "./useProfileForm/profileFormSchema";
 import { loadProfile } from "./useProfileForm/loadProfile";
 import { submitProfile } from "./useProfileForm/submitProfile";
 
-// Re-export the type from the schema file
 export type { ProfileFormValues } from "./useProfileForm/profileFormSchema";
 
 export const useProfileForm = () => {
@@ -23,9 +22,9 @@ export const useProfileForm = () => {
       password: "",
       first_name: "",
       last_name: "",
-      club_role: "joueur",
-      sport: "goalball",
-      team: "loisir",
+      club_role: "joueur" as const,
+      sport: "goalball" as const,
+      team: "loisir" as const,
     },
   });
 
