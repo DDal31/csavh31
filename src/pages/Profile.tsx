@@ -17,12 +17,14 @@ const ProfilePage = () => {
     queryFn: async () => {
       console.log("Fetching profile data...");
       const { data: { user } } = await supabase.auth.getUser();
+      
       if (!user) {
         console.log("No user found, redirecting to login");
         navigate("/login");
-        throw new Error("Non connecté");
+        return null;
       }
 
+      console.log("Fetching profile for user:", user.id);
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
@@ -37,26 +39,25 @@ const ProfilePage = () => {
       console.log("Profile data fetched:", data);
       return data as Profile;
     },
+    retry: false,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
+
+  React.useEffect(() => {
+    if (error) {
+      console.error("Profile error:", error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible de charger le profil",
+      });
+    }
+  }, [error, toast]);
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
-
-  if (error) {
-    console.error("Profile error:", error);
-    toast({
-      variant: "destructive",
-      title: "Erreur",
-      description: "Impossible de charger le profil",
-    });
-    return (
-      <div className="container mx-auto p-4 text-center">
-        <p className="text-red-500">Erreur de chargement</p>
       </div>
     );
   }
