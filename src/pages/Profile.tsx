@@ -1,3 +1,4 @@
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -5,38 +6,68 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import type { Profile } from "@/types/profile";
+import { Loader2 } from "lucide-react";
 
-const Profile = () => {
+const ProfilePage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const { data: profile, isLoading, error } = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) throw new Error("Non connecté");
+      console.log("Fetching profile data...");
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.log("No user found, redirecting to login");
+        navigate("/login");
+        throw new Error("Non connecté");
+      }
 
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", user.user.id)
-        .single();
+        .eq("id", user.id)
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching profile:", error);
+        throw error;
+      }
+      
+      console.log("Profile data fetched:", data);
       return data as Profile;
     },
   });
 
-  if (isLoading) return <div>Chargement...</div>;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
   if (error) {
+    console.error("Profile error:", error);
     toast({
       variant: "destructive",
       title: "Erreur",
       description: "Impossible de charger le profil",
     });
-    return <div>Erreur de chargement</div>;
+    return (
+      <div className="container mx-auto p-4 text-center">
+        <p className="text-red-500">Erreur de chargement</p>
+      </div>
+    );
   }
-  if (!profile) return <div>Profil non trouvé</div>;
+
+  if (!profile) {
+    return (
+      <div className="container mx-auto p-4 text-center">
+        <p>Profil non trouvé</p>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4">
@@ -65,4 +96,4 @@ const Profile = () => {
   );
 };
 
-export default Profile;
+export default ProfilePage;
