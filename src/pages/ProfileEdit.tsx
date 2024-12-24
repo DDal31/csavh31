@@ -45,12 +45,14 @@ const ProfileEdit = () => {
 
         const { data, error } = await supabase
           .from("profiles")
-          .select("*")
+          .select()
           .eq("id", session.user.id)
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
-        setProfile(data as Profile);
+        if (data) {
+          setProfile(data as Profile);
+        }
       } catch (error) {
         console.error("Erreur lors du chargement du profil:", error);
         toast({
@@ -76,7 +78,13 @@ const ProfileEdit = () => {
 
       const { error } = await supabase
         .from("profiles")
-        .update(profile)
+        .update({
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          club_role: profile.club_role,
+          team: profile.team,
+          sport: profile.sport
+        })
         .eq("id", session.user.id);
 
       if (error) throw error;
@@ -86,7 +94,7 @@ const ProfileEdit = () => {
         description: "Votre profil a été mis à jour"
       });
       navigate("/profile");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erreur lors de la mise à jour du profil:", error);
       toast({
         variant: "destructive",
