@@ -2,7 +2,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { UseFormReturn } from "react-hook-form";
 import { ProfileFormValues } from "./profileFormSchema";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export const loadProfile = (

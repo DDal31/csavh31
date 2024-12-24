@@ -4,6 +4,10 @@ const clubRoleEnum = ["joueur", "entraineur", "arbitre", "staff"] as const;
 const sportEnum = ["goalball", "torball", "both"] as const;
 const teamEnum = ["loisir", "d1_masculine", "d1_feminine"] as const;
 
+export type ClubRole = typeof clubRoleEnum[number];
+export type Sport = typeof sportEnum[number];
+export type Team = typeof teamEnum[number];
+
 export const formSchema = z.object({
   email: z.string().email("Email invalide"),
   phone: z.string().nullable(),
