@@ -55,17 +55,16 @@ export const useProfileForm = () => {
         return;
       }
 
-      const [profileResponse, userResponse] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .single(),
-        supabase.auth.getUser()
-      ]);
+      console.log("Fetching profile data for user:", session.user.id);
+      
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", session.user.id)
+        .single();
 
-      if (profileResponse.error) {
-        console.error("Error fetching profile:", profileResponse.error);
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
         toast({
           variant: "destructive",
           title: "Erreur",
@@ -74,8 +73,10 @@ export const useProfileForm = () => {
         return;
       }
 
-      if (userResponse.error) {
-        console.error("Error fetching user:", userResponse.error);
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+      if (userError) {
+        console.error("Error fetching user:", userError);
         toast({
           variant: "destructive",
           title: "Erreur",
@@ -84,14 +85,11 @@ export const useProfileForm = () => {
         return;
       }
 
-      const profileData = profileResponse.data;
-      const userData = userResponse.data.user;
-
-      if (profileData && userData) {
+      if (profileData && user) {
         console.log("Setting form data with profile:", profileData);
         form.reset({
-          email: userData.email || "",
-          phone: userData.phone || "",
+          email: user.email || "",
+          phone: user.phone || "",
           password: "",
           first_name: profileData.first_name,
           last_name: profileData.last_name,
@@ -121,12 +119,24 @@ export const useProfileForm = () => {
       
       if (sessionError) {
         console.error("Session error:", sessionError);
-        throw sessionError;
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "Session expirée, veuillez vous reconnecter",
+        });
+        navigate("/login");
+        return;
       }
 
       if (!session) {
         console.error("No session found during form submission");
-        throw new Error("Non authentifié");
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "Session expirée, veuillez vous reconnecter",
+        });
+        navigate("/login");
+        return;
       }
 
       // Update profile data first
