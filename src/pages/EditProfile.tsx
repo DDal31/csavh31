@@ -20,28 +20,43 @@ const EditProfile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
+        const { data: sessionData } = await supabase.auth.getSession();
+        
+        if (!sessionData.session) {
+          console.log("No session found, redirecting to login");
           navigate("/login");
           return;
         }
 
-        console.log("Fetching profile data for user:", session.user.id);
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .single();
+        const userId = sessionData.session.user.id;
+        console.log("Fetching profile data for user:", userId);
 
-        if (error) {
-          console.error("Error fetching profile:", error);
-          throw error;
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select()
+          .eq("id", userId)
+          .maybeSingle();
+
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
+          throw profileError;
         }
 
-        console.log("Profile data retrieved:", data);
-        setProfile(data);
+        if (!profileData) {
+          console.log("No profile found for user");
+          toast({
+            variant: "destructive",
+            title: "Erreur",
+            description: "Profil non trouvé",
+          });
+          navigate("/dashboard");
+          return;
+        }
+
+        console.log("Profile data retrieved:", profileData);
+        setProfile(profileData);
       } catch (error) {
-        console.error("Error loading profile:", error);
+        console.error("Error in fetchProfile:", error);
         toast({
           variant: "destructive",
           title: "Erreur",
@@ -120,7 +135,7 @@ const EditProfile = () => {
             </Button>
           </div>
 
-          <Card className="bg-white/10 border-none backdrop-blur-sm">
+          <Card className="bg-white/5 border-white/10 backdrop-blur-xl">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-white">
                 Modifier mon profil
