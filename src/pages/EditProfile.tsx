@@ -19,24 +19,26 @@ const EditProfile = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/login");
-        return;
-      }
-
+    const fetchProfile = async () => {
       try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          navigate("/login");
+          return;
+        }
+
         console.log("Fetching profile data for user:", session.user.id);
-        const { data: profileData, error } = await supabase
+        
+        const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", session.user.id)
           .maybeSingle();
 
-        if (error) {
-          console.error("Error fetching profile:", error);
-          throw error;
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
+          throw profileError;
         }
 
         if (!profileData) {
@@ -63,7 +65,7 @@ const EditProfile = () => {
       }
     };
 
-    checkAuth();
+    fetchProfile();
   }, [navigate, toast]);
 
   if (loading) {

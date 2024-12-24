@@ -35,6 +35,24 @@ const ProfileForm = ({ profile }: ProfileFormProps) => {
     
     setSaving(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("No session found");
+      }
+
+      // Update auth user email if changed
+      if (formData.email !== profile.email) {
+        const { error: emailError } = await supabase.auth.updateUser({
+          email: formData.email,
+        });
+
+        if (emailError) {
+          console.error("Error updating email:", emailError);
+          throw emailError;
+        }
+      }
+
+      // Update profile data
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
