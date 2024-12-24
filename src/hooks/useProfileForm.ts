@@ -41,39 +41,46 @@ export const useProfileForm = () => {
   const loadProfile = async () => {
     try {
       console.log("Loading profile data...");
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
+      if (sessionError) {
+        console.error("Session error:", sessionError);
+        throw sessionError;
+      }
+
       if (!session) {
         console.log("No session found, redirecting to login");
         navigate("/login");
         return;
       }
 
-      // Get profile data
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", session.user.id)
-        .maybeSingle();
+      const [profileResponse, userResponse] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", session.user.id)
+          .maybeSingle(),
+        supabase.auth.getUser()
+      ]);
 
-      if (profileError) {
-        console.error("Error fetching profile:", profileError);
-        throw profileError;
+      if (profileResponse.error) {
+        console.error("Error fetching profile:", profileResponse.error);
+        throw profileResponse.error;
       }
 
-      // Get user data
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
-      if (userError) {
-        console.error("Error fetching user:", userError);
-        throw userError;
+      if (userResponse.error) {
+        console.error("Error fetching user:", userResponse.error);
+        throw userResponse.error;
       }
 
-      if (profileData && user) {
+      const profileData = profileResponse.data;
+      const userData = userResponse.data.user;
+
+      if (profileData && userData) {
         console.log("Setting form data with profile:", profileData);
         form.reset({
-          email: user.email || "",
-          phone: user.phone || "",
+          email: userData.email || "",
+          phone: userData.phone || "",
           password: "",
           first_name: profileData.first_name,
           last_name: profileData.last_name,
@@ -89,6 +96,7 @@ export const useProfileForm = () => {
         title: "Erreur",
         description: "Impossible de charger votre profil",
       });
+      navigate("/profile");
     } finally {
       setLoading(false);
     }
@@ -99,7 +107,13 @@ export const useProfileForm = () => {
       console.log("Submitting form with values:", values);
       setLoading(true);
       
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error("Session error:", sessionError);
+        throw sessionError;
+      }
+
       if (!session) {
         console.error("No session found during form submission");
         throw new Error("Non authentifié");
