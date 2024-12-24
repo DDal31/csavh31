@@ -19,9 +19,16 @@ const EditProfile = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchProfile = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error("Session error:", sessionError);
+          throw sessionError;
+        }
         
         if (!session) {
           navigate("/login");
@@ -32,9 +39,10 @@ const EditProfile = () => {
         
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
-          .select("*")
+          .select()
           .eq("id", session.user.id)
-          .maybeSingle();
+          .limit(1)
+          .single();
 
         if (profileError) {
           console.error("Error fetching profile:", profileError);
@@ -52,7 +60,9 @@ const EditProfile = () => {
         }
 
         console.log("Profile data retrieved:", profileData);
-        setProfile(profileData);
+        if (isMounted) {
+          setProfile(profileData);
+        }
       } catch (error) {
         console.error("Error loading profile:", error);
         toast({
@@ -61,11 +71,17 @@ const EditProfile = () => {
           description: "Impossible de charger votre profil",
         });
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchProfile();
+
+    return () => {
+      isMounted = false;
+    };
   }, [navigate, toast]);
 
   if (loading) {
