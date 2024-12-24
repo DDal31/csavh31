@@ -14,26 +14,28 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ArrowLeft, Save } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface Profile {
-  nom: string;
-  prenom: string;
-  role_club: string;
-  team: string;
-  sport: string;
-  role_site: string;
+  id: string;
+  first_name: string;
+  last_name: string;
+  club_role: "joueur" | "entraineur" | "arbitre" | "joueur-entraineur" | "joueur-arbitre" | "entraineur-arbitre" | "les-trois";
+  team: "loisir" | "d1_masculine" | "d1_feminine";
+  sport: "goalball" | "torball" | "both";
+  site_role: "member" | "admin";
 }
 
 const ProfileEdit = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile>({
-    nom: "",
-    prenom: "",
-    role_club: "",
-    team: "",
-    sport: "",
-    role_site: "member"
+    id: "",
+    first_name: "",
+    last_name: "",
+    club_role: "joueur",
+    team: "loisir",
+    sport: "goalball",
+    site_role: "member"
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -49,13 +51,13 @@ const ProfileEdit = () => {
         }
 
         const { data, error } = await supabase
-          .from("profil")
+          .from("profiles")
           .select("*")
-          .eq("id_user", session.user.id)
+          .eq("id", session.user.id)
           .single();
 
         if (error) throw error;
-        setProfile(data);
+        setProfile(data as Profile);
       } catch (error) {
         console.error("Erreur lors du chargement du profil:", error);
         toast({
@@ -80,9 +82,9 @@ const ProfileEdit = () => {
       if (!session) throw new Error("Non authentifié");
 
       const { error } = await supabase
-        .from("profil")
+        .from("profiles")
         .update(profile)
-        .eq("id_user", session.user.id);
+        .eq("id", session.user.id);
 
       if (error) throw error;
 
@@ -139,16 +141,16 @@ const ProfileEdit = () => {
                     <div>
                       <label className="text-sm font-medium text-gray-300">Prénom</label>
                       <Input
-                        value={profile.prenom}
-                        onChange={(e) => setProfile({ ...profile, prenom: e.target.value })}
+                        value={profile.first_name}
+                        onChange={(e) => setProfile({ ...profile, first_name: e.target.value })}
                         className="bg-gray-700 border-gray-600 text-white"
                       />
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-300">Nom</label>
                       <Input
-                        value={profile.nom}
-                        onChange={(e) => setProfile({ ...profile, nom: e.target.value })}
+                        value={profile.last_name}
+                        onChange={(e) => setProfile({ ...profile, last_name: e.target.value })}
                         className="bg-gray-700 border-gray-600 text-white"
                       />
                     </div>
@@ -157,8 +159,8 @@ const ProfileEdit = () => {
                     <div>
                       <label className="text-sm font-medium text-gray-300">Rôle dans le club</label>
                       <Select
-                        value={profile.role_club}
-                        onValueChange={(value) => setProfile({ ...profile, role_club: value })}
+                        value={profile.club_role}
+                        onValueChange={(value: Profile["club_role"]) => setProfile({ ...profile, club_role: value })}
                       >
                         <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
                           <SelectValue placeholder="Sélectionnez un rôle" />
@@ -178,15 +180,15 @@ const ProfileEdit = () => {
                       <label className="text-sm font-medium text-gray-300">Équipe</label>
                       <Select
                         value={profile.team}
-                        onValueChange={(value) => setProfile({ ...profile, team: value })}
+                        onValueChange={(value: Profile["team"]) => setProfile({ ...profile, team: value })}
                       >
                         <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
                           <SelectValue placeholder="Sélectionnez une équipe" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="loisirs">Loisirs</SelectItem>
-                          <SelectItem value="d1-masculine">D1 Masculine</SelectItem>
-                          <SelectItem value="d1-feminine">D1 Féminine</SelectItem>
+                          <SelectItem value="loisir">Loisirs</SelectItem>
+                          <SelectItem value="d1_masculine">D1 Masculine</SelectItem>
+                          <SelectItem value="d1_feminine">D1 Féminine</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -194,7 +196,7 @@ const ProfileEdit = () => {
                       <label className="text-sm font-medium text-gray-300">Sport</label>
                       <Select
                         value={profile.sport}
-                        onValueChange={(value) => setProfile({ ...profile, sport: value })}
+                        onValueChange={(value: Profile["sport"]) => setProfile({ ...profile, sport: value })}
                       >
                         <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
                           <SelectValue placeholder="Sélectionnez un sport" />
@@ -202,7 +204,7 @@ const ProfileEdit = () => {
                         <SelectContent>
                           <SelectItem value="goalball">Goalball</SelectItem>
                           <SelectItem value="torball">Torball</SelectItem>
-                          <SelectItem value="les-deux">Les deux</SelectItem>
+                          <SelectItem value="both">Les deux</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

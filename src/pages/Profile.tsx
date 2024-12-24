@@ -6,15 +6,16 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Edit } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface Profile {
-  nom: string;
-  prenom: string;
-  role_club: string;
-  team: string;
-  sport: string;
-  role_site: string;
+  id: string;
+  first_name: string;
+  last_name: string;
+  club_role: "joueur" | "entraineur" | "arbitre" | "joueur-entraineur" | "joueur-arbitre" | "entraineur-arbitre" | "les-trois";
+  team: "loisir" | "d1_masculine" | "d1_feminine";
+  sport: "goalball" | "torball" | "both";
+  site_role: "member" | "admin";
 }
 
 const Profile = () => {
@@ -33,13 +34,13 @@ const Profile = () => {
         }
 
         const { data, error } = await supabase
-          .from("profil")
+          .from("profiles")
           .select("*")
-          .eq("id_user", session.user.id)
+          .eq("id", session.user.id)
           .single();
 
         if (error) throw error;
-        setProfile(data);
+        setProfile(data as Profile);
       } catch (error) {
         console.error("Erreur lors du chargement du profil:", error);
         toast({
@@ -87,7 +88,7 @@ const Profile = () => {
           <Card className="bg-gray-800 border-gray-700">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-white">
-                Profil de {profile?.prenom} {profile?.nom}
+                Profil de {profile?.first_name} {profile?.last_name}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -95,14 +96,14 @@ const Profile = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-gray-300 mb-2">Informations personnelles</h3>
                   <div className="space-y-2 text-gray-400">
-                    <p><span className="font-medium">Prénom:</span> {profile?.prenom}</p>
-                    <p><span className="font-medium">Nom:</span> {profile?.nom}</p>
+                    <p><span className="font-medium">Prénom:</span> {profile?.first_name}</p>
+                    <p><span className="font-medium">Nom:</span> {profile?.last_name}</p>
                   </div>
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-300 mb-2">Informations sportives</h3>
                   <div className="space-y-2 text-gray-400">
-                    <p><span className="font-medium">Rôle:</span> {profile?.role_club}</p>
+                    <p><span className="font-medium">Rôle:</span> {profile?.club_role}</p>
                     <p><span className="font-medium">Équipe:</span> {profile?.team}</p>
                     <p><span className="font-medium">Sport:</span> {profile?.sport}</p>
                   </div>
