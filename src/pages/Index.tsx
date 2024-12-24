@@ -3,7 +3,7 @@ import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, FileText, Newspaper, Mail } from "lucide-react";
+import { Loader2, FileText, Newspaper, Mail, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
@@ -47,6 +47,13 @@ const Index = () => {
       description: getContentForSection("actualites").substring(0, 100) + "..."
     },
     {
+      title: "Blog",
+      icon: BookOpen,
+      route: "/blog/welcome",
+      bgColor: "bg-orange-600 hover:bg-orange-700",
+      description: "Découvrez nos articles et actualités détaillés"
+    },
+    {
       title: "Contact",
       icon: Mail,
       route: "/contact",
@@ -64,8 +71,7 @@ const Index = () => {
           Club Sportif de l'Association Valentin Haüy
         </h1>
 
-        {/* App-style Tiles Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
           {tiles.map((tile) => (
             <Card 
               key={tile.title}
