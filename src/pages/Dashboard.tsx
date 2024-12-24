@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Activity, Calendar, FileText, MessageSquare } from "lucide-react";
+import { Loader2, User, Activity, Calendar, FileText, MessageSquare } from "lucide-react";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -29,6 +29,13 @@ const Dashboard = () => {
   };
 
   const tiles = [
+    {
+      title: "Mon Profil",
+      icon: User,
+      route: "/profile",
+      bgColor: "bg-blue-600 hover:bg-blue-700",
+      description: "Gérer vos informations personnelles"
+    },
     {
       title: "Inscription entraînement",
       icon: Activity,
@@ -84,7 +91,7 @@ const Dashboard = () => {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8">
             {tiles.map((tile) => (
               <Card 
                 key={tile.title}
