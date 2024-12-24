@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 export const submitProfile = (
   toast: ReturnType<typeof useToast>['toast'], 
-  navigate: ReturnType<typeof useNavigate], 
+  navigate: ReturnType<typeof useNavigate>,
   setLoading: React.Dispatch<React.SetStateAction<boolean>>
 ) => async (values: ProfileFormValues) => {
   try {
