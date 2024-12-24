@@ -10,22 +10,22 @@ const Navbar = () => {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center">
-              <span className="text-xl font-bold text-white">The Journal</span>
+              <span className="text-xl font-bold text-white">Club Sportif AVH</span>
             </Link>
           </div>
           
           <div className="hidden sm:ml-6 sm:flex sm:items-center space-x-8">
             <Link to="/" className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">
-              Home
+              Accueil
             </Link>
-            <Link to="/design" className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">
-              Design
+            <Link to="/presentation" className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">
+              Présentation
             </Link>
-            <Link to="/research" className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">
-              Research
+            <Link to="/actualites" className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">
+              Actualités
             </Link>
-            <Link to="/interviews" className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">
-              Interviews
+            <Link to="/contact" className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">
+              Contact
             </Link>
           </div>
         </div>
