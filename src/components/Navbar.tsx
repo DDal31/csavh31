@@ -1,8 +1,26 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+    };
+
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
     <nav className="bg-gray-800 shadow-lg border-b border-gray-700">
@@ -27,6 +45,15 @@ const Navbar = () => {
             <Link to="/contact" className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">
               Contact
             </Link>
+            {isAuthenticated ? (
+              <Link to="/dashboard" className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">
+                Dashboard
+              </Link>
+            ) : (
+              <Link to="/login" className="text-gray-300 hover:text-white px-3 py-2 text-sm font-medium">
+                Connexion
+              </Link>
+            )}
           </div>
         </div>
       </div>

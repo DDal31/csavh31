@@ -30,6 +30,48 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          club_role: Database["public"]["Enums"]["club_role"]
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          phone: string | null
+          site_role: Database["public"]["Enums"]["site_role"]
+          sport: Database["public"]["Enums"]["sport_type"]
+          team: Database["public"]["Enums"]["team_type"]
+          updated_at: string
+        }
+        Insert: {
+          club_role: Database["public"]["Enums"]["club_role"]
+          created_at?: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          phone?: string | null
+          site_role?: Database["public"]["Enums"]["site_role"]
+          sport: Database["public"]["Enums"]["sport_type"]
+          team: Database["public"]["Enums"]["team_type"]
+          updated_at?: string
+        }
+        Update: {
+          club_role?: Database["public"]["Enums"]["club_role"]
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          phone?: string | null
+          site_role?: Database["public"]["Enums"]["site_role"]
+          sport?: Database["public"]["Enums"]["sport_type"]
+          team?: Database["public"]["Enums"]["team_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -38,7 +80,10 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      club_role: "joueur" | "entraineur" | "arbitre" | "staff"
+      site_role: "member" | "admin"
+      sport_type: "goalball" | "torball" | "both"
+      team_type: "loisir" | "d1_masculine" | "d1_feminine"
     }
     CompositeTypes: {
       [_ in never]: never
