@@ -45,7 +45,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          club_role: Database["public"]["Enums"]["club_role"]
+          club_role?: Database["public"]["Enums"]["club_role"]
           created_at?: string
           email: string
           first_name: string
@@ -80,7 +80,14 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      club_role: "joueur" | "entraineur" | "arbitre" | "staff"
+      club_role:
+        | "joueur"
+        | "entraineur"
+        | "arbitre"
+        | "joueur-entraineur"
+        | "joueur-arbitre"
+        | "entraineur-arbitre"
+        | "les-trois"
       site_role: "member" | "admin"
       sport_type: "goalball" | "torball" | "both"
       team_type: "loisir" | "d1_masculine" | "d1_feminine"
