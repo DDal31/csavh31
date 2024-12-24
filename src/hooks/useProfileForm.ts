@@ -40,24 +40,37 @@ export const useProfileForm = () => {
 
   const loadProfile = async () => {
     try {
+      console.log("Loading profile data...");
       const { data: { session } } = await supabase.auth.getSession();
+      
       if (!session) {
+        console.log("No session found, redirecting to login");
         navigate("/login");
         return;
       }
 
+      // Get profile data
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", session.user.id)
         .maybeSingle();
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        throw profileError;
+      }
 
+      // Get user data
       const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
+      
+      if (userError) {
+        console.error("Error fetching user:", userError);
+        throw userError;
+      }
 
       if (profileData && user) {
+        console.log("Setting form data with profile:", profileData);
         form.reset({
           email: user.email || "",
           phone: user.phone || "",
@@ -70,7 +83,7 @@ export const useProfileForm = () => {
         });
       }
     } catch (error) {
-      console.error("Erreur lors du chargement du profil:", error);
+      console.error("Error in loadProfile:", error);
       toast({
         variant: "destructive",
         title: "Erreur",
@@ -83,11 +96,16 @@ export const useProfileForm = () => {
 
   const onSubmit = async (values: ProfileFormValues) => {
     try {
+      console.log("Submitting form with values:", values);
       setLoading(true);
+      
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Non authentifié");
+      if (!session) {
+        console.error("No session found during form submission");
+        throw new Error("Non authentifié");
+      }
 
-      // Mettre à jour le profil dans la table profiles
+      // Update profile data first
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
@@ -99,17 +117,29 @@ export const useProfileForm = () => {
         })
         .eq("id", session.user.id);
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error("Error updating profile:", profileError);
+        throw profileError;
+      }
 
-      // Mettre à jour l'email et le téléphone dans auth.users
-      const { error: userError } = await supabase.auth.updateUser({
+      // Then update user data
+      const updateUserData: any = {
         email: values.email,
         phone: values.phone,
-        ...(values.password ? { password: values.password } : {}),
-      });
+      };
 
-      if (userError) throw userError;
+      if (values.password && values.password.length > 0) {
+        updateUserData.password = values.password;
+      }
 
+      const { error: userError } = await supabase.auth.updateUser(updateUserData);
+
+      if (userError) {
+        console.error("Error updating user:", userError);
+        throw userError;
+      }
+
+      console.log("Profile updated successfully");
       toast({
         title: "Succès",
         description: "Votre profil a été mis à jour",
@@ -117,7 +147,7 @@ export const useProfileForm = () => {
 
       navigate("/profile");
     } catch (error) {
-      console.error("Erreur lors de la mise à jour du profil:", error);
+      console.error("Error in form submission:", error);
       toast({
         variant: "destructive",
         title: "Erreur",
