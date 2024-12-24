@@ -45,7 +45,8 @@ export const useProfileForm = () => {
       
       if (sessionError) {
         console.error("Session error:", sessionError);
-        throw sessionError;
+        navigate("/login");
+        return;
       }
 
       if (!session) {
@@ -59,18 +60,28 @@ export const useProfileForm = () => {
           .from("profiles")
           .select("*")
           .eq("id", session.user.id)
-          .maybeSingle(),
+          .single(),
         supabase.auth.getUser()
       ]);
 
       if (profileResponse.error) {
         console.error("Error fetching profile:", profileResponse.error);
-        throw profileResponse.error;
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "Impossible de charger votre profil",
+        });
+        return;
       }
 
       if (userResponse.error) {
         console.error("Error fetching user:", userResponse.error);
-        throw userResponse.error;
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "Impossible de charger vos informations utilisateur",
+        });
+        return;
       }
 
       const profileData = profileResponse.data;
@@ -94,9 +105,8 @@ export const useProfileForm = () => {
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: "Impossible de charger votre profil",
+        description: "Une erreur est survenue lors du chargement de votre profil",
       });
-      navigate("/profile");
     } finally {
       setLoading(false);
     }
