@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Users, Database, Shield, Settings } from "lucide-react";
+import { Loader2, Users, Calendar, Shield, Settings } from "lucide-react";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -51,11 +51,11 @@ const AdminDashboard = () => {
       description: "Gérer les membres du club"
     },
     {
-      title: "Base de données",
-      icon: Database,
-      route: "/admin/database",
+      title: "Gestion des Entraînements",
+      icon: Calendar,
+      route: "/admin/trainings",
       bgColor: "bg-green-600 hover:bg-green-700",
-      description: "Gérer les données du site"
+      description: "Gérer les séances d'entraînement"
     },
     {
       title: "Permissions",
