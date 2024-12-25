@@ -6,7 +6,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, User, Pencil } from "lucide-react";
+import { Loader2, User, Pencil, ArrowLeft } from "lucide-react";
 import type { Profile } from "@/types/profile";
 
 const ProfilePage = () => {
@@ -98,15 +98,15 @@ const ProfilePage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-white" />
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center">
         <div className="text-white text-center">
           <p className="mb-4">Profil non trouvé</p>
           <Button onClick={() => navigate("/dashboard")}>
@@ -118,22 +118,35 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
       <Navbar />
       <main className="container mx-auto px-4 py-24">
         <div className="max-w-3xl mx-auto">
           <div className="flex justify-between items-center mb-8">
-            <div className="flex items-center space-x-4">
-              <User className="h-8 w-8 text-white" />
-              <h1 className="text-3xl font-bold text-white">Mon Profil</h1>
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => navigate("/dashboard")}
+                className="text-white hover:text-primary transition-colors"
+              >
+                <ArrowLeft className="h-6 w-6" />
+              </Button>
+              <div className="flex items-center gap-4">
+                <User className="h-8 w-8 text-primary" />
+                <h1 className="text-3xl font-bold text-white">Mon Profil</h1>
+              </div>
             </div>
-            <Button onClick={() => navigate("/profile/edit")} className="flex items-center space-x-2">
+            <Button 
+              onClick={() => navigate("/profile/edit")} 
+              className="bg-primary hover:bg-primary/90 text-white flex items-center gap-2"
+            >
               <Pencil className="h-4 w-4" />
               <span>Modifier</span>
             </Button>
           </div>
 
-          <Card className="bg-gray-800 border-gray-700">
+          <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="text-xl text-white">Informations personnelles</CardTitle>
             </CardHeader>
