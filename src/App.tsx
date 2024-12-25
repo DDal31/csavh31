@@ -11,6 +11,7 @@ import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import ProfilePage from "./pages/Profile";
+import ProfileEdit from "./pages/ProfileEdit";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile/edit" element={<ProfileEdit />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
