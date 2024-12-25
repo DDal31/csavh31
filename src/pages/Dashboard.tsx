@@ -21,7 +21,6 @@ const Dashboard = () => {
           return;
         }
 
-        // Fetch user profile
         const { data: profile } = await supabase
           .from("profiles")
           .select("*")
@@ -65,7 +64,7 @@ const Dashboard = () => {
       icon: Calendar,
       route: "/attendance",
       bgColor: "bg-orange-600 hover:bg-orange-700",
-      description: "Consulter votre historique de présence"
+      description: "Consulter les présences aux entraînements"
     },
     {
       title: "Documents",
@@ -108,7 +107,7 @@ const Dashboard = () => {
             </button>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8">
             {tiles.map((tile) => (
               <Card 
                 key={tile.title}

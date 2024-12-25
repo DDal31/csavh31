@@ -15,7 +15,8 @@ import AdminUsers from "./pages/AdminUsers";
 import AdminTrainings from "./pages/AdminTrainings";
 import ProfilePage from "./pages/Profile";
 import ProfileEdit from "./pages/ProfileEdit";
-import TrainingRegistration from "./pages/Training"; // New import
+import TrainingRegistration from "./pages/Training";
+import Attendance from "./pages/Attendance"; // New import
 
 const queryClient = new QueryClient();
 
@@ -33,7 +34,8 @@ const App = () => (
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/training" element={<TrainingRegistration />} /> {/* New route */}
+          <Route path="/training" element={<TrainingRegistration />} />
+          <Route path="/attendance" element={<Attendance />} /> {/* New route */}
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/trainings" element={<AdminTrainings />} />
