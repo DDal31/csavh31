@@ -10,6 +10,7 @@ export type Training = {
     id: string;
     user_id: string;
     created_at: string;
+    training_id: string;
     profiles: {
       first_name: string;
       last_name: string;

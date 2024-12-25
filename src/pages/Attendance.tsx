@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import { Loader2 } from "lucide-react";
 import { AttendanceCard } from "@/components/attendance/AttendanceCard";
 import { BackButton } from "@/components/training/BackButton";
+import type { Training } from "@/types/training";
 
 const Attendance = () => {
   const navigate = useNavigate();
@@ -35,6 +36,7 @@ const Attendance = () => {
           registrations (
             id,
             user_id,
+            training_id,
             created_at,
             profiles (
               first_name,
@@ -52,7 +54,7 @@ const Attendance = () => {
       }
 
       console.log("Fetched trainings:", trainingsData);
-      return trainingsData;
+      return trainingsData as Training[];
     },
   });
 
