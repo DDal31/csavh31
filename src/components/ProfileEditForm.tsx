@@ -36,9 +36,9 @@ const ProfileEditForm = ({ profile, onSubmit, isLoading }: ProfileEditFormProps)
           name="first_name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Prénom</FormLabel>
+              <FormLabel className="text-white">Prénom</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input placeholder="Votre prénom" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -50,9 +50,9 @@ const ProfileEditForm = ({ profile, onSubmit, isLoading }: ProfileEditFormProps)
           name="last_name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nom</FormLabel>
+              <FormLabel className="text-white">Nom de famille</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input placeholder="Votre nom de famille" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -64,9 +64,9 @@ const ProfileEditForm = ({ profile, onSubmit, isLoading }: ProfileEditFormProps)
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel className="text-white">Adresse e-mail</FormLabel>
               <FormControl>
-                <Input {...field} type="email" />
+                <Input type="email" placeholder="votre@email.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -78,9 +78,9 @@ const ProfileEditForm = ({ profile, onSubmit, isLoading }: ProfileEditFormProps)
           name="phone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Téléphone</FormLabel>
+              <FormLabel className="text-white">Numéro de téléphone</FormLabel>
               <FormControl>
-                <Input {...field} type="tel" />
+                <Input type="tel" placeholder="06 12 34 56 78" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -92,7 +92,7 @@ const ProfileEditForm = ({ profile, onSubmit, isLoading }: ProfileEditFormProps)
           name="club_role"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Rôle dans le club</FormLabel>
+              <FormLabel className="text-white">Rôle dans le club</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -119,7 +119,7 @@ const ProfileEditForm = ({ profile, onSubmit, isLoading }: ProfileEditFormProps)
           name="sport"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Sport pratiqué</FormLabel>
+              <FormLabel className="text-white">Sport pratiqué</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -142,7 +142,7 @@ const ProfileEditForm = ({ profile, onSubmit, isLoading }: ProfileEditFormProps)
           name="team"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Équipe</FormLabel>
+              <FormLabel className="text-white">Équipe</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -160,8 +160,8 @@ const ProfileEditForm = ({ profile, onSubmit, isLoading }: ProfileEditFormProps)
           )}
         />
 
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? "Enregistrement..." : "Enregistrer les modifications"}
+        <Button type="submit" disabled={isLoading} className="w-full">
+          {isLoading ? "Enregistrement en cours..." : "Enregistrer les modifications"}
         </Button>
       </form>
     </Form>
