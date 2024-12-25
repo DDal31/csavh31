@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -31,9 +30,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+
+type TrainingType = Database["public"]["Enums"]["training_type"];
 
 const formSchema = z.object({
-  type: z.enum(["goalball", "torball", "other"]),
+  type: z.enum(["goalball", "torball", "other"] as const),
   otherTypeDetails: z.string().optional().nullable(),
   date: z.date({
     required_error: "Une date est requise",
@@ -82,13 +84,15 @@ export function TrainingManagement() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      const { error } = await supabase.from("trainings").insert({
-        type: values.type,
-        other_type_details: values.type === "other" ? values.otherTypeDetails : null,
-        date: format(values.date, "yyyy-MM-dd"),
-        start_time: values.startTime,
-        end_time: values.endTime,
-      });
+      const { error } = await supabase
+        .from("trainings")
+        .insert({
+          type: values.type as TrainingType,
+          other_type_details: values.type === "other" ? values.otherTypeDetails : null,
+          date: format(values.date, "yyyy-MM-dd"),
+          start_time: values.startTime,
+          end_time: values.endTime,
+        });
 
       if (error) throw error;
 

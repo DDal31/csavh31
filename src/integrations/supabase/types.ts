@@ -72,6 +72,36 @@ export type Database = {
         }
         Relationships: []
       }
+      trainings: {
+        Row: {
+          created_at: string
+          date: string
+          end_time: string
+          id: string
+          other_type_details: string | null
+          start_time: string
+          type: Database["public"]["Enums"]["training_type"]
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          end_time: string
+          id?: string
+          other_type_details?: string | null
+          start_time: string
+          type: Database["public"]["Enums"]["training_type"]
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          end_time?: string
+          id?: string
+          other_type_details?: string | null
+          start_time?: string
+          type?: Database["public"]["Enums"]["training_type"]
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -91,6 +121,7 @@ export type Database = {
       site_role: "member" | "admin"
       sport_type: "goalball" | "torball" | "both"
       team_type: "loisir" | "d1_masculine" | "d1_feminine"
+      training_type: "goalball" | "torball" | "other"
     }
     CompositeTypes: {
       [_ in never]: never
