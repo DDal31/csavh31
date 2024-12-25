@@ -30,29 +30,41 @@ const Attendance = () => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
-      const { data, error } = await supabase
+      // First get trainings with their registrations
+      const { data: trainingsData, error: trainingsError } = await supabase
         .from("trainings")
         .select(`
           *,
           registrations (
             *,
-            profiles (
-              first_name,
-              last_name,
-              club_role
+            user:user_id (
+              profiles (
+                first_name,
+                last_name,
+                club_role
+              )
             )
           )
         `)
         .gte("date", today.toISOString())
         .order("date", { ascending: true });
 
-      if (error) {
-        console.error("Error fetching trainings:", error);
-        throw error;
+      if (trainingsError) {
+        console.error("Error fetching trainings:", trainingsError);
+        throw trainingsError;
       }
 
-      console.log("Fetched trainings:", data);
-      return data;
+      // Transform the data to match the expected format
+      const transformedTrainings = trainingsData.map(training => ({
+        ...training,
+        registrations: training.registrations.map(registration => ({
+          ...registration,
+          profiles: registration.user.profiles
+        }))
+      }));
+
+      console.log("Fetched trainings:", transformedTrainings);
+      return transformedTrainings;
     },
   });
 
