@@ -1,0 +1,56 @@
+import { useState } from "react";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { Training } from "@/types/training";
+
+type TrainingListProps = {
+  trainings: Training[];
+  selectedTrainings: string[];
+  onTrainingToggle: (trainingId: string) => void;
+};
+
+export function TrainingList({ trainings, selectedTrainings, onTrainingToggle }: TrainingListProps) {
+  if (trainings.length === 0) {
+    return (
+      <div className="text-center text-gray-400">
+        Aucun entraînement disponible pour le moment.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {trainings.map((training) => (
+        <Card 
+          key={training.id} 
+          className="bg-gray-800 border-gray-700 hover:bg-gray-700 transition-colors"
+        >
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xl font-bold text-white">
+              {training.type === 'other' 
+                ? training.other_type_details || 'Événement' 
+                : training.type.charAt(0).toUpperCase() + training.type.slice(1)}
+            </CardTitle>
+            <Checkbox 
+              checked={selectedTrainings.includes(training.id)}
+              onCheckedChange={() => onTrainingToggle(training.id)}
+              className="border-gray-600"
+            />
+          </CardHeader>
+          <CardContent>
+            <div className="text-gray-300">
+              <p>
+                {format(new Date(training.date), "EEEE d MMMM yyyy", { locale: fr })}
+              </p>
+              <p>
+                {training.start_time.slice(0, 5)} - {training.end_time.slice(0, 5)}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}

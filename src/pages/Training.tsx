@@ -2,23 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
 import { useToast } from "@/components/ui/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-
-type Training = {
-  id: string;
-  type: string;
-  other_type_details?: string | null;
-  date: string;
-  start_time: string;
-  end_time: string;
-};
+import { TrainingList } from "@/components/training/TrainingList";
+import { BackButton } from "@/components/training/BackButton";
+import type { Training } from "@/types/training";
 
 const TrainingRegistration = () => {
   const [trainings, setTrainings] = useState<Training[]>([]);
@@ -173,54 +163,25 @@ const TrainingRegistration = () => {
     <div className="min-h-screen bg-gray-900 text-gray-100">
       <Navbar />
       <main className="container mx-auto px-4 py-24">
-        <h1 className="text-4xl font-bold text-center mb-12 text-white">
-          Inscriptions aux Entraînements
-        </h1>
+        <div className="max-w-2xl mx-auto">
+          <BackButton />
+          <h1 className="text-4xl font-bold text-center mb-12 text-white">
+            Inscriptions aux Entraînements
+          </h1>
 
-        {trainings.length === 0 ? (
-          <div className="text-center text-gray-400">
-            Aucun entraînement disponible pour le moment.
-          </div>
-        ) : (
-          <div className="space-y-6 max-w-2xl mx-auto">
-            {trainings.map((training) => (
-              <Card 
-                key={training.id} 
-                className="bg-gray-800 border-gray-700 hover:bg-gray-700 transition-colors"
-              >
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-xl font-bold text-white">
-                    {training.type === 'other' 
-                      ? training.other_type_details || 'Événement' 
-                      : training.type.charAt(0).toUpperCase() + training.type.slice(1)}
-                  </CardTitle>
-                  <Checkbox 
-                    checked={selectedTrainings.includes(training.id)}
-                    onCheckedChange={() => toggleTrainingSelection(training.id)}
-                    className="border-gray-600"
-                  />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-gray-300">
-                    <p>
-                      {format(new Date(training.date), "EEEE d MMMM yyyy", { locale: fr })}
-                    </p>
-                    <p>
-                      {training.start_time.slice(0, 5)} - {training.end_time.slice(0, 5)}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            
-            <Button 
-              onClick={handleSaveRegistrations} 
-              className="w-full bg-green-600 hover:bg-green-700 text-white"
-            >
-              Valider mes inscriptions
-            </Button>
-          </div>
-        )}
+          <TrainingList 
+            trainings={trainings}
+            selectedTrainings={selectedTrainings}
+            onTrainingToggle={toggleTrainingSelection}
+          />
+          
+          <Button 
+            onClick={handleSaveRegistrations} 
+            className="w-full mt-6 bg-green-600 hover:bg-green-700 text-white"
+          >
+            Valider mes inscriptions
+          </Button>
+        </div>
       </main>
       <Footer />
     </div>
