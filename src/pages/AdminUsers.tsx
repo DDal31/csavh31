@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Loader2, UserPlus } from "lucide-react";
+import { Loader2, UserPlus, ArrowLeft } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import CreateUserForm from "@/components/admin/CreateUserForm";
 import UsersList from "@/components/admin/UsersList";
@@ -172,37 +172,48 @@ const AdminUsers = () => {
       <Navbar />
       <main className="container mx-auto px-4 py-24">
         <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-4xl font-bold text-white">
-              Gestion des Utilisateurs
-            </h1>
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="flex items-center gap-2">
-                  <UserPlus className="w-4 h-4" />
-                  Nouvel Utilisateur
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Créer un nouvel utilisateur</DialogTitle>
-                </DialogHeader>
-                <CreateUserForm
-                  onSubmit={handleCreateUser}
-                  isLoading={false}
-                />
-              </DialogContent>
-            </Dialog>
-          </div>
+          <div className="flex flex-col gap-8">
+            <Button 
+              variant="ghost" 
+              className="text-white w-fit flex items-center gap-2 hover:text-gray-300"
+              onClick={() => navigate('/dashboard')}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Retour au tableau de bord
+            </Button>
 
-          <UsersList
-            users={users}
-            onUpdateProfile={handleUpdateProfile}
-            selectedUser={selectedUser}
-            setSelectedUser={setSelectedUser}
-            isEditDialogOpen={isEditDialogOpen}
-            setIsEditDialogOpen={setIsEditDialogOpen}
-          />
+            <div className="flex justify-between items-center">
+              <h1 className="text-4xl font-bold text-white">
+                Gestion des Utilisateurs
+              </h1>
+              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2">
+                    <UserPlus className="w-4 h-4" />
+                    Nouvel Utilisateur
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-gray-800 border-gray-700">
+                  <DialogHeader>
+                    <DialogTitle className="text-white">Créer un nouvel utilisateur</DialogTitle>
+                  </DialogHeader>
+                  <CreateUserForm
+                    onSubmit={handleCreateUser}
+                    isLoading={false}
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            <UsersList
+              users={users}
+              onUpdateProfile={handleUpdateProfile}
+              selectedUser={selectedUser}
+              setSelectedUser={setSelectedUser}
+              isEditDialogOpen={isEditDialogOpen}
+              setIsEditDialogOpen={setIsEditDialogOpen}
+            />
+          </div>
         </div>
       </main>
       <Footer />

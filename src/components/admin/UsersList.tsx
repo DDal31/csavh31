@@ -41,43 +41,44 @@ const UsersList = ({
   setIsEditDialogOpen
 }: UsersListProps) => {
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
+    <div className="bg-gray-800 rounded-lg shadow-lg overflow-hidden border border-gray-700">
       <Table>
         <TableHeader>
-          <TableRow>
-            <TableHead>Email</TableHead>
-            <TableHead>Prénom</TableHead>
-            <TableHead>Nom</TableHead>
-            <TableHead>Rôle Club</TableHead>
-            <TableHead>Sport</TableHead>
-            <TableHead>Équipe</TableHead>
-            <TableHead>Rôle Site</TableHead>
-            <TableHead>Actions</TableHead>
+          <TableRow className="border-gray-700">
+            <TableHead className="text-gray-300">Email</TableHead>
+            <TableHead className="text-gray-300">Prénom</TableHead>
+            <TableHead className="text-gray-300">Nom</TableHead>
+            <TableHead className="text-gray-300">Rôle Club</TableHead>
+            <TableHead className="text-gray-300">Sport</TableHead>
+            <TableHead className="text-gray-300">Équipe</TableHead>
+            <TableHead className="text-gray-300">Rôle Site</TableHead>
+            <TableHead className="text-gray-300">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {users.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell>{user.email}</TableCell>
-              <TableCell>{user.profile?.first_name}</TableCell>
-              <TableCell>{user.profile?.last_name}</TableCell>
-              <TableCell>{user.profile?.club_role}</TableCell>
-              <TableCell>{user.profile?.sport}</TableCell>
-              <TableCell>{user.profile?.team}</TableCell>
-              <TableCell>{user.profile?.site_role}</TableCell>
+            <TableRow key={user.id} className="border-gray-700">
+              <TableCell className="text-gray-300">{user.email}</TableCell>
+              <TableCell className="text-gray-300">{user.profile?.first_name}</TableCell>
+              <TableCell className="text-gray-300">{user.profile?.last_name}</TableCell>
+              <TableCell className="text-gray-300">{user.profile?.club_role}</TableCell>
+              <TableCell className="text-gray-300">{user.profile?.sport}</TableCell>
+              <TableCell className="text-gray-300">{user.profile?.team}</TableCell>
+              <TableCell className="text-gray-300">{user.profile?.site_role}</TableCell>
               <TableCell>
                 <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
                   <DialogTrigger asChild>
                     <Button
                       variant="outline"
+                      className="bg-blue-600 hover:bg-blue-700 text-white border-none"
                       onClick={() => setSelectedUser(user)}
                     >
                       Modifier
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="bg-gray-800 border-gray-700">
                     <DialogHeader>
-                      <DialogTitle>Modifier le profil</DialogTitle>
+                      <DialogTitle className="text-white">Modifier le profil</DialogTitle>
                     </DialogHeader>
                     {selectedUser && (
                       <ProfileEditForm
