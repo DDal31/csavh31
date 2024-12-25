@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { method, userData } = await req.json()
+    const { method, userData, userId } = await req.json()
     console.log('Received request with method:', method)
 
     switch (method) {
@@ -74,6 +74,16 @@ Deno.serve(async (req) => {
           .eq('id', newUser.user.id)
 
         if (updateError) throw updateError
+
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+
+      case 'DELETE_USER':
+        console.log('Deleting user with ID:', userId)
+        const { error: deleteError } = await supabaseClient.auth.admin.deleteUser(userId)
+        
+        if (deleteError) throw deleteError
 
         return new Response(JSON.stringify({ success: true }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },

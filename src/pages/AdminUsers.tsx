@@ -159,6 +159,33 @@ const AdminUsers = () => {
     }
   };
 
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      const { error } = await supabase.functions.invoke('manage-users', {
+        body: { 
+          method: 'DELETE_USER',
+          userId 
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "L'utilisateur a été supprimé avec succès",
+      });
+      
+      fetchUsers();
+    } catch (error) {
+      console.error("Erreur lors de la suppression de l'utilisateur:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer l'utilisateur",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
@@ -209,6 +236,7 @@ const AdminUsers = () => {
             <UsersList
               users={users}
               onUpdateProfile={handleUpdateProfile}
+              onDeleteUser={handleDeleteUser}
               selectedUser={selectedUser}
               setSelectedUser={setSelectedUser}
               isEditDialogOpen={isEditDialogOpen}

@@ -14,7 +14,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { ArrowLeft } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { ArrowLeft, Trash2 } from "lucide-react";
 import ProfileEditForm from "@/components/ProfileEditForm";
 import type { Profile } from "@/types/profile";
 
@@ -27,6 +38,7 @@ interface User {
 interface UsersListProps {
   users: User[];
   onUpdateProfile: (data: Profile) => void;
+  onDeleteUser: (userId: string) => void;
   selectedUser: User | null;
   setSelectedUser: (user: User | null) => void;
   isEditDialogOpen: boolean;
@@ -36,6 +48,7 @@ interface UsersListProps {
 const UsersList = ({
   users,
   onUpdateProfile,
+  onDeleteUser,
   selectedUser,
   setSelectedUser,
   isEditDialogOpen,
@@ -67,39 +80,72 @@ const UsersList = ({
               <TableCell className="text-gray-300">{user.profile?.team}</TableCell>
               <TableCell className="text-gray-300">{user.profile?.site_role}</TableCell>
               <TableCell>
-                <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="bg-blue-600 hover:bg-blue-700 text-white border-none"
-                      onClick={() => setSelectedUser(user)}
-                    >
-                      Modifier
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="bg-gray-800 border-gray-700">
-                    <DialogHeader>
-                      <div className="flex items-center gap-2">
-                        <Button 
-                          variant="ghost" 
-                          className="text-white w-fit flex items-center gap-2 hover:text-gray-300"
-                          onClick={() => setIsEditDialogOpen(false)}
+                <div className="flex items-center gap-2">
+                  <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="bg-blue-600 hover:bg-blue-700 text-white border-none"
+                        onClick={() => setSelectedUser(user)}
+                      >
+                        Modifier
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="bg-gray-800 border-gray-700">
+                      <DialogHeader>
+                        <div className="flex items-center gap-2">
+                          <Button 
+                            variant="ghost" 
+                            className="text-white w-fit flex items-center gap-2 hover:text-gray-300"
+                            onClick={() => setIsEditDialogOpen(false)}
+                          >
+                            <ArrowLeft className="h-4 w-4" />
+                            Retour
+                          </Button>
+                          <DialogTitle className="text-white">Modifier le profil</DialogTitle>
+                        </div>
+                      </DialogHeader>
+                      {selectedUser && (
+                        <ProfileEditForm
+                          profile={selectedUser.profile}
+                          onSubmit={onUpdateProfile}
+                          isLoading={false}
+                        />
+                      )}
+                    </DialogContent>
+                  </Dialog>
+
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="hover:bg-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="bg-gray-800 border-gray-700">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="text-white">Confirmer la suppression</AlertDialogTitle>
+                        <AlertDialogDescription className="text-gray-400">
+                          Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="bg-gray-700 text-white hover:bg-gray-600 border-gray-600">
+                          Annuler
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-red-600 hover:bg-red-700 text-white border-none"
+                          onClick={() => onDeleteUser(user.id)}
                         >
-                          <ArrowLeft className="h-4 w-4" />
-                          Retour
-                        </Button>
-                        <DialogTitle className="text-white">Modifier le profil</DialogTitle>
-                      </div>
-                    </DialogHeader>
-                    {selectedUser && (
-                      <ProfileEditForm
-                        profile={selectedUser.profile}
-                        onSubmit={onUpdateProfile}
-                        isLoading={false}
-                      />
-                    )}
-                  </DialogContent>
-                </Dialog>
+                          Supprimer
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </TableCell>
             </TableRow>
           ))}
