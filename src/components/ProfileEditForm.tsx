@@ -160,6 +160,28 @@ const ProfileEditForm = ({ profile, onSubmit, isLoading }: ProfileEditFormProps)
           )}
         />
 
+        <FormField
+          control={form.control}
+          name="site_role"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-white">Rôle sur le site</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionnez le rôle sur le site" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="member">Membre</SelectItem>
+                  <SelectItem value="admin">Administrateur</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <Button type="submit" disabled={isLoading} className="w-full">
           {isLoading ? "Enregistrement en cours..." : "Enregistrer les modifications"}
         </Button>
