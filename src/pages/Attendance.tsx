@@ -35,14 +35,12 @@ const Attendance = () => {
         .from("trainings")
         .select(`
           *,
-          registrations (
+          registrations!inner (
             *,
-            user:user_id (
-              profiles (
-                first_name,
-                last_name,
-                club_role
-              )
+            profiles!inner (
+              first_name,
+              last_name,
+              club_role
             )
           )
         `)
@@ -54,17 +52,8 @@ const Attendance = () => {
         throw trainingsError;
       }
 
-      // Transform the data to match the expected format
-      const transformedTrainings = trainingsData.map(training => ({
-        ...training,
-        registrations: training.registrations.map(registration => ({
-          ...registration,
-          profiles: registration.user.profiles
-        }))
-      }));
-
-      console.log("Fetched trainings:", transformedTrainings);
-      return transformedTrainings;
+      console.log("Fetched trainings:", trainingsData);
+      return trainingsData;
     },
   });
 
