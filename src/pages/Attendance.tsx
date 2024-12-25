@@ -33,7 +33,9 @@ const Attendance = () => {
         .select(`
           *,
           registrations (
-            *,
+            id,
+            user_id,
+            created_at,
             user:user_id (
               profiles (
                 first_name,
@@ -55,7 +57,9 @@ const Attendance = () => {
       const transformedTrainings = trainingsData.map(training => ({
         ...training,
         registrations: training.registrations.map(reg => ({
-          ...reg,
+          id: reg.id,
+          user_id: reg.user_id,
+          created_at: reg.created_at,
           profiles: reg.user.profiles
         }))
       }));
