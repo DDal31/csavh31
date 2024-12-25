@@ -107,7 +107,7 @@ const Dashboard = () => {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8">
+          <div className="grid grid-cols-3 gap-4 md:gap-8">
             {tiles.map((tile) => (
               <Card 
                 key={tile.title}
@@ -115,13 +115,13 @@ const Dashboard = () => {
                 onClick={() => navigate(tile.route)}
               >
                 <CardHeader className="text-center pb-2">
-                  <tile.icon className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-4 text-white" />
-                  <CardTitle className="text-lg md:text-2xl font-bold text-white">
+                  <tile.icon className="w-8 h-8 md:w-16 md:h-16 mx-auto mb-2 md:mb-4 text-white" />
+                  <CardTitle className="text-sm md:text-2xl font-bold text-white">
                     {tile.title}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm md:text-base text-gray-100 text-center">
+                  <p className="text-xs md:text-base text-gray-100 text-center line-clamp-3">
                     {tile.description}
                   </p>
                 </CardContent>
@@ -134,13 +134,13 @@ const Dashboard = () => {
                 onClick={() => navigate("/admin")}
               >
                 <CardHeader className="text-center pb-2">
-                  <Shield className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-4 text-white" />
-                  <CardTitle className="text-lg md:text-2xl font-bold text-white">
+                  <Shield className="w-8 h-8 md:w-16 md:h-16 mx-auto mb-2 md:mb-4 text-white" />
+                  <CardTitle className="text-sm md:text-2xl font-bold text-white">
                     Dashboard Admin
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm md:text-base text-gray-100 text-center">
+                  <p className="text-xs md:text-base text-gray-100 text-center">
                     Accéder à l'espace administrateur
                   </p>
                 </CardContent>

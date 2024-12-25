@@ -78,7 +78,7 @@ const Index = () => {
           Club Sportif de l'Association Valentin Haüy
         </h1>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-3 gap-4 md:gap-8 max-w-7xl mx-auto">
           {tiles.map((tile) => (
             <Card 
               key={tile.title}
@@ -86,15 +86,15 @@ const Index = () => {
               onClick={() => navigate(tile.route)}
             >
               <CardHeader className="text-center pb-2">
-                <tile.icon className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-4 text-white" />
-                <CardTitle className="text-lg md:text-2xl font-bold text-white">
+                <tile.icon className="w-8 h-8 md:w-16 md:h-16 mx-auto mb-2 md:mb-4 text-white" />
+                <CardTitle className="text-sm md:text-2xl font-bold text-white">
                   {tile.title}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm md:text-base text-gray-100 text-center">
+                <p className="text-xs md:text-base text-gray-100 text-center line-clamp-3">
                   {isLoading ? (
-                    <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                    <Loader2 className="h-4 w-4 md:h-6 md:w-6 animate-spin mx-auto" />
                   ) : (
                     tile.description
                   )}
