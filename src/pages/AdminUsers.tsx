@@ -1,21 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { profileSchema } from "@/schemas/profileSchema";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -25,19 +13,15 @@ import {
 } from "@/components/ui/dialog";
 import { Loader2, UserPlus } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import ProfileEditForm from "@/components/ProfileEditForm";
+import CreateUserForm from "@/components/admin/CreateUserForm";
+import UsersList from "@/components/admin/UsersList";
+import type { Profile } from "@/types/profile";
+import type { CreateUserData } from "@/types/auth";
 
 interface User {
   id: string;
   email: string;
-  profile: {
-    first_name: string;
-    last_name: string;
-    club_role: string;
-    sport: string;
-    team: string;
-    site_role: string;
-  };
+  profile: Profile;
 }
 
 const AdminUsers = () => {
@@ -48,20 +32,6 @@ const AdminUsers = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-
-  const form = useForm({
-    resolver: zodResolver(profileSchema),
-    defaultValues: {
-      first_name: "",
-      last_name: "",
-      email: "",
-      phone: "",
-      club_role: "joueur",
-      sport: "goalball",
-      team: "loisir",
-      site_role: "member"
-    }
-  });
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -112,7 +82,7 @@ const AdminUsers = () => {
     }
   };
 
-  const handleCreateUser = async (data: any) => {
+  const handleCreateUser = async (data: CreateUserData) => {
     try {
       const { error } = await supabase.functions.invoke('manage-users', {
         body: {
@@ -141,7 +111,6 @@ const AdminUsers = () => {
       });
       
       setIsCreateDialogOpen(false);
-      form.reset();
       fetchUsers();
     } catch (error) {
       console.error("Erreur lors de la création de l'utilisateur:", error);
@@ -153,7 +122,7 @@ const AdminUsers = () => {
     }
   };
 
-  const handleUpdateProfile = async (data: any) => {
+  const handleUpdateProfile = async (data: Profile) => {
     if (!selectedUser) return;
 
     try {
@@ -218,92 +187,22 @@ const AdminUsers = () => {
                 <DialogHeader>
                   <DialogTitle>Créer un nouvel utilisateur</DialogTitle>
                 </DialogHeader>
-                <form onSubmit={form.handleSubmit(handleCreateUser)} className="space-y-4">
-                  <Input
-                    {...form.register("email")}
-                    type="email"
-                    placeholder="Email"
-                  />
-                  <Input
-                    {...form.register("password")}
-                    type="password"
-                    placeholder="Mot de passe"
-                  />
-                  <ProfileEditForm
-                    profile={{
-                      id: "",
-                      first_name: "",
-                      last_name: "",
-                      email: "",
-                      phone: "",
-                      club_role: "joueur",
-                      sport: "goalball",
-                      team: "loisir",
-                      site_role: "member",
-                      created_at: "",
-                      updated_at: ""
-                    }}
-                    onSubmit={handleCreateUser}
-                    isLoading={false}
-                  />
-                </form>
+                <CreateUserForm
+                  onSubmit={handleCreateUser}
+                  isLoading={false}
+                />
               </DialogContent>
             </Dialog>
           </div>
 
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Prénom</TableHead>
-                  <TableHead>Nom</TableHead>
-                  <TableHead>Rôle Club</TableHead>
-                  <TableHead>Sport</TableHead>
-                  <TableHead>Équipe</TableHead>
-                  <TableHead>Rôle Site</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>{user.profile?.first_name}</TableCell>
-                    <TableCell>{user.profile?.last_name}</TableCell>
-                    <TableCell>{user.profile?.club_role}</TableCell>
-                    <TableCell>{user.profile?.sport}</TableCell>
-                    <TableCell>{user.profile?.team}</TableCell>
-                    <TableCell>{user.profile?.site_role}</TableCell>
-                    <TableCell>
-                      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            onClick={() => setSelectedUser(user)}
-                          >
-                            Modifier
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Modifier le profil</DialogTitle>
-                          </DialogHeader>
-                          {selectedUser && (
-                            <ProfileEditForm
-                              profile={selectedUser.profile}
-                              onSubmit={handleUpdateProfile}
-                              isLoading={false}
-                            />
-                          )}
-                        </DialogContent>
-                      </Dialog>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <UsersList
+            users={users}
+            onUpdateProfile={handleUpdateProfile}
+            selectedUser={selectedUser}
+            setSelectedUser={setSelectedUser}
+            isEditDialogOpen={isEditDialogOpen}
+            setIsEditDialogOpen={setIsEditDialogOpen}
+          />
         </div>
       </main>
       <Footer />
