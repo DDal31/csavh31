@@ -33,12 +33,12 @@ const Attendance = () => {
         .from("trainings")
         .select(`
           *,
-          registrations (
+          registrations!inner (
             id,
             user_id,
             training_id,
             created_at,
-            profiles (
+            profiles!inner (
               first_name,
               last_name,
               club_role
