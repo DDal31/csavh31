@@ -36,12 +36,10 @@ const Attendance = () => {
             id,
             user_id,
             created_at,
-            user:user_id (
-              profiles (
-                first_name,
-                last_name,
-                club_role
-              )
+            profiles (
+              first_name,
+              last_name,
+              club_role
             )
           )
         `)
@@ -53,19 +51,8 @@ const Attendance = () => {
         throw trainingsError;
       }
 
-      // Transform the data to match the expected format
-      const transformedTrainings = trainingsData.map(training => ({
-        ...training,
-        registrations: training.registrations.map(reg => ({
-          id: reg.id,
-          user_id: reg.user_id,
-          created_at: reg.created_at,
-          profiles: reg.user.profiles
-        }))
-      }));
-
-      console.log("Fetched trainings:", transformedTrainings);
-      return transformedTrainings;
+      console.log("Fetched trainings:", trainingsData);
+      return trainingsData;
     },
   });
 
