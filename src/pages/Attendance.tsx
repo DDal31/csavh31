@@ -30,14 +30,13 @@ const Attendance = () => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
-      // First get trainings with their registrations
       const { data: trainingsData, error: trainingsError } = await supabase
         .from("trainings")
         .select(`
           *,
-          registrations!inner (
+          registrations (
             *,
-            profiles!inner (
+            profiles (
               first_name,
               last_name,
               club_role
