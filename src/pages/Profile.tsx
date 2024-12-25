@@ -21,12 +21,22 @@ const ProfilePage = () => {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
+          console.log("No session found, redirecting to login");
           navigate("/login");
           return;
         }
 
-        console.log("Fetching profile for user:", session.user.id);
+        console.log("Current user ID:", session.user.id);
         
+        // Log the table structure
+        const { data: tableInfo, error: tableError } = await supabase
+          .from('profiles')
+          .select('*')
+          .limit(1);
+        
+        console.log("Table structure check:", { tableInfo, tableError });
+        
+        // Try to fetch the profile
         const { data, error } = await supabase
           .from("profiles")
           .select("*")
@@ -38,18 +48,39 @@ const ProfilePage = () => {
           throw error;
         }
 
-        if (!data) {
-          console.log("No profile found");
-          toast({
-            title: "Erreur",
-            description: "Profil non trouvé",
-            variant: "destructive",
-          });
-          return;
-        }
+        console.log("Profile query result:", data);
 
-        console.log("Profile fetched successfully:", data);
-        setProfile(data);
+        if (!data) {
+          console.log("No profile found, attempting to create one");
+          // Try to create a profile if none exists
+          const { data: newProfile, error: createError } = await supabase
+            .from("profiles")
+            .insert([
+              {
+                id: session.user.id,
+                email: session.user.email,
+                first_name: "",
+                last_name: "",
+                club_role: "joueur",
+                sport: "goalball",
+                team: "loisir",
+                site_role: "member"
+              }
+            ])
+            .select()
+            .single();
+
+          if (createError) {
+            console.error("Error creating profile:", createError);
+            throw createError;
+          }
+
+          console.log("New profile created:", newProfile);
+          setProfile(newProfile);
+        } else {
+          console.log("Profile found:", data);
+          setProfile(data);
+        }
       } catch (error) {
         console.error("Error in profile fetch:", error);
         toast({
@@ -110,37 +141,37 @@ const ProfilePage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <p className="text-sm text-gray-400">Prénom</p>
-                  <p className="text-lg text-white">{profile.first_name}</p>
+                  <p className="text-lg text-white">{profile?.first_name || "Non renseigné"}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-400">Nom</p>
-                  <p className="text-lg text-white">{profile.last_name}</p>
+                  <p className="text-lg text-white">{profile?.last_name || "Non renseigné"}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-400">Email</p>
-                  <p className="text-lg text-white">{profile.email}</p>
+                  <p className="text-lg text-white">{profile?.email}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-400">Téléphone</p>
-                  <p className="text-lg text-white">{profile.phone || "Non renseigné"}</p>
+                  <p className="text-lg text-white">{profile?.phone || "Non renseigné"}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-400">Rôle dans le club</p>
-                  <p className="text-lg text-white capitalize">{profile.club_role.replace(/-/g, " ")}</p>
+                  <p className="text-lg text-white capitalize">{profile?.club_role.replace(/-/g, " ")}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-400">Sport pratiqué</p>
                   <p className="text-lg text-white capitalize">
-                    {profile.sport === "both" ? "Goalball et Torball" : profile.sport}
+                    {profile?.sport === "both" ? "Goalball et Torball" : profile?.sport}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-400">Équipe</p>
-                  <p className="text-lg text-white capitalize">{profile.team.replace(/_/g, " ")}</p>
+                  <p className="text-lg text-white capitalize">{profile?.team.replace(/_/g, " ")}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-400">Rôle sur le site</p>
-                  <p className="text-lg text-white capitalize">{profile.site_role}</p>
+                  <p className="text-lg text-white capitalize">{profile?.site_role}</p>
                 </div>
               </div>
             </CardContent>
