@@ -36,14 +36,37 @@ const TrainingRegistration = () => {
 
         setUserProfile(profile);
 
-        // Fetch trainings
+        // Fetch trainings with registrations
         const { data: trainingsData, error: trainingsError } = await supabase
           .from("trainings")
-          .select("*")
+          .select(`
+            *,
+            registrations (
+              *,
+              user:user_id (
+                profiles (
+                  first_name,
+                  last_name,
+                  club_role
+                )
+              )
+            )
+          `)
           .gte("date", new Date().toISOString().split("T")[0])
           .order("date", { ascending: true });
 
         if (trainingsError) throw trainingsError;
+
+        // Transform the data to match the expected format
+        const transformedTrainings = trainingsData.map(training => ({
+          ...training,
+          registrations: training.registrations.map(reg => ({
+            ...reg,
+            profiles: reg.user.profiles
+          }))
+        }));
+
+        setTrainings(transformedTrainings);
 
         // Fetch user's current registrations
         const { data: registrations, error: registrationsError } = await supabase
@@ -53,21 +76,13 @@ const TrainingRegistration = () => {
 
         if (registrationsError) throw registrationsError;
 
-        // Filter trainings based on user's sport
-        const filteredTrainings = trainingsData.filter(training => 
-          profile.sport === 'both' || 
-          training.type === profile.sport || 
-          training.type === 'other'
-        );
-
-        setTrainings(filteredTrainings);
         setSelectedTrainings(registrations.map(reg => reg.training_id));
         setLoading(false);
       } catch (error) {
-        console.error("Erreur lors de la récupération des données:", error);
+        console.error("Error fetching data:", error);
         toast({
           title: "Erreur",
-          description: "Impossible de charger les entraînements",
+          description: "Impossible de charger les données",
           variant: "destructive"
         });
         setLoading(false);

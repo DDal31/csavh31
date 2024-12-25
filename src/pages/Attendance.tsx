@@ -2,8 +2,6 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Loader2 } from "lucide-react";
@@ -36,10 +34,12 @@ const Attendance = () => {
           *,
           registrations (
             *,
-            profiles (
-              first_name,
-              last_name,
-              club_role
+            user:user_id (
+              profiles (
+                first_name,
+                last_name,
+                club_role
+              )
             )
           )
         `)
@@ -51,8 +51,17 @@ const Attendance = () => {
         throw trainingsError;
       }
 
-      console.log("Fetched trainings:", trainingsData);
-      return trainingsData;
+      // Transform the data to match the expected format
+      const transformedTrainings = trainingsData.map(training => ({
+        ...training,
+        registrations: training.registrations.map(reg => ({
+          ...reg,
+          profiles: reg.user.profiles
+        }))
+      }));
+
+      console.log("Fetched trainings:", transformedTrainings);
+      return transformedTrainings;
     },
   });
 
