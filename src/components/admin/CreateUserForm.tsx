@@ -5,14 +5,16 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft } from "lucide-react";
 import type { CreateUserData } from "@/types/auth";
 
 interface CreateUserFormProps {
   onSubmit: (data: CreateUserData) => void;
   isLoading: boolean;
+  onBack: () => void;
 }
 
-const CreateUserForm = ({ onSubmit, isLoading }: CreateUserFormProps) => {
+const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) => {
   const form = useForm<CreateUserData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -29,7 +31,17 @@ const CreateUserForm = ({ onSubmit, isLoading }: CreateUserFormProps) => {
   });
 
   return (
-    <Form {...form}>
+    <>
+      <Button 
+        variant="ghost" 
+        className="text-white w-fit flex items-center gap-2 hover:text-gray-300 mb-6"
+        onClick={onBack}
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Retour
+      </Button>
+
+      <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
@@ -210,7 +222,8 @@ const CreateUserForm = ({ onSubmit, isLoading }: CreateUserFormProps) => {
           {isLoading ? "Création en cours..." : "Créer l'utilisateur"}
         </Button>
       </form>
-    </Form>
+      </Form>
+    </>
   );
 };
 

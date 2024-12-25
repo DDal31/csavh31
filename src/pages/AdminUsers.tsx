@@ -200,6 +200,7 @@ const AdminUsers = () => {
                   <CreateUserForm
                     onSubmit={handleCreateUser}
                     isLoading={false}
+                    onBack={() => setIsCreateDialogOpen(false)}
                   />
                 </DialogContent>
               </Dialog>

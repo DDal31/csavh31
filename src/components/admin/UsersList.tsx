@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ArrowLeft } from "lucide-react";
 import ProfileEditForm from "@/components/ProfileEditForm";
 import type { Profile } from "@/types/profile";
 
@@ -78,7 +79,17 @@ const UsersList = ({
                   </DialogTrigger>
                   <DialogContent className="bg-gray-800 border-gray-700">
                     <DialogHeader>
-                      <DialogTitle className="text-white">Modifier le profil</DialogTitle>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="ghost" 
+                          className="text-white w-fit flex items-center gap-2 hover:text-gray-300"
+                          onClick={() => setIsEditDialogOpen(false)}
+                        >
+                          <ArrowLeft className="h-4 w-4" />
+                          Retour
+                        </Button>
+                        <DialogTitle className="text-white">Modifier le profil</DialogTitle>
+                      </div>
                     </DialogHeader>
                     {selectedUser && (
                       <ProfileEditForm
