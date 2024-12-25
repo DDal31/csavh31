@@ -1,3 +1,4 @@
+import * as z from "zod";  // Add this import to resolve the namespace issue
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { format } from "date-fns";
