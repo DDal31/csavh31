@@ -90,7 +90,7 @@ const Login = () => {
                 },
               },
             }}
-            view="sign_in"  // This ensures only sign-in view is shown
+            view="sign_in"
           />
         </div>
       </div>
