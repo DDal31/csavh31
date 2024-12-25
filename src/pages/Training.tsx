@@ -10,6 +10,7 @@ import Footer from "@/components/Footer";
 import { TrainingList } from "@/components/training/TrainingList";
 import { BackButton } from "@/components/training/BackButton";
 import type { Training } from "@/types/training";
+import type { SportType } from "@/types/profile";
 
 const TrainingRegistration = () => {
   const [trainings, setTrainings] = useState<Training[]>([]);
@@ -28,14 +29,27 @@ const TrainingRegistration = () => {
           return;
         }
 
-        // Fetch user profile
+        // Fetch user profile first to get sport preference
         const { data: profile } = await supabase
           .from("profiles")
-          .select("*")
+          .select("sport")
           .eq("id", session.user.id)
           .single();
 
+        console.log("User profile sport:", profile?.sport);
         setUserProfile(profile);
+
+        if (!profile) {
+          throw new Error("Profile not found");
+        }
+
+        // Build the type filter based on user's sport preference
+        let typeFilter = "";
+        if (profile.sport === "both") {
+          typeFilter = "type.in.(goalball,torball,other)";
+        } else {
+          typeFilter = `type.in.(${profile.sport},other)`;
+        }
 
         // Fetch trainings with registrations and profiles
         const { data: trainingsData, error: trainingsError } = await supabase
@@ -55,7 +69,8 @@ const TrainingRegistration = () => {
             )
           `)
           .gte("date", new Date().toISOString().split("T")[0])
-          .order("date", { ascending: true });
+          .order("date", { ascending: true })
+          .or(typeFilter);
 
         if (trainingsError) throw trainingsError;
 
