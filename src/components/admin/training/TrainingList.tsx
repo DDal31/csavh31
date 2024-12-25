@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -17,9 +16,12 @@ import type { Database } from "@/integrations/supabase/types";
 
 type Training = Database["public"]["Tables"]["trainings"]["Row"];
 
-export function TrainingList({ onAddClick }: { onAddClick: () => void }) {
-  const [isEditing, setIsEditing] = useState<string | null>(null);
+type TrainingListProps = {
+  onAddClick: () => void;
+  onEditClick: (training: Training) => void;
+};
 
+export function TrainingList({ onAddClick, onEditClick }: TrainingListProps) {
   const { data: trainings, isLoading } = useQuery({
     queryKey: ["trainings"],
     queryFn: async () => {
@@ -40,12 +42,6 @@ export function TrainingList({ onAddClick }: { onAddClick: () => void }) {
       return data as Training[];
     },
   });
-
-  const handleEdit = (trainingId: string) => {
-    console.log("Editing training:", trainingId);
-    setIsEditing(trainingId);
-    // TODO: Implement edit functionality
-  };
 
   if (isLoading) {
     return <div className="text-white">Chargement des entraînements...</div>;
@@ -96,7 +92,7 @@ export function TrainingList({ onAddClick }: { onAddClick: () => void }) {
                   <TableCell className="text-right">
                     <Button
                       variant="outline"
-                      onClick={() => handleEdit(training.id)}
+                      onClick={() => onEditClick(training)}
                       className="border-[#9b87f5] text-[#9b87f5] hover:bg-[#9b87f5] hover:text-white"
                     >
                       Modifier

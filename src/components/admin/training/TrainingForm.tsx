@@ -31,6 +31,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
+type Training = Database["public"]["Tables"]["trainings"]["Row"];
 type TrainingType = Database["public"]["Enums"]["training_type"];
 
 const formSchema = z.object({
@@ -65,20 +66,23 @@ const formSchema = z.object({
 });
 
 type TrainingFormProps = {
+  training?: Training | null;
   onSuccess: () => void;
   onCancel: () => void;
 };
 
-export function TrainingForm({ onSuccess, onCancel }: TrainingFormProps) {
+export function TrainingForm({ training, onSuccess, onCancel }: TrainingFormProps) {
   const { toast } = useToast();
+  const isEditing = !!training;
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      type: "goalball",
-      otherTypeDetails: "",
-      startTime: "09:00",
-      endTime: "10:30",
+      type: (training?.type as TrainingType) || "goalball",
+      otherTypeDetails: training?.other_type_details || "",
+      date: training ? new Date(training.date) : undefined,
+      startTime: training?.start_time.slice(0, 5) || "09:00",
+      endTime: training?.end_time.slice(0, 5) || "10:30",
     },
   });
 
@@ -86,32 +90,40 @@ export function TrainingForm({ onSuccess, onCancel }: TrainingFormProps) {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
-      console.log("Submitting training form with values:", values);
-      const { error } = await supabase
-        .from("trainings")
-        .insert({
-          type: values.type as TrainingType,
-          other_type_details: values.type === "other" ? values.otherTypeDetails : null,
-          date: format(values.date, "yyyy-MM-dd"),
-          start_time: values.startTime,
-          end_time: values.endTime,
-        });
+      console.log(`${isEditing ? "Updating" : "Creating"} training with values:`, values);
+      
+      const trainingData = {
+        type: values.type as TrainingType,
+        other_type_details: values.type === "other" ? values.otherTypeDetails : null,
+        date: format(values.date, "yyyy-MM-dd"),
+        start_time: values.startTime,
+        end_time: values.endTime,
+      };
+
+      const { error } = isEditing 
+        ? await supabase
+            .from("trainings")
+            .update(trainingData)
+            .eq("id", training.id)
+        : await supabase
+            .from("trainings")
+            .insert(trainingData);
 
       if (error) throw error;
 
-      console.log("Training created successfully");
+      console.log(`Training ${isEditing ? "updated" : "created"} successfully`);
       toast({
-        title: "Entraînement créé",
-        description: "L'entraînement a été ajouté avec succès.",
+        title: `Entraînement ${isEditing ? "modifié" : "créé"}`,
+        description: `L'entraînement a été ${isEditing ? "modifié" : "ajouté"} avec succès.`,
       });
 
       onSuccess();
     } catch (error) {
-      console.error("Error creating training:", error);
+      console.error(`Error ${isEditing ? "updating" : "creating"} training:`, error);
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: "Une erreur est survenue lors de la création de l'entraînement.",
+        description: `Une erreur est survenue lors de la ${isEditing ? "modification" : "création"} de l'entraînement.`,
       });
     }
   }
@@ -120,7 +132,7 @@ export function TrainingForm({ onSuccess, onCancel }: TrainingFormProps) {
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <h2 className="text-3xl font-bold text-white bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
-          Créer un entraînement
+          {isEditing ? "Modifier l'entraînement" : "Créer un entraînement"}
         </h2>
         <Button 
           variant="outline" 
@@ -262,7 +274,7 @@ export function TrainingForm({ onSuccess, onCancel }: TrainingFormProps) {
               type="submit" 
               className="w-full bg-[#9b87f5] hover:bg-[#7E69AB] text-white mt-8"
             >
-              Créer l'entraînement
+              {isEditing ? "Modifier l'entraînement" : "Créer l'entraînement"}
             </Button>
           </form>
         </Form>
