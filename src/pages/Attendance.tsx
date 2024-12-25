@@ -8,24 +8,36 @@ import { Loader2 } from "lucide-react";
 import { AttendanceCard } from "@/components/attendance/AttendanceCard";
 import { BackButton } from "@/components/training/BackButton";
 import type { Training } from "@/types/training";
+import type { SportType } from "@/types/profile";
 
 const Attendance = () => {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/login");
-      }
-    };
-    checkAuth();
-  }, [navigate]);
-
-  const { data: trainings, isLoading } = useQuery({
-    queryKey: ["future-trainings"],
+  // Query to get user's sport preference
+  const { data: userProfile } = useQuery({
+    queryKey: ["user-profile"],
     queryFn: async () => {
-      console.log("Fetching future trainings...");
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return null;
+
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("sport")
+        .eq("id", session.user.id)
+        .single();
+
+      if (error) throw error;
+      return profile;
+    },
+  });
+
+  // Query to get filtered trainings
+  const { data: trainings, isLoading } = useQuery({
+    queryKey: ["future-trainings", userProfile?.sport],
+    queryFn: async () => {
+      console.log("Fetching future trainings for sport:", userProfile?.sport);
+      if (!userProfile) return [];
+
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
@@ -46,7 +58,12 @@ const Attendance = () => {
           )
         `)
         .gte("date", today.toISOString())
-        .order("date", { ascending: true });
+        .order("date", { ascending: true })
+        .or(
+          userProfile.sport === 'both' 
+            ? `type.in.(goalball,torball,other)` 
+            : `type.in.(${userProfile.sport},other)`
+        );
 
       if (trainingsError) {
         console.error("Error fetching trainings:", trainingsError);
@@ -56,7 +73,18 @@ const Attendance = () => {
       console.log("Fetched trainings:", trainingsData);
       return trainingsData as Training[];
     },
+    enabled: !!userProfile?.sport,
   });
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/login");
+      }
+    };
+    checkAuth();
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-gray-900">
@@ -75,15 +103,19 @@ const Attendance = () => {
             <div className="flex justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-white" />
             </div>
-          ) : (
+          ) : trainings && trainings.length > 0 ? (
             <div className="grid gap-6">
-              {trainings?.map((training) => (
+              {trainings.map((training) => (
                 <AttendanceCard 
                   key={training.id} 
                   training={training}
                 />
               ))}
             </div>
+          ) : (
+            <p className="text-center text-gray-400">
+              Aucun entraînement disponible pour votre sport.
+            </p>
           )}
         </div>
       </main>
