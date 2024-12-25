@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
@@ -36,19 +37,20 @@ const TrainingRegistration = () => {
 
         setUserProfile(profile);
 
-        // Fetch trainings with registrations
+        // Fetch trainings with registrations and profiles
         const { data: trainingsData, error: trainingsError } = await supabase
           .from("trainings")
           .select(`
             *,
             registrations (
-              *,
-              user:user_id (
-                profiles (
-                  first_name,
-                  last_name,
-                  club_role
-                )
+              id,
+              user_id,
+              created_at,
+              training_id,
+              profiles (
+                first_name,
+                last_name,
+                club_role
               )
             )
           `)
@@ -57,16 +59,8 @@ const TrainingRegistration = () => {
 
         if (trainingsError) throw trainingsError;
 
-        // Transform the data to match the expected format
-        const transformedTrainings = trainingsData.map(training => ({
-          ...training,
-          registrations: training.registrations.map(reg => ({
-            ...reg,
-            profiles: reg.user.profiles
-          }))
-        }));
-
-        setTrainings(transformedTrainings);
+        console.log("Fetched trainings:", trainingsData);
+        setTrainings(trainingsData);
 
         // Fetch user's current registrations
         const { data: registrations, error: registrationsError } = await supabase
