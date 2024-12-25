@@ -98,23 +98,12 @@ const Dashboard = () => {
             <h1 className="text-4xl font-bold text-white">
               Bienvenue !
             </h1>
-            <div className="flex gap-4">
-              {isAdmin && (
-                <button
-                  onClick={() => navigate("/admin")}
-                  className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                >
-                  <Shield className="w-5 h-5" />
-                  Dashboard Admin
-                </button>
-              )}
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-              >
-                Déconnexion
-              </button>
-            </div>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Déconnexion
+            </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8">
@@ -137,6 +126,25 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
             ))}
+            
+            {isAdmin && (
+              <Card 
+                className="bg-red-600 hover:bg-red-700 border-none cursor-pointer transform transition-all duration-300 hover:scale-105"
+                onClick={() => navigate("/admin")}
+              >
+                <CardHeader className="text-center pb-2">
+                  <Shield className="w-16 h-16 mx-auto mb-4 text-white" />
+                  <CardTitle className="text-2xl font-bold text-white">
+                    Dashboard Admin
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-100 text-center">
+                    Accéder à l'espace administrateur
+                  </p>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </main>
