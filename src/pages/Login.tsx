@@ -91,6 +91,7 @@ const Login = () => {
               },
             }}
             view="sign_in"
+            showLinks={false}
           />
         </div>
       </div>
