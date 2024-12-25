@@ -10,6 +10,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -20,13 +21,14 @@ const Dashboard = () => {
           return;
         }
 
-        // Vérifier si l'utilisateur est admin
+        // Fetch user profile
         const { data: profile } = await supabase
           .from("profiles")
-          .select("site_role")
+          .select("*")
           .eq("id", session.user.id)
           .single();
 
+        setUserProfile(profile);
         setIsAdmin(profile?.site_role === "admin");
         setLoading(false);
       } catch (error) {
@@ -52,7 +54,7 @@ const Dashboard = () => {
       description: "Gérer vos informations personnelles"
     },
     {
-      title: "Inscription entraînement",
+      title: "Inscription Entraînement",
       icon: Activity,
       route: "/training",
       bgColor: "bg-green-600 hover:bg-green-700",

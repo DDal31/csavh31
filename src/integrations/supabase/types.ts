@@ -72,6 +72,35 @@ export type Database = {
         }
         Relationships: []
       }
+      registrations: {
+        Row: {
+          created_at: string
+          id: string
+          training_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          training_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          training_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registrations_training_id_fkey"
+            columns: ["training_id"]
+            isOneToOne: false
+            referencedRelation: "trainings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trainings: {
         Row: {
           created_at: string
