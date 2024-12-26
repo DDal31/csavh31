@@ -40,8 +40,8 @@ export function AttendanceCard({ training }: AttendanceCardProps) {
           </span>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4 sm:space-y-6 px-4 py-3 sm:px-6 sm:py-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
+      <CardContent className="space-y-4 px-4 py-3 sm:px-6 sm:py-4">
+        <div className="grid grid-cols-2 gap-2">
           <AttendanceGraph
             type="players"
             count={players.length}
