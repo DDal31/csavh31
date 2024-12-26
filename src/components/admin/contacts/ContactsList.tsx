@@ -92,22 +92,23 @@ const ContactsList = () => {
     newContacts[currentIndex].display_order = newContacts[swapIndex].display_order;
     newContacts[swapIndex].display_order = tempOrder;
 
-    // Update the database
+    // Update the database - using update instead of upsert
     try {
-      const { error } = await supabase
+      // Update first contact
+      const { error: error1 } = await supabase
         .from('contacts')
-        .upsert([
-          {
-            id: newContacts[currentIndex].id,
-            display_order: newContacts[currentIndex].display_order
-          },
-          {
-            id: newContacts[swapIndex].id,
-            display_order: newContacts[swapIndex].display_order
-          }
-        ]);
+        .update({ display_order: newContacts[currentIndex].display_order })
+        .eq('id', newContacts[currentIndex].id);
 
-      if (error) throw error;
+      if (error1) throw error1;
+
+      // Update second contact
+      const { error: error2 } = await supabase
+        .from('contacts')
+        .update({ display_order: newContacts[swapIndex].display_order })
+        .eq('id', newContacts[swapIndex].id);
+
+      if (error2) throw error2;
 
       // Swap positions in the local state
       [newContacts[currentIndex], newContacts[swapIndex]] = 
