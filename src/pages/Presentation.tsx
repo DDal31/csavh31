@@ -2,18 +2,18 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 
 const Presentation = () => {
-  const { data: content, isLoading } = useQuery({
+  const { data: content, isLoading, error } = useQuery({
     queryKey: ["presentation-content"],
     queryFn: async () => {
       console.log("Fetching presentation content...");
       const { data, error } = await supabase
         .from("pages_content")
-        .select("content")
+        .select("content, title, image_paths")
         .eq("section", "presentation")
-        .single();
+        .maybeSingle();
       
       if (error) {
         console.error("Error fetching presentation content:", error);
@@ -21,7 +21,11 @@ const Presentation = () => {
       }
       
       console.log("Fetched presentation content:", data);
-      return data?.content || "";
+      return data || {
+        content: "Aucun contenu de présentation disponible pour le moment.",
+        title: "Présentation",
+        image_paths: []
+      };
     },
   });
 
@@ -31,7 +35,7 @@ const Presentation = () => {
       
       <main className="container mx-auto px-4 py-24">
         <h1 className="text-4xl md:text-5xl font-bold text-center mb-16">
-          Présentation
+          {content?.title || "Présentation"}
         </h1>
 
         <div className="max-w-4xl mx-auto">
@@ -39,10 +43,29 @@ const Presentation = () => {
             <div className="flex justify-center items-center h-24">
               <Loader2 className="h-8 w-8 animate-spin" />
             </div>
+          ) : error ? (
+            <div className="bg-red-900/20 border border-red-500 rounded-lg p-8 flex items-center justify-center">
+              <AlertCircle className="h-12 w-12 text-red-500 mr-4" />
+              <p className="text-red-300">
+                Une erreur s'est produite lors du chargement du contenu.
+              </p>
+            </div>
           ) : (
             <div className="bg-gray-800 rounded-lg p-8 shadow-lg border border-gray-700">
+              {content?.image_paths && content.image_paths.length > 0 && (
+                <div className="grid grid-cols-3 gap-4 mb-6">
+                  {content.image_paths.map((imagePath, index) => (
+                    <img 
+                      key={index} 
+                      src={imagePath} 
+                      alt={`Image de présentation ${index + 1}`} 
+                      className="w-full h-48 object-cover rounded-lg"
+                    />
+                  ))}
+                </div>
+              )}
               <p className="text-lg leading-relaxed whitespace-pre-wrap">
-                {content}
+                {content?.content || "Aucun contenu de présentation disponible."}
               </p>
             </div>
           )}

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, Upload, X } from "lucide-react";
+import { Loader2, Upload, X, AlertCircle } from "lucide-react";
 
 const AdminPresentation = () => {
   const navigate = useNavigate();
@@ -45,23 +45,32 @@ const AdminPresentation = () => {
           .from("pages_content")
           .select("title, content, image_paths")
           .eq("section", "presentation")
-          .single();
+          .maybeSingle();
 
         if (presentationData) {
           setTitle(presentationData.title || "");
           setContent(presentationData.content || "");
           setImages(presentationData.image_paths || []);
+        } else {
+          // If no data exists, set default values
+          setTitle("Présentation");
+          setContent("Contenu de présentation par défaut");
         }
 
         setLoading(false);
       } catch (error) {
         console.error("Erreur lors du chargement:", error);
+        toast({
+          title: "Erreur de chargement",
+          description: "Impossible de charger les données de présentation",
+          variant: "destructive"
+        });
         navigate("/dashboard");
       }
     };
 
     checkAuthAndLoadContent();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -113,17 +122,17 @@ const AdminPresentation = () => {
         newImagePaths.push(publicUrl);
       }
 
-      // Update content in database
-      const { error: updateError } = await supabase
+      // Upsert content in database
+      const { error: upsertError } = await supabase
         .from('pages_content')
-        .update({
+        .upsert({
+          section: 'presentation',
           title,
           content,
           image_paths: newImagePaths
-        })
-        .eq('section', 'presentation');
+        }, { onConflict: 'section' });
 
-      if (updateError) throw updateError;
+      if (upsertError) throw upsertError;
 
       setImages(newImagePaths);
       setPreviewImages([]);
