@@ -7,9 +7,15 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { UserDocument, DocumentType } from "@/types/documents";
-import { DOCUMENT_LABELS } from "@/types/documents";
 import { DocumentUploader } from "@/components/documents/DocumentUploader";
 import { useDocumentManagement } from "@/hooks/useDocumentManagement";
+
+// Liste des documents requis uniquement
+const REQUIRED_DOCUMENT_LABELS: Record<DocumentType, string> = {
+  medical_certificate: 'Certificat Médical',
+  ophthalmological_certificate: 'Certificat Ophtalmologique',
+  ffh_license: 'Licence FFH'
+};
 
 const Documents = () => {
   const navigate = useNavigate();
@@ -121,7 +127,7 @@ const Documents = () => {
           </h1>
 
           <div className="grid gap-6">
-            {Object.entries(DOCUMENT_LABELS).map(([type, label]) => {
+            {Object.entries(REQUIRED_DOCUMENT_LABELS).map(([type, label]) => {
               const document = getDocumentByType(type as DocumentType);
               const userName = userProfile ? `${userProfile.first_name} ${userProfile.last_name}` : '';
               
