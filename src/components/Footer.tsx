@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
 import { Github, Twitter, Linkedin } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { SUPABASE_URL } from "@/config/supabase";
 
 const Footer = () => {
-  const logoUrl = `${supabase.supabaseUrl}/storage/v1/object/public/club-assets/club-logo.png`;
+  const logoUrl = `${SUPABASE_URL}/storage/v1/object/public/club-assets/club-logo.png`;
 
   return (
     <footer className="bg-gray-800 text-gray-300 border-t border-gray-700">

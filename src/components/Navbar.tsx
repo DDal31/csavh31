@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { SUPABASE_URL } from "@/config/supabase";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
-  const logoUrl = `${supabase.supabaseUrl}/storage/v1/object/public/club-assets/club-logo.png`;
+  const logoUrl = `${SUPABASE_URL}/storage/v1/object/public/club-assets/club-logo.png`;
 
   useEffect(() => {
     const checkAuth = async () => {
