@@ -12,9 +12,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Loader2, UserPlus, ArrowLeft } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import CreateUserForm from "@/components/admin/CreateUserForm";
-import UsersList from "@/components/admin/UsersList";
+import UsersList from "@/components/admin/users/UsersList";
 import type { Profile } from "@/types/profile";
 import type { CreateUserData } from "@/types/auth";
 
@@ -209,13 +209,13 @@ const AdminUsers = () => {
               Retour au tableau de bord
             </Button>
 
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h1 className="text-4xl font-bold text-white">
                 Gestion des Utilisateurs
               </h1>
               <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2">
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 w-full sm:w-auto">
                     <UserPlus className="w-4 h-4" />
                     Nouvel Utilisateur
                   </Button>
