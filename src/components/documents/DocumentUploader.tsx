@@ -8,9 +8,11 @@ interface DocumentUploaderProps {
   type: DocumentType;
   existingDocument: boolean;
   onUploadSuccess: (file: File) => void;
+  userName: string;
+  documentType: string;
 }
 
-export const DocumentUploader = ({ type, existingDocument, onUploadSuccess }: DocumentUploaderProps) => {
+export const DocumentUploader = ({ type, existingDocument, onUploadSuccess, userName, documentType }: DocumentUploaderProps) => {
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -49,13 +51,9 @@ export const DocumentUploader = ({ type, existingDocument, onUploadSuccess }: Do
     fileInputRef.current?.click();
   };
 
-  const handleInputClick = (e: React.MouseEvent<HTMLInputElement>) => {
-    console.log("File input clicked", {
-      disabled: uploading,
-      currentTarget: e.currentTarget,
-      target: e.target,
-    });
-  };
+  const buttonLabel = existingDocument ? 
+    `Changer le ${documentType.toLowerCase()} de ${userName}` :
+    `Importer le ${documentType.toLowerCase()} de ${userName}`;
 
   return (
     <div className="inline-block">
@@ -66,21 +64,22 @@ export const DocumentUploader = ({ type, existingDocument, onUploadSuccess }: Do
         accept=".pdf,.jpg,.jpeg,.png"
         onChange={handleFileUpload}
         disabled={uploading}
-        onClick={handleInputClick}
+        aria-label={buttonLabel}
       />
       <Button
         variant="outline"
-        className="bg-green-600 hover:bg-green-700 text-white border-none"
+        className="bg-green-600 hover:bg-green-700 text-white border-none w-full sm:w-auto"
         disabled={uploading}
         type="button"
         onClick={handleButtonClick}
+        aria-label={buttonLabel}
       >
         {uploading ? (
-          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          <Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden="true" />
         ) : existingDocument ? (
-          <RefreshCw className="h-4 w-4 mr-2" />
+          <RefreshCw className="h-4 w-4 mr-2" aria-hidden="true" />
         ) : (
-          <Upload className="h-4 w-4 mr-2" />
+          <Upload className="h-4 w-4 mr-2" aria-hidden="true" />
         )}
         {existingDocument ? "Changer" : "Importer"}
       </Button>

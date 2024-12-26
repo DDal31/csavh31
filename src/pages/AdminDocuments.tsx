@@ -109,7 +109,7 @@ const AdminDocuments = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-white" />
+        <Loader2 className="h-8 w-8 animate-spin text-white" aria-label="Chargement..." />
       </div>
     );
   }
@@ -123,8 +123,9 @@ const AdminDocuments = () => {
             variant="ghost" 
             className="text-white w-fit flex items-center gap-2 hover:text-gray-300 mb-8"
             onClick={() => navigate('/admin')}
+            aria-label="Retour au tableau de bord administrateur"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             Retour au tableau de bord admin
           </Button>
 

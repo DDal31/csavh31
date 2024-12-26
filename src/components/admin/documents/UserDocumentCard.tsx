@@ -34,34 +34,41 @@ export function UserDocumentCard({ user, uploading, onUpload, onDownload }: User
   const documentTypes = getRequiredDocuments();
 
   return (
-    <Card className="bg-gray-800 border-gray-700">
+    <Card className="bg-gray-800 border-gray-700 mb-6">
       <CardHeader>
-        <CardTitle className="text-white">
-          {user.profile.first_name} {user.profile.last_name} ({user.email})
+        <CardTitle className="text-white text-xl md:text-2xl">
+          {user.profile.first_name} {user.profile.last_name}
+          <span className="block text-sm text-gray-400 mt-1">{user.email}</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           {documentTypes.map((type) => {
             const document = getDocumentByType(type);
-            console.log("UserDocumentCard: Document status for", type, ":", document ? "exists" : "missing");
+            const documentLabel = type === 'medical_certificate' ? 'Certificat médical' :
+                                type === 'ophthalmological_certificate' ? 'Certificat ophtalmologique' :
+                                'Licence FFH';
             
             return (
-              <div key={type} className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
-                <div className="text-white capitalize">
-                  {type.replace('_', ' ')}
+              <div key={type} className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-gray-700 rounded-lg">
+                <div className="text-white mb-3 md:mb-0">
+                  {documentLabel}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   {document && (
                     <DocumentDownloader
                       document={document}
                       onDownload={onDownload}
+                      userName={`${user.profile.first_name} ${user.profile.last_name}`}
+                      documentType={documentLabel}
                     />
                   )}
                   <DocumentUploader
                     type={type}
                     existingDocument={!!document}
                     onUploadSuccess={(file) => handleUpload(type, file)}
+                    userName={`${user.profile.first_name} ${user.profile.last_name}`}
+                    documentType={documentLabel}
                   />
                 </div>
               </div>

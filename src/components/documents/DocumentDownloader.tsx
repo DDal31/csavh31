@@ -7,9 +7,11 @@ import { supabase } from "@/integrations/supabase/client";
 interface DocumentDownloaderProps {
   document: UserDocument;
   onDownload?: (document: UserDocument) => Promise<void>;
+  userName: string;
+  documentType: string;
 }
 
-export const DocumentDownloader = ({ document, onDownload }: DocumentDownloaderProps) => {
+export const DocumentDownloader = ({ document, onDownload, userName, documentType }: DocumentDownloaderProps) => {
   const { toast } = useToast();
 
   const handleDownload = async () => {
@@ -25,15 +27,10 @@ export const DocumentDownloader = ({ document, onDownload }: DocumentDownloaderP
 
       if (error) throw error;
 
-      // Create a temporary URL for the downloaded file
       const url = URL.createObjectURL(data);
-      
-      // Create a temporary link element
       const link = window.document.createElement('a');
       link.href = url;
       link.download = document.file_name;
-      
-      // Append to body, click, and cleanup
       window.document.body.appendChild(link);
       link.click();
       window.document.body.removeChild(link);
@@ -48,13 +45,16 @@ export const DocumentDownloader = ({ document, onDownload }: DocumentDownloaderP
     }
   };
 
+  const buttonLabel = `Télécharger le ${documentType.toLowerCase()} de ${userName}`;
+
   return (
     <Button
       variant="outline"
-      className="bg-blue-600 hover:bg-blue-700 text-white border-none"
+      className="bg-blue-600 hover:bg-blue-700 text-white border-none w-full sm:w-auto"
       onClick={handleDownload}
+      aria-label={buttonLabel}
     >
-      <Download className="h-4 w-4 mr-2" />
+      <Download className="h-4 w-4 mr-2" aria-hidden="true" />
       Télécharger
     </Button>
   );
