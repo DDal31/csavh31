@@ -27,6 +27,14 @@ export const UserDocumentCard = ({ user, uploading, onDownload, onUpload }: User
     }
   };
 
+  const handleInputClick = (e: React.MouseEvent<HTMLInputElement>) => {
+    console.log("File input clicked", {
+      disabled: !!uploading,
+      currentTarget: e.currentTarget,
+      target: e.target,
+    });
+  };
+
   return (
     <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
       <div className="mb-4">
@@ -77,7 +85,7 @@ export const UserDocumentCard = ({ user, uploading, onDownload, onUpload }: User
                         accept=".pdf,.jpg,.jpeg,.png"
                         onChange={(e) => handleFileChange(e, type as DocumentType)}
                         disabled={!!uploading}
-                        onClick={() => console.log("File input clicked for change")}
+                        onClick={handleInputClick}
                       />
                       <Button
                         variant="outline"
@@ -101,7 +109,7 @@ export const UserDocumentCard = ({ user, uploading, onDownload, onUpload }: User
                       accept=".pdf,.jpg,.jpeg,.png"
                       onChange={(e) => handleFileChange(e, type as DocumentType)}
                       disabled={!!uploading}
-                      onClick={() => console.log("File input clicked for upload")}
+                      onClick={handleInputClick}
                     />
                     <Button
                       variant="outline"

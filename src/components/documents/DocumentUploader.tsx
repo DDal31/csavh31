@@ -101,6 +101,18 @@ export const DocumentUploader = ({ type, existingDocument, onUploadSuccess }: Do
     }
   };
 
+  const handleButtonClick = () => {
+    console.log("Upload button clicked");
+  };
+
+  const handleInputClick = (e: React.MouseEvent<HTMLInputElement>) => {
+    console.log("File input clicked", {
+      disabled: uploading,
+      currentTarget: e.currentTarget,
+      target: e.target,
+    });
+  };
+
   return (
     <div className="inline-block">
       <label className="cursor-pointer">
@@ -110,14 +122,14 @@ export const DocumentUploader = ({ type, existingDocument, onUploadSuccess }: Do
           accept=".pdf,.jpg,.jpeg,.png"
           onChange={handleFileUpload}
           disabled={uploading}
-          onClick={(e) => console.log("File input clicked")}
+          onClick={handleInputClick}
         />
         <Button
           variant="outline"
           className="bg-green-600 hover:bg-green-700 text-white border-none"
           disabled={uploading}
           type="button"
-          onClick={() => console.log("Upload button clicked")}
+          onClick={handleButtonClick}
         >
           {uploading ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
