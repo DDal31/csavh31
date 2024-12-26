@@ -43,7 +43,6 @@ export const DocumentUploader = ({ type, existingDocument, onUploadSuccess }: Do
       const filePath = `${session.user.id}/${type}/${crypto.randomUUID()}.${fileExt}`;
       console.log("Generated file path:", filePath);
 
-      // Upload file to storage
       console.log("Uploading file to storage...");
       const { error: uploadError } = await supabase.storage
         .from('user-documents')
@@ -59,7 +58,6 @@ export const DocumentUploader = ({ type, existingDocument, onUploadSuccess }: Do
 
       console.log("File uploaded successfully to storage");
 
-      // Update database record
       console.log("Updating database record...");
       const { error: dbError } = await supabase
         .from('user_documents')
@@ -101,8 +99,11 @@ export const DocumentUploader = ({ type, existingDocument, onUploadSuccess }: Do
     }
   };
 
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
   const handleButtonClick = () => {
-    console.log("Upload button clicked");
+    console.log("Upload button clicked, triggering file input click");
+    fileInputRef.current?.click();
   };
 
   const handleInputClick = (e: React.MouseEvent<HTMLInputElement>) => {
@@ -115,32 +116,31 @@ export const DocumentUploader = ({ type, existingDocument, onUploadSuccess }: Do
 
   return (
     <div className="inline-block">
-      <label className="cursor-pointer">
-        <input
-          type="file"
-          className="hidden"
-          accept=".pdf,.jpg,.jpeg,.png"
-          onChange={handleFileUpload}
-          disabled={uploading}
-          onClick={handleInputClick}
-        />
-        <Button
-          variant="outline"
-          className="bg-green-600 hover:bg-green-700 text-white border-none"
-          disabled={uploading}
-          type="button"
-          onClick={handleButtonClick}
-        >
-          {uploading ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : existingDocument ? (
-            <RefreshCw className="h-4 w-4 mr-2" />
-          ) : (
-            <Upload className="h-4 w-4 mr-2" />
-          )}
-          {existingDocument ? "Changer" : "Importer"}
-        </Button>
-      </label>
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        accept=".pdf,.jpg,.jpeg,.png"
+        onChange={handleFileUpload}
+        disabled={uploading}
+        onClick={handleInputClick}
+      />
+      <Button
+        variant="outline"
+        className="bg-green-600 hover:bg-green-700 text-white border-none"
+        disabled={uploading}
+        type="button"
+        onClick={handleButtonClick}
+      >
+        {uploading ? (
+          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+        ) : existingDocument ? (
+          <RefreshCw className="h-4 w-4 mr-2" />
+        ) : (
+          <Upload className="h-4 w-4 mr-2" />
+        )}
+        {existingDocument ? "Changer" : "Importer"}
+      </Button>
     </div>
   );
 };
