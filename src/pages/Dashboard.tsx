@@ -39,6 +39,15 @@ const Dashboard = () => {
     checkAuth();
   }, [navigate]);
 
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate("/"); // Redirect to homepage after sign out
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion:", error);
+    }
+  };
+
   const tiles = [
     {
       title: "Mon Profil",
@@ -82,7 +91,7 @@ const Dashboard = () => {
               Bienvenue !
             </h1>
             <button
-              onClick={() => supabase.auth.signOut()}
+              onClick={handleSignOut}
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors focus:ring-2 focus:ring-red-400 focus:outline-none"
               aria-label="Se déconnecter de votre compte"
             >
