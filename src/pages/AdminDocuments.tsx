@@ -136,7 +136,7 @@ const AdminDocuments = () => {
       if (error) throw error;
 
       const url = URL.createObjectURL(data);
-      const a = document.createElement('a');
+      const a = window.document.createElement('a');
       a.href = url;
       a.download = document.file_name;
       a.click();
