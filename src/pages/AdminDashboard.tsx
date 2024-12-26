@@ -84,34 +84,34 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-900">
       <Navbar />
-      <main className="container mx-auto px-4 py-12" role="main">
+      <main className="container mx-auto px-4 py-8 sm:py-12" role="main">
         <div className="max-w-6xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-white">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white text-center sm:text-left">
               Tableau de Bord Administrateur
             </h1>
             <button
               onClick={() => navigate("/dashboard")}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:ring-2 focus:ring-blue-400 focus:outline-none"
+              className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:ring-2 focus:ring-blue-400 focus:outline-none"
               aria-label="Retourner au tableau de bord utilisateur"
             >
               Tableau de Bord Utilisateur
             </button>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {adminTiles.map((tile) => (
               <Card 
                 key={tile.title}
-                className={`${tile.bgColor} border-none cursor-pointer transform transition-all duration-300 hover:scale-105 focus-within:ring-2 focus-within:ring-white h-24 sm:h-32`}
+                className={`${tile.bgColor} border-none cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl focus-within:ring-2 focus-within:ring-white`}
                 onClick={() => navigate(tile.route)}
                 role="button"
                 aria-label={tile.ariaLabel}
                 tabIndex={0}
               >
-                <CardHeader className="text-center p-2 sm:p-4">
+                <CardHeader className="text-center p-4 sm:p-6">
                   <tile.icon 
-                    className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-1 sm:mb-2 text-white" 
+                    className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-4 text-white" 
                     aria-hidden="true"
                   />
                   <CardTitle className="text-sm sm:text-lg font-bold text-white">
