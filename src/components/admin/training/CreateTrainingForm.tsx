@@ -15,9 +15,9 @@ import {
 } from "@/components/ui/form";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { TrainingTypeField } from "./form-fields/TrainingTypeField";
-import { TrainingDateField } from "./form-fields/TrainingDateField";
-import { TrainingTimeFields } from "./form-fields/TrainingTimeFields";
+import { TrainingTypeField } from "./form/TrainingTypeField";
+import { TrainingDateField } from "./form/TrainingDateField";
+import { TrainingTimeFields } from "./form/TrainingTimeFields";
 
 type TrainingType = Database["public"]["Enums"]["training_type"];
 
