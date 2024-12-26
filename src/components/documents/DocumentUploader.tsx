@@ -17,16 +17,21 @@ export const DocumentUploader = ({ type, existingDocument, onUploadSuccess }: Do
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      console.log("No file selected");
+      return;
+    }
 
     try {
       setUploading(true);
-      console.log("Starting file upload for type:", type);
+      console.log("Starting file upload process...");
+      console.log("File details:", { name: file.name, size: file.size, type: file.type });
 
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
+        console.error("No session found");
         toast({
-          title: "Erreur",
+          title: "Erreur d'authentification",
           description: "Vous devez être connecté pour importer un document",
           variant: "destructive"
         });
@@ -35,20 +40,26 @@ export const DocumentUploader = ({ type, existingDocument, onUploadSuccess }: Do
 
       const fileExt = file.name.split('.').pop();
       const filePath = `${session.user.id}/${type}/${crypto.randomUUID()}.${fileExt}`;
+      console.log("Generated file path:", filePath);
 
-      console.log("Uploading file to path:", filePath);
-
+      // Upload file to storage
+      console.log("Uploading file to storage...");
       const { error: uploadError } = await supabase.storage
         .from('user-documents')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (uploadError) {
-        console.error("Upload error:", uploadError);
-        throw uploadError;
+        console.error("Storage upload error:", uploadError);
+        throw new Error(`Erreur lors de l'upload: ${uploadError.message}`);
       }
 
-      console.log("File uploaded successfully, updating database...");
+      console.log("File uploaded successfully to storage");
 
+      // Update database record
+      console.log("Updating database record...");
       const { error: dbError } = await supabase
         .from('user_documents')
         .upsert({
@@ -62,11 +73,11 @@ export const DocumentUploader = ({ type, existingDocument, onUploadSuccess }: Do
         });
 
       if (dbError) {
-        console.error("Database error:", dbError);
-        throw dbError;
+        console.error("Database update error:", dbError);
+        throw new Error(`Erreur lors de la mise à jour de la base de données: ${dbError.message}`);
       }
 
-      console.log("Database updated successfully");
+      console.log("Database record updated successfully");
 
       toast({
         title: "Succès",
@@ -75,15 +86,14 @@ export const DocumentUploader = ({ type, existingDocument, onUploadSuccess }: Do
 
       onUploadSuccess();
     } catch (error) {
-      console.error("Error uploading document:", error);
+      console.error("Error in upload process:", error);
       toast({
         title: "Erreur",
-        description: "Impossible d'importer le document",
+        description: error instanceof Error ? error.message : "Une erreur est survenue lors de l'import",
         variant: "destructive"
       });
     } finally {
       setUploading(false);
-      // Reset the input value to allow uploading the same file again
       if (event.target) {
         event.target.value = '';
       }
