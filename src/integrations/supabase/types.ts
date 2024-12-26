@@ -138,6 +138,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_documents: {
+        Row: {
+          document_type: Database["public"]["Enums"]["document_type"]
+          file_name: string
+          file_path: string
+          id: string
+          uploaded_at: string
+          uploaded_by: string
+          user_id: string
+        }
+        Insert: {
+          document_type: Database["public"]["Enums"]["document_type"]
+          file_name: string
+          file_path: string
+          id?: string
+          uploaded_at?: string
+          uploaded_by: string
+          user_id: string
+        }
+        Update: {
+          document_type?: Database["public"]["Enums"]["document_type"]
+          file_name?: string
+          file_path?: string
+          id?: string
+          uploaded_at?: string
+          uploaded_by?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -154,6 +184,10 @@ export type Database = {
         | "joueur-arbitre"
         | "entraineur-arbitre"
         | "les-trois"
+      document_type:
+        | "medical_certificate"
+        | "ophthalmological_certificate"
+        | "ffh_license"
       site_role: "member" | "admin"
       sport_type: "goalball" | "torball" | "both"
       team_type: "loisir" | "d1_masculine" | "d1_feminine"

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Users, Calendar, Shield, Settings } from "lucide-react";
+import { Loader2, Users, Calendar, Shield, Settings, FileText } from "lucide-react";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -57,11 +57,11 @@ const AdminDashboard = () => {
       ariaLabel: "Accéder à la gestion des entraînements"
     },
     {
-      title: "Permissions",
-      icon: Shield,
-      route: "/admin/permissions",
+      title: "Gestion des Documents",
+      icon: FileText,
+      route: "/admin/documents",
       bgColor: "bg-purple-600 hover:bg-purple-700",
-      ariaLabel: "Gérer les permissions des utilisateurs"
+      ariaLabel: "Gérer les documents des utilisateurs"
     },
     {
       title: "Paramètres",
@@ -99,7 +99,7 @@ const AdminDashboard = () => {
             </button>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 sm:gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
             {adminTiles.map((tile) => (
               <Card 
                 key={tile.title}

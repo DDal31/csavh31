@@ -13,10 +13,12 @@ import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminTrainings from "./pages/AdminTrainings";
+import AdminDocuments from "./pages/AdminDocuments";
 import ProfilePage from "./pages/Profile";
 import ProfileEdit from "./pages/ProfileEdit";
 import TrainingRegistration from "./pages/Training";
-import Attendance from "./pages/Attendance"; // New import
+import Attendance from "./pages/Attendance";
+import Documents from "./pages/Documents";
 
 const queryClient = new QueryClient();
 
@@ -35,10 +37,12 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/training" element={<TrainingRegistration />} />
-          <Route path="/attendance" element={<Attendance />} /> {/* New route */}
+          <Route path="/attendance" element={<Attendance />} />
+          <Route path="/documents" element={<Documents />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/trainings" element={<AdminTrainings />} />
+          <Route path="/admin/documents" element={<AdminDocuments />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/profile/edit" element={<ProfileEdit />} />
         </Routes>
