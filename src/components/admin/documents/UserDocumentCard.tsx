@@ -23,7 +23,15 @@ export function UserDocumentCard({ user, uploading, onUpload, onDownload }: User
     return user.documents.find(doc => doc.document_type === type);
   };
 
-  const documentTypes: DocumentType[] = ['medical_certificate', 'license', 'id_card', 'photo'];
+  const getRequiredDocuments = (): DocumentType[] => {
+    const role = user.profile.club_role;
+    if (role === 'joueur' || role === 'joueur-entraineur') {
+      return ['ophthalmological_certificate', 'medical_certificate', 'ffh_license'];
+    }
+    return ['ffh_license'];
+  };
+
+  const documentTypes = getRequiredDocuments();
 
   return (
     <Card className="bg-gray-800 border-gray-700">
