@@ -7,6 +7,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import PhotoUpload from "./PhotoUpload";
+import type { Contact, ContactFormData } from "@/types/contacts";
 
 const contactSchema = z.object({
   role: z.string().min(1, "Le rôle est requis"),
@@ -16,20 +18,10 @@ const contactSchema = z.object({
   email: z.string().email("Email invalide").optional(),
 });
 
-type ContactFormData = z.infer<typeof contactSchema>;
-
 interface ContactFormProps {
   onClose: () => void;
   onSuccess: () => void;
-  contact?: {
-    id: string;
-    role: string;
-    first_name: string;
-    last_name: string;
-    phone?: string;
-    email?: string;
-    photo_url?: string;
-  };
+  contact?: Contact;
 }
 
 const ContactForm = ({ onClose, onSuccess, contact }: ContactFormProps) => {
@@ -53,13 +45,6 @@ const ContactForm = ({ onClose, onSuccess, contact }: ContactFormProps) => {
     }
   });
 
-  const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setPhotoFile(file);
-    }
-  };
-
   const onSubmit = async (data: ContactFormData) => {
     try {
       setIsLoading(true);
@@ -82,8 +67,12 @@ const ContactForm = ({ onClose, onSuccess, contact }: ContactFormProps) => {
         photoUrl = publicUrl;
       }
 
-      const contactData = {
-        ...data,
+      const contactData: ContactFormData = {
+        role: data.role,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        phone: data.phone || null,
+        email: data.email || null,
         photo_url: photoUrl,
       };
 
@@ -187,15 +176,7 @@ const ContactForm = ({ onClose, onSuccess, contact }: ContactFormProps) => {
           />
         </div>
 
-        <div>
-          <FormLabel className="text-white block mb-2">Photo</FormLabel>
-          <Input
-            type="file"
-            accept="image/*"
-            onChange={handlePhotoChange}
-            className="bg-gray-700 border-gray-600 text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700"
-          />
-        </div>
+        <PhotoUpload onChange={setPhotoFile} />
 
         <div className="flex justify-end gap-4">
           <Button
