@@ -1,4 +1,6 @@
-export type DocumentType = 'medical_certificate' | 'ophthalmological_certificate' | 'ffh_license';
+import type { Profile } from "./profile";
+
+export type DocumentType = 'medical_certificate' | 'ophthalmological_certificate' | 'ffh_license' | 'license' | 'id_card' | 'photo';
 
 export interface UserDocument {
   id: string;
@@ -20,5 +22,8 @@ export interface UserWithDocuments {
 export const DOCUMENT_LABELS: Record<DocumentType, string> = {
   medical_certificate: 'Certificat Médical',
   ophthalmological_certificate: 'Certificat Ophtalmologique',
-  ffh_license: 'Licence FFH'
+  ffh_license: 'Licence FFH',
+  license: 'Licence',
+  id_card: 'Carte d\'identité',
+  photo: 'Photo'
 };
