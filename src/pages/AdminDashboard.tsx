@@ -84,10 +84,10 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-900">
       <Navbar />
-      <main className="container mx-auto px-4 py-24" role="main">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center mb-12">
-            <h1 className="text-4xl font-bold text-white">
+      <main className="container mx-auto px-4 py-12" role="main">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-3xl font-bold text-white">
               Tableau de Bord Administrateur
             </h1>
             <button
@@ -99,22 +99,22 @@ const AdminDashboard = () => {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {adminTiles.map((tile) => (
               <Card 
                 key={tile.title}
-                className={`${tile.bgColor} border-none cursor-pointer transform transition-all duration-300 hover:scale-105 focus-within:ring-2 focus-within:ring-white`}
+                className={`${tile.bgColor} border-none cursor-pointer transform transition-all duration-300 hover:scale-105 focus-within:ring-2 focus-within:ring-white h-32`}
                 onClick={() => navigate(tile.route)}
                 role="button"
                 aria-label={tile.ariaLabel}
                 tabIndex={0}
               >
-                <CardHeader className="text-center pb-2">
+                <CardHeader className="text-center p-4">
                   <tile.icon 
-                    className="w-12 h-12 mx-auto mb-4 text-white" 
+                    className="w-8 h-8 mx-auto mb-2 text-white" 
                     aria-hidden="true"
                   />
-                  <CardTitle className="text-xl font-bold text-white">
+                  <CardTitle className="text-lg font-bold text-white">
                     {tile.title}
                   </CardTitle>
                 </CardHeader>
