@@ -105,7 +105,9 @@ const Documents = () => {
       const a = document.createElement('a');
       a.href = url;
       a.download = document.file_name;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error downloading document:", error);

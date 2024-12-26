@@ -6,16 +6,8 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download, Upload, RefreshCw, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { UserDocument, DocumentType } from "@/types/documents";
+import type { UserDocument, DocumentType, UserWithDocuments } from "@/types/documents";
 import { DOCUMENT_LABELS } from "@/types/documents";
-import type { Profile } from "@/types/profile";
-
-interface UserWithDocuments {
-  id: string;
-  email: string;
-  profile: Profile;
-  documents: UserDocument[];
-}
 
 const AdminDocuments = () => {
   const navigate = useNavigate();
@@ -68,8 +60,10 @@ const AdminDocuments = () => {
 
       if (documentsError) throw documentsError;
 
-      const usersWithDocs = usersData.map(user => ({
-        ...user,
+      const usersWithDocs: UserWithDocuments[] = usersData.map(user => ({
+        id: user.id,
+        email: user.email,
+        profile: user,
         documents: documentsData.filter(doc => doc.user_id === user.id) || []
       }));
 
@@ -211,7 +205,7 @@ const AdminDocuments = () => {
                   {Object.entries(DOCUMENT_LABELS).map(([type, label]) => {
                     if (needsOnlyLicense(user) && type !== 'ffh_license') return null;
                     
-                    const document = getUserDocumentByType(user, type as DocumentType);
+                    const document = user.documents.find(doc => doc.document_type === type);
                     return (
                       <div 
                         key={type}

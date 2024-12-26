@@ -1,3 +1,5 @@
+import type { Profile } from "./profile";
+
 export type DocumentType = 'medical_certificate' | 'ophthalmological_certificate' | 'ffh_license';
 
 export interface UserDocument {
@@ -8,6 +10,13 @@ export interface UserDocument {
   file_name: string;
   uploaded_at: string;
   uploaded_by: string;
+}
+
+export interface UserWithDocuments {
+  id: string;
+  email: string;
+  profile: Profile;
+  documents: UserDocument[];
 }
 
 export const DOCUMENT_LABELS: Record<DocumentType, string> = {
