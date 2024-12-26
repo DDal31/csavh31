@@ -89,22 +89,22 @@ const Attendance = () => {
   return (
     <div className="min-h-screen bg-gray-900">
       <Navbar />
-      <main className="container mx-auto px-4 py-24">
+      <main className="container mx-auto px-4 py-12 sm:py-24">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-8">
+          <div className="mb-6 sm:mb-8">
             <BackButton />
           </div>
           
-          <h1 className="text-4xl font-bold text-white mb-12">
+          <h1 className="text-2xl sm:text-4xl font-bold text-white mb-8 sm:mb-12">
             Présence aux entraînements
           </h1>
 
           {isLoading ? (
-            <div className="flex justify-center">
+            <div className="flex justify-center p-8">
               <Loader2 className="h-8 w-8 animate-spin text-white" />
             </div>
           ) : trainings && trainings.length > 0 ? (
-            <div className="grid gap-6">
+            <div className="grid gap-4 sm:gap-6">
               {trainings.map((training) => (
                 <AttendanceCard 
                   key={training.id} 
@@ -113,7 +113,7 @@ const Attendance = () => {
               ))}
             </div>
           ) : (
-            <p className="text-center text-gray-400">
+            <p className="text-center text-gray-400 p-8">
               Aucun entraînement disponible pour votre sport.
             </p>
           )}

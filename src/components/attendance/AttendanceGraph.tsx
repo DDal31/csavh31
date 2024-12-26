@@ -30,16 +30,16 @@ export function AttendanceGraph({ type, count, ariaLabel }: AttendanceGraphProps
 
   return (
     <div 
-      className="flex items-center gap-4 p-4 rounded-lg bg-gray-700"
+      className="flex items-center gap-4 p-4 rounded-lg bg-gray-700 w-full"
       role="img"
       aria-label={ariaLabel}
     >
-      <Icon className={`h-12 w-12 ${colorClass}`} />
-      <div>
-        <h3 className="text-lg font-medium text-white">
+      <Icon className={`h-8 w-8 sm:h-12 sm:w-12 ${colorClass} flex-shrink-0`} />
+      <div className="min-w-0">
+        <h3 className="text-base sm:text-lg font-medium text-white truncate">
           {type === "players" ? "Joueurs" : "Arbitres"}
         </h3>
-        <p className="text-gray-300">
+        <p className="text-sm sm:text-base text-gray-300">
           {count} {type === "players" ? "joueur" : "arbitre"}
           {count > 1 ? "s" : ""} inscrit{count > 1 ? "s" : ""}
         </p>
