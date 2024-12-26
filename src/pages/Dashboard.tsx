@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, User, Activity, Calendar } from "lucide-react";
+import { Loader2, User, Activity, Calendar, Shield } from "lucide-react";
 
 const Dashboard = () => {
   const navigate = useNavigate();
