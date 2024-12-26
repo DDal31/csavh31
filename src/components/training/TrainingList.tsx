@@ -33,11 +33,19 @@ export function TrainingList({ trainings, selectedTrainings, onTrainingToggle }:
                 ? training.other_type_details || 'Événement' 
                 : training.type.charAt(0).toUpperCase() + training.type.slice(1)}
             </CardTitle>
-            <Checkbox 
-              checked={selectedTrainings.includes(training.id)}
-              onCheckedChange={() => onTrainingToggle(training.id)}
-              className="border-gray-600"
-            />
+            <div className="flex items-center gap-4">
+              {selectedTrainings.includes(training.id) && (
+                <span className="text-green-400 text-sm" aria-label="Vous êtes déjà inscrit à cet entraînement">
+                  Déjà inscrit
+                </span>
+              )}
+              <Checkbox 
+                checked={selectedTrainings.includes(training.id)}
+                onCheckedChange={() => onTrainingToggle(training.id)}
+                className="border-gray-600 focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-purple-500"
+                aria-label={`S'inscrire à l'entraînement du ${format(new Date(training.date), "EEEE d MMMM yyyy", { locale: fr })}`}
+              />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-gray-300">

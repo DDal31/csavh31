@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -22,7 +23,8 @@ type TrainingListProps = {
 };
 
 export function TrainingList({ onAddClick, onEditClick }: TrainingListProps) {
-  const { data: trainings, isLoading } = useQuery({
+  const { toast } = useToast();
+  const { data: trainings, isLoading, refetch } = useQuery({
     queryKey: ["trainings"],
     queryFn: async () => {
       console.log("Fetching upcoming trainings...");
@@ -42,6 +44,31 @@ export function TrainingList({ onAddClick, onEditClick }: TrainingListProps) {
       return data as Training[];
     },
   });
+
+  const handleDelete = async (trainingId: string) => {
+    try {
+      const { error } = await supabase
+        .from("trainings")
+        .delete()
+        .eq("id", trainingId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Entraînement supprimé",
+        description: "L'entraînement a été supprimé avec succès.",
+      });
+
+      refetch();
+    } catch (error) {
+      console.error("Error deleting training:", error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la suppression de l'entraînement.",
+      });
+    }
+  };
 
   if (isLoading) {
     return <div className="text-white">Chargement des entraînements...</div>;
@@ -89,13 +116,23 @@ export function TrainingList({ onAddClick, onEditClick }: TrainingListProps) {
                   <TableCell className="text-gray-200">
                     {training.start_time.slice(0, 5)} - {training.end_time.slice(0, 5)}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right space-x-2">
                     <Button
                       variant="outline"
                       onClick={() => onEditClick(training)}
                       className="border-[#9b87f5] text-[#9b87f5] hover:bg-[#9b87f5] hover:text-white"
                     >
                       Modifier
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => handleDelete(training.id)}
+                      className="bg-red-600 hover:bg-red-700"
+                      aria-label={`Supprimer l'entraînement du ${format(new Date(training.date), "EEEE d MMMM yyyy", {
+                        locale: fr,
+                      })}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </TableCell>
                 </TableRow>
