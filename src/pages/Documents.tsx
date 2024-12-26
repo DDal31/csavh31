@@ -9,13 +9,14 @@ import { useToast } from "@/hooks/use-toast";
 import type { UserDocument, DocumentType } from "@/types/documents";
 import { DOCUMENT_LABELS } from "@/types/documents";
 import { DocumentUploader } from "@/components/documents/DocumentUploader";
-import { DocumentDownloader } from "@/components/documents/DocumentDownloader";
+import { useDocumentManagement } from "@/hooks/useDocumentManagement";
 
 const Documents = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [documents, setDocuments] = useState<UserDocument[]>([]);
+  const { handleDownload } = useDocumentManagement();
 
   useEffect(() => {
     fetchDocuments();
@@ -23,8 +24,10 @@ const Documents = () => {
 
   const fetchDocuments = async () => {
     try {
+      console.log("Fetching user documents");
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
+        console.log("No session found, redirecting to login");
         navigate("/login");
         return;
       }
@@ -35,6 +38,8 @@ const Documents = () => {
         .eq('user_id', session.user.id);
 
       if (error) throw error;
+      
+      console.log("Documents fetched successfully:", data?.length || 0, "documents found");
       setDocuments(data || []);
       setLoading(false);
     } catch (error) {
@@ -94,32 +99,21 @@ const Documents = () => {
                     )}
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {document ? (
-                      <>
-                        <Button
-                          variant="outline"
-                          className="bg-blue-600 hover:bg-blue-700 text-white border-none"
-                          onClick={() => {
-                            const downloader = DocumentDownloader({ document });
-                            downloader.handleDownload();
-                          }}
-                        >
-                          <Download className="h-4 w-4 mr-2" />
-                          Télécharger
-                        </Button>
-                        <DocumentUploader
-                          type={type as DocumentType}
-                          existingDocument={true}
-                          onUploadSuccess={fetchDocuments}
-                        />
-                      </>
-                    ) : (
-                      <DocumentUploader
-                        type={type as DocumentType}
-                        existingDocument={false}
-                        onUploadSuccess={fetchDocuments}
-                      />
+                    {document && (
+                      <Button
+                        variant="outline"
+                        className="bg-blue-600 hover:bg-blue-700 text-white border-none"
+                        onClick={() => handleDownload(document)}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Télécharger
+                      </Button>
                     )}
+                    <DocumentUploader
+                      type={type as DocumentType}
+                      existingDocument={!!document}
+                      onUploadSuccess={fetchDocuments}
+                    />
                   </div>
                 </div>
               );
