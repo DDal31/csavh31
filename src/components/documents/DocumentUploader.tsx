@@ -3,7 +3,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Upload, RefreshCw, Loader2 } from "lucide-react";
 import type { DocumentType } from "@/types/documents";
-import { supabase } from "@/integrations/supabase/client";
 
 interface DocumentUploaderProps {
   type: DocumentType;

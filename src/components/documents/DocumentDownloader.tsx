@@ -1,8 +1,8 @@
 import { useToast } from "@/hooks/use-toast";
 import type { UserDocument } from "@/types/documents";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DocumentDownloaderProps {
   document: UserDocument;
