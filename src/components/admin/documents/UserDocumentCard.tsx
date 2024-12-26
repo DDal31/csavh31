@@ -16,6 +16,17 @@ export const UserDocumentCard = ({ user, uploading, onDownload, onUpload }: User
     return ['arbitre', 'entraineur', 'joueur-arbitre', 'entraineur-arbitre'].includes(role);
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: DocumentType) => {
+    console.log("File input change detected", { type });
+    const file = e.target.files?.[0];
+    if (file) {
+      console.log("File selected:", { name: file.name, type: file.type, size: file.size });
+      onUpload(user.id, type, file);
+    } else {
+      console.log("No file selected");
+    }
+  };
+
   return (
     <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
       <div className="mb-4">
@@ -51,7 +62,10 @@ export const UserDocumentCard = ({ user, uploading, onDownload, onUpload }: User
                     <Button
                       variant="outline"
                       className="bg-blue-600 hover:bg-blue-700 text-white border-none"
-                      onClick={() => onDownload(document)}
+                      onClick={() => {
+                        console.log("Download clicked for document:", document);
+                        onDownload(document);
+                      }}
                     >
                       <Download className="h-4 w-4 mr-2" />
                       Télécharger
@@ -61,11 +75,9 @@ export const UserDocumentCard = ({ user, uploading, onDownload, onUpload }: User
                         type="file"
                         className="hidden"
                         accept=".pdf,.jpg,.jpeg,.png"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) onUpload(user.id, type as DocumentType, file);
-                        }}
+                        onChange={(e) => handleFileChange(e, type as DocumentType)}
                         disabled={!!uploading}
+                        onClick={() => console.log("File input clicked for change")}
                       />
                       <Button
                         variant="outline"
@@ -87,11 +99,9 @@ export const UserDocumentCard = ({ user, uploading, onDownload, onUpload }: User
                       type="file"
                       className="hidden"
                       accept=".pdf,.jpg,.jpeg,.png"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) onUpload(user.id, type as DocumentType, file);
-                      }}
+                      onChange={(e) => handleFileChange(e, type as DocumentType)}
                       disabled={!!uploading}
+                      onClick={() => console.log("File input clicked for upload")}
                     />
                     <Button
                       variant="outline"
