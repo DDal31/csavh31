@@ -16,6 +16,7 @@ export const DocumentUploader = ({ type, existingDocument, onUploadSuccess }: Do
   const [uploading, setUploading] = useState(false);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("File input change detected");
     const file = event.target.files?.[0];
     if (!file) {
       console.log("No file selected");
@@ -109,12 +110,14 @@ export const DocumentUploader = ({ type, existingDocument, onUploadSuccess }: Do
           accept=".pdf,.jpg,.jpeg,.png"
           onChange={handleFileUpload}
           disabled={uploading}
+          onClick={(e) => console.log("File input clicked")}
         />
         <Button
           variant="outline"
           className="bg-green-600 hover:bg-green-700 text-white border-none"
           disabled={uploading}
           type="button"
+          onClick={() => console.log("Upload button clicked")}
         >
           {uploading ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
