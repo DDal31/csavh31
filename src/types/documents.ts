@@ -1,5 +1,3 @@
-import type { Profile } from "./profile";
-
 export type DocumentType = 'medical_certificate' | 'ophthalmological_certificate' | 'ffh_license';
 
 export interface UserDocument {

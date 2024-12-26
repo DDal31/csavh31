@@ -51,9 +51,9 @@ export const DocumentUploader = ({ type, existingDocument, onUploadSuccess, user
     fileInputRef.current?.click();
   };
 
-  const buttonLabel = existingDocument ? 
-    `Changer le ${documentType.toLowerCase()} de ${userName}` :
-    `Importer le ${documentType.toLowerCase()} de ${userName}`;
+  const buttonLabel = userName ? 
+    `${existingDocument ? 'Changer' : 'Importer'} le ${documentType.toLowerCase()} de ${userName}` :
+    `${existingDocument ? 'Changer' : 'Importer'} le ${documentType.toLowerCase()}`;
 
   return (
     <div className="inline-block">

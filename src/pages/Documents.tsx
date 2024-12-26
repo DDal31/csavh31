@@ -16,6 +16,7 @@ const Documents = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [documents, setDocuments] = useState<UserDocument[]>([]);
+  const [userProfile, setUserProfile] = useState<{ first_name: string; last_name: string } | null>(null);
   const { handleDownload } = useDocumentManagement();
 
   useEffect(() => {
@@ -31,6 +32,16 @@ const Documents = () => {
         navigate("/login");
         return;
       }
+
+      // Fetch user profile first
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('first_name, last_name')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profileError) throw profileError;
+      setUserProfile(profileData);
 
       const { data, error } = await supabase
         .from('user_documents')
@@ -85,6 +96,8 @@ const Documents = () => {
           <div className="grid gap-6">
             {Object.entries(DOCUMENT_LABELS).map(([type, label]) => {
               const document = getDocumentByType(type as DocumentType);
+              const userName = userProfile ? `${userProfile.first_name} ${userProfile.last_name}` : '';
+              
               return (
                 <div 
                   key={type}
@@ -113,6 +126,8 @@ const Documents = () => {
                       type={type as DocumentType}
                       existingDocument={!!document}
                       onUploadSuccess={fetchDocuments}
+                      userName={userName}
+                      documentType={label}
                     />
                   </div>
                 </div>
