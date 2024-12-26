@@ -19,7 +19,6 @@ const AdminDashboard = () => {
           return;
         }
 
-        // Vérifier si l'utilisateur est admin
         const { data: profile, error } = await supabase
           .from("profiles")
           .select("site_role")
@@ -48,35 +47,36 @@ const AdminDashboard = () => {
       icon: Users,
       route: "/admin/users",
       bgColor: "bg-blue-600 hover:bg-blue-700",
-      description: "Gérer les membres du club"
+      ariaLabel: "Accéder à la gestion des utilisateurs"
     },
     {
       title: "Gestion des Entraînements",
       icon: Calendar,
       route: "/admin/trainings",
       bgColor: "bg-green-600 hover:bg-green-700",
-      description: "Gérer les séances d'entraînement"
+      ariaLabel: "Accéder à la gestion des entraînements"
     },
     {
       title: "Permissions",
       icon: Shield,
       route: "/admin/permissions",
       bgColor: "bg-purple-600 hover:bg-purple-700",
-      description: "Gérer les rôles et permissions"
+      ariaLabel: "Gérer les permissions des utilisateurs"
     },
     {
       title: "Paramètres",
       icon: Settings,
       route: "/admin/settings",
       bgColor: "bg-orange-600 hover:bg-orange-700",
-      description: "Configuration du site"
+      ariaLabel: "Accéder aux paramètres du site"
     }
   ];
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-white" />
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center" role="status" aria-label="Chargement en cours">
+        <Loader2 className="h-8 w-8 animate-spin text-white" aria-hidden="true" />
+        <span className="sr-only">Chargement en cours...</span>
       </div>
     );
   }
@@ -84,38 +84,40 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-900">
       <Navbar />
-      <main className="container mx-auto px-4 py-24">
+      <main className="container mx-auto px-4 py-24" role="main">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-12">
             <h1 className="text-4xl font-bold text-white">
-              Dashboard Administrateur
+              Tableau de Bord Administrateur
             </h1>
             <button
               onClick={() => navigate("/dashboard")}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:ring-2 focus:ring-blue-400 focus:outline-none"
+              aria-label="Retourner au tableau de bord utilisateur"
             >
-              Dashboard Utilisateur
+              Tableau de Bord Utilisateur
             </button>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 md:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
             {adminTiles.map((tile) => (
               <Card 
                 key={tile.title}
-                className={`${tile.bgColor} border-none cursor-pointer transform transition-all duration-300 hover:scale-105`}
+                className={`${tile.bgColor} border-none cursor-pointer transform transition-all duration-300 hover:scale-105 focus-within:ring-2 focus-within:ring-white`}
                 onClick={() => navigate(tile.route)}
+                role="button"
+                aria-label={tile.ariaLabel}
+                tabIndex={0}
               >
                 <CardHeader className="text-center pb-2">
-                  <tile.icon className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-4 text-white" />
-                  <CardTitle className="text-lg md:text-2xl font-bold text-white">
+                  <tile.icon 
+                    className="w-12 h-12 mx-auto mb-4 text-white" 
+                    aria-hidden="true"
+                  />
+                  <CardTitle className="text-xl font-bold text-white">
                     {tile.title}
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-sm md:text-base text-gray-100 text-center">
-                    {tile.description}
-                  </p>
-                </CardContent>
               </Card>
             ))}
           </div>
