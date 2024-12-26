@@ -4,10 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, ArrowLeft } from "lucide-react";
-import ProfileEditForm from "@/components/ProfileEditForm";
+import { ProfileHeader } from "@/components/profile/ProfileHeader";
+import { ProfileCard } from "@/components/profile/ProfileCard";
 import type { Profile } from "@/types/profile";
 import type { ProfileFormData } from "@/schemas/profileSchema";
 
@@ -126,30 +126,12 @@ const ProfileEdit = () => {
       <Navbar />
       <main className="container mx-auto px-4 py-24">
         <div className="max-w-3xl mx-auto">
-          <div className="flex items-center gap-4 mb-8">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => navigate("/profile")}
-              className="text-white hover:text-primary transition-colors"
-            >
-              <ArrowLeft className="h-6 w-6" />
-            </Button>
-            <h1 className="text-3xl font-bold text-white">Modifier mon profil</h1>
-          </div>
-
-          <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-xl text-white">Informations personnelles</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ProfileEditForm
-                profile={profile}
-                onSubmit={handleSubmit}
-                isLoading={updating}
-              />
-            </CardContent>
-          </Card>
+          <ProfileHeader />
+          <ProfileCard
+            profile={profile}
+            onSubmit={handleSubmit}
+            isLoading={updating}
+          />
         </div>
       </main>
       <Footer />
