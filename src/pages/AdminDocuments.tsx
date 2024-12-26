@@ -18,15 +18,16 @@ const AdminDocuments = () => {
   const { uploading, handleFileUpload, handleDownload } = useDocumentManagement();
 
   useEffect(() => {
+    console.log("AdminDocuments: Component mounted");
     checkAdminAndFetchData();
   }, []);
 
   const checkAdminAndFetchData = async () => {
     try {
-      console.log("Checking admin status and fetching data");
+      console.log("AdminDocuments: Checking admin status and fetching data");
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        console.log("No session found, redirecting to login");
+        console.log("AdminDocuments: No session found, redirecting to login");
         navigate("/login");
         return;
       }
@@ -38,32 +39,41 @@ const AdminDocuments = () => {
         .single();
 
       if (!profile || profile.site_role !== "admin") {
-        console.log("User is not admin, redirecting to dashboard");
+        console.log("AdminDocuments: User is not admin, redirecting to dashboard");
         navigate("/dashboard");
         return;
       }
 
       await fetchUsersAndDocuments();
     } catch (error) {
-      console.error("Error checking admin status:", error);
+      console.error("AdminDocuments: Error checking admin status:", error);
       navigate("/dashboard");
     }
   };
 
   const fetchUsersAndDocuments = async () => {
     try {
-      console.log("Fetching users and documents data");
+      console.log("AdminDocuments: Fetching users and documents data");
       const { data: usersData, error: usersError } = await supabase
         .from('profiles')
         .select('*');
 
-      if (usersError) throw usersError;
+      if (usersError) {
+        console.error("AdminDocuments: Error fetching users:", usersError);
+        throw usersError;
+      }
 
       const { data: documentsData, error: documentsError } = await supabase
         .from('user_documents')
         .select('*');
 
-      if (documentsError) throw documentsError;
+      if (documentsError) {
+        console.error("AdminDocuments: Error fetching documents:", documentsError);
+        throw documentsError;
+      }
+
+      console.log("AdminDocuments: Users data:", usersData);
+      console.log("AdminDocuments: Documents data:", documentsData);
 
       const usersWithDocs: UserWithDocuments[] = usersData.map(user => ({
         id: user.id,
@@ -74,9 +84,9 @@ const AdminDocuments = () => {
 
       setUsers(usersWithDocs);
       setLoading(false);
-      console.log("Data fetched successfully");
+      console.log("AdminDocuments: Data fetched successfully");
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("AdminDocuments: Error fetching data:", error);
       toast({
         title: "Erreur",
         description: "Impossible de récupérer les données",
@@ -86,9 +96,13 @@ const AdminDocuments = () => {
   };
 
   const handleUploadSuccess = async (userId: string, type: DocumentType, file: File) => {
+    console.log("AdminDocuments: Handling upload for user:", userId, "type:", type, "file:", file.name);
     const success = await handleFileUpload(userId, type, file);
     if (success) {
+      console.log("AdminDocuments: Upload successful, refreshing data");
       await fetchUsersAndDocuments();
+    } else {
+      console.error("AdminDocuments: Upload failed");
     }
   };
 
