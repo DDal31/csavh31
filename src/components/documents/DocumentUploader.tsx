@@ -18,17 +18,17 @@ export const DocumentUploader = ({ type, existingDocument, onUploadSuccess, user
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log("File input change detected");
+    console.log("DocumentUploader: File input change detected");
     const file = event.target.files?.[0];
     if (!file) {
-      console.log("No file selected");
+      console.log("DocumentUploader: No file selected");
       return;
     }
 
     try {
       setUploading(true);
-      console.log("Starting file upload process...");
-      console.log("File details:", { name: file.name, size: file.size, type: file.type });
+      console.log("DocumentUploader: Starting file upload process...");
+      console.log("DocumentUploader: File details:", { name: file.name, size: file.size, type: file.type });
 
       await onUploadSuccess(file);
       
@@ -37,7 +37,7 @@ export const DocumentUploader = ({ type, existingDocument, onUploadSuccess, user
         description: "Document importé avec succès",
       });
     } catch (error) {
-      console.error("Error in upload process:", error);
+      console.error("DocumentUploader: Error in upload process:", error);
       toast({
         title: "Erreur lors de l'import",
         description: "Impossible d'importer le document. Veuillez réessayer.",
@@ -52,7 +52,7 @@ export const DocumentUploader = ({ type, existingDocument, onUploadSuccess, user
   };
 
   const handleButtonClick = () => {
-    console.log("Upload button clicked, triggering file input click");
+    console.log("DocumentUploader: Upload button clicked, triggering file input click");
     fileInputRef.current?.click();
   };
 

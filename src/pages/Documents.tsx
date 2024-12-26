@@ -20,15 +20,16 @@ const Documents = () => {
   const { handleDownload } = useDocumentManagement();
 
   useEffect(() => {
+    console.log("Documents: Component mounted");
     fetchDocuments();
   }, []);
 
   const fetchDocuments = async () => {
     try {
-      console.log("Fetching user documents");
+      console.log("Documents: Fetching user documents");
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        console.log("No session found, redirecting to login");
+        console.log("Documents: No session found, redirecting to login");
         navigate("/login");
         return;
       }
@@ -40,7 +41,10 @@ const Documents = () => {
         .eq('id', session.user.id)
         .single();
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error("Documents: Error fetching profile:", profileError);
+        throw profileError;
+      }
       setUserProfile(profileData);
 
       const { data, error } = await supabase
@@ -48,18 +52,38 @@ const Documents = () => {
         .select('*')
         .eq('user_id', session.user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Documents: Error fetching documents:", error);
+        throw error;
+      }
       
-      console.log("Documents fetched successfully:", data?.length || 0, "documents found");
+      console.log("Documents: Documents fetched successfully:", data?.length || 0, "documents found");
       setDocuments(data || []);
       setLoading(false);
     } catch (error) {
-      console.error("Error fetching documents:", error);
+      console.error("Documents: Error in fetchDocuments:", error);
       toast({
         title: "Erreur",
         description: "Impossible de récupérer vos documents",
         variant: "destructive"
       });
+      setLoading(false);
+    }
+  };
+
+  const handleUpload = async (file: File) => {
+    try {
+      console.log("Documents: Starting document upload");
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.log("Documents: No session found for upload");
+        throw new Error("Session not found");
+      }
+
+      await fetchDocuments(); // Refresh documents after upload
+    } catch (error) {
+      console.error("Documents: Error in handleUpload:", error);
+      throw error; // Let the DocumentUploader handle the error display
     }
   };
 
@@ -125,7 +149,7 @@ const Documents = () => {
                     <DocumentUploader
                       type={type as DocumentType}
                       existingDocument={!!document}
-                      onUploadSuccess={fetchDocuments}
+                      onUploadSuccess={handleUpload}
                       userName={userName}
                       documentType={label}
                     />

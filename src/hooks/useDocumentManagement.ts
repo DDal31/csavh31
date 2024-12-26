@@ -9,26 +9,26 @@ export const useDocumentManagement = () => {
 
   const handleFileUpload = async (userId: string, type: DocumentType, file: File) => {
     try {
-      console.log("Starting file upload for user:", userId, "type:", type);
+      console.log("useDocumentManagement: Starting file upload for user:", userId, "type:", type);
       setUploading({ userId, type });
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Non authentifié");
 
       const fileExt = file.name.split('.').pop();
       const filePath = `${userId}/${type}/${crypto.randomUUID()}.${fileExt}`;
 
-      console.log("Uploading file to storage path:", filePath);
+      console.log("useDocumentManagement: Uploading file to storage path:", filePath);
       const { error: uploadError } = await supabase.storage
         .from('user-documents')
         .upload(filePath, file);
 
       if (uploadError) {
-        console.error("Storage upload error:", uploadError);
+        console.error("useDocumentManagement: Storage upload error:", uploadError);
         throw new Error("Erreur lors de l'upload du fichier");
       }
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Non authentifié");
-
-      console.log("Updating database record");
+      console.log("useDocumentManagement: Updating database record");
       const { error: dbError } = await supabase
         .from('user_documents')
         .upsert({
@@ -42,14 +42,14 @@ export const useDocumentManagement = () => {
         });
 
       if (dbError) {
-        console.error("Database update error:", dbError);
+        console.error("useDocumentManagement: Database update error:", dbError);
         throw new Error("Erreur lors de la mise à jour de la base de données");
       }
 
-      console.log("Upload completed successfully");
+      console.log("useDocumentManagement: Upload completed successfully");
       return true;
     } catch (error) {
-      console.error("Error in upload process:", error);
+      console.error("useDocumentManagement: Error in upload process:", error);
       throw error;
     } finally {
       setUploading(null);
@@ -58,13 +58,13 @@ export const useDocumentManagement = () => {
 
   const handleDownload = async (document: UserDocument) => {
     try {
-      console.log("Starting download for document:", document.file_path);
+      console.log("useDocumentManagement: Starting download for document:", document.file_path);
       const { data, error } = await supabase.storage
         .from('user-documents')
         .download(document.file_path);
 
       if (error) {
-        console.error("Download error:", error);
+        console.error("useDocumentManagement: Download error:", error);
         throw new Error("Impossible de télécharger le document");
       }
 
@@ -75,9 +75,9 @@ export const useDocumentManagement = () => {
       a.click();
       URL.revokeObjectURL(url);
       
-      console.log("Download completed successfully");
+      console.log("useDocumentManagement: Download completed successfully");
     } catch (error) {
-      console.error("Error in download process:", error);
+      console.error("useDocumentManagement: Error in download process:", error);
       toast({
         title: "Erreur",
         description: "Impossible de télécharger le document",
