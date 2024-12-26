@@ -13,7 +13,7 @@ const Contact = () => {
         .from("pages_content")
         .select("content")
         .eq("section", "contact")
-        .single();
+        .maybeSingle();
       
       if (error) {
         console.error("Error fetching contact content:", error);
@@ -21,7 +21,7 @@ const Contact = () => {
       }
       
       console.log("Fetched contact content:", data);
-      return data?.content || "";
+      return data?.content || "Contenu en cours de rédaction...";
     },
   });
 

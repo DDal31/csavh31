@@ -6,16 +6,10 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { UserDocument, DocumentType } from "@/types/documents";
+import type { UserDocument, RequiredDocumentType } from "@/types/documents";
+import { REQUIRED_DOCUMENT_LABELS } from "@/types/documents";
 import { DocumentUploader } from "@/components/documents/DocumentUploader";
 import { useDocumentManagement } from "@/hooks/useDocumentManagement";
-
-// Liste des documents requis uniquement
-const REQUIRED_DOCUMENT_LABELS: Record<DocumentType, string> = {
-  medical_certificate: 'Certificat Médical',
-  ophthalmological_certificate: 'Certificat Ophtalmologique',
-  ffh_license: 'Licence FFH'
-};
 
 const Documents = () => {
   const navigate = useNavigate();
@@ -77,7 +71,7 @@ const Documents = () => {
     }
   };
 
-  const handleUpload = async (type: DocumentType, file: File) => {
+  const handleUpload = async (type: RequiredDocumentType, file: File) => {
     if (!userProfile?.id) {
       toast({
         title: "Erreur",
@@ -96,7 +90,7 @@ const Documents = () => {
     }
   };
 
-  const getDocumentByType = (type: DocumentType) => {
+  const getDocumentByType = (type: RequiredDocumentType) => {
     return documents.find(doc => doc.document_type === type);
   };
 
@@ -127,8 +121,8 @@ const Documents = () => {
           </h1>
 
           <div className="grid gap-6">
-            {Object.entries(REQUIRED_DOCUMENT_LABELS).map(([type, label]) => {
-              const document = getDocumentByType(type as DocumentType);
+            {(Object.entries(REQUIRED_DOCUMENT_LABELS) as [RequiredDocumentType, string][]).map(([type, label]) => {
+              const document = getDocumentByType(type);
               const userName = userProfile ? `${userProfile.first_name} ${userProfile.last_name}` : '';
               
               return (
@@ -156,9 +150,9 @@ const Documents = () => {
                       </Button>
                     )}
                     <DocumentUploader
-                      type={type as DocumentType}
+                      type={type}
                       existingDocument={!!document}
-                      onUploadSuccess={(file) => handleUpload(type as DocumentType, file)}
+                      onUploadSuccess={(file) => handleUpload(type, file)}
                       userName={userName}
                       documentType={label}
                     />
