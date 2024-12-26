@@ -99,22 +99,22 @@ const AdminDashboard = () => {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4">
             {adminTiles.map((tile) => (
               <Card 
                 key={tile.title}
-                className={`${tile.bgColor} border-none cursor-pointer transform transition-all duration-300 hover:scale-105 focus-within:ring-2 focus-within:ring-white h-32`}
+                className={`${tile.bgColor} border-none cursor-pointer transform transition-all duration-300 hover:scale-105 focus-within:ring-2 focus-within:ring-white h-24 sm:h-32`}
                 onClick={() => navigate(tile.route)}
                 role="button"
                 aria-label={tile.ariaLabel}
                 tabIndex={0}
               >
-                <CardHeader className="text-center p-4">
+                <CardHeader className="text-center p-2 sm:p-4">
                   <tile.icon 
-                    className="w-8 h-8 mx-auto mb-2 text-white" 
+                    className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-1 sm:mb-2 text-white" 
                     aria-hidden="true"
                   />
-                  <CardTitle className="text-lg font-bold text-white">
+                  <CardTitle className="text-sm sm:text-lg font-bold text-white">
                     {tile.title}
                   </CardTitle>
                 </CardHeader>
