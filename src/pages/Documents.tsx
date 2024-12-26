@@ -16,8 +16,8 @@ const Documents = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [documents, setDocuments] = useState<UserDocument[]>([]);
-  const [userProfile, setUserProfile] = useState<{ first_name: string; last_name: string } | null>(null);
-  const { handleDownload } = useDocumentManagement();
+  const [userProfile, setUserProfile] = useState<{ first_name: string; last_name: string; id: string } | null>(null);
+  const { handleFileUpload, handleDownload } = useDocumentManagement();
 
   useEffect(() => {
     console.log("Documents: Component mounted");
@@ -37,7 +37,7 @@ const Documents = () => {
       // Fetch user profile first
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('first_name, last_name')
+        .select('first_name, last_name, id')
         .eq('id', session.user.id)
         .single();
 
@@ -71,19 +71,22 @@ const Documents = () => {
     }
   };
 
-  const handleUpload = async (file: File) => {
-    try {
-      console.log("Documents: Starting document upload");
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.log("Documents: No session found for upload");
-        throw new Error("Session not found");
-      }
+  const handleUpload = async (type: DocumentType, file: File) => {
+    if (!userProfile?.id) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de récupérer votre profil",
+        variant: "destructive"
+      });
+      return;
+    }
 
+    try {
+      await handleFileUpload(userProfile.id, type, file);
       await fetchDocuments(); // Refresh documents after upload
     } catch (error) {
       console.error("Documents: Error in handleUpload:", error);
-      throw error; // Let the DocumentUploader handle the error display
+      throw error;
     }
   };
 
@@ -149,7 +152,7 @@ const Documents = () => {
                     <DocumentUploader
                       type={type as DocumentType}
                       existingDocument={!!document}
-                      onUploadSuccess={handleUpload}
+                      onUploadSuccess={(file) => handleUpload(type as DocumentType, file)}
                       userName={userName}
                       documentType={label}
                     />

@@ -69,10 +69,12 @@ export const useDocumentManagement = () => {
       }
 
       const url = URL.createObjectURL(data);
-      const a = window.document.createElement('a');
+      const a = document.createElement('a');
       a.href = url;
       a.download = document.file_name;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
       console.log("useDocumentManagement: Download completed successfully");

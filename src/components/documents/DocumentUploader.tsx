@@ -7,7 +7,7 @@ import type { DocumentType } from "@/types/documents";
 interface DocumentUploaderProps {
   type: DocumentType;
   existingDocument: boolean;
-  onUploadSuccess: (file: File) => void;
+  onUploadSuccess: (file: File) => Promise<void>;
   userName: string;
   documentType: string;
 }
@@ -45,8 +45,8 @@ export const DocumentUploader = ({ type, existingDocument, onUploadSuccess, user
       });
     } finally {
       setUploading(false);
-      if (event.target) {
-        event.target.value = '';
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
       }
     }
   };
