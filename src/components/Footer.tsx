@@ -1,10 +1,8 @@
 import { Link } from "react-router-dom";
 import { Github, Twitter, Linkedin } from "lucide-react";
-import { SUPABASE_URL } from "@/config/supabase";
+import { CLUB_LOGO_URL } from "@/config/logo";
 
 const Footer = () => {
-  const logoUrl = `${SUPABASE_URL}/storage/v1/object/public/club-assets/club-logo.png`;
-
   return (
     <footer className="bg-gray-800 text-gray-300 border-t border-gray-700">
       <div className="container mx-auto px-4 py-12">
@@ -12,9 +10,9 @@ const Footer = () => {
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <img 
-                src={logoUrl}
+                src={CLUB_LOGO_URL}
                 alt="Logo CSAVH31 Toulouse" 
-                className="h-12 w-auto object-contain"
+                className="h-12 w-auto object-contain rounded-full"
                 onError={(e) => console.error('Erreur de chargement du logo:', e)}
               />
               <h3 className="text-xl font-bold text-white">CSAVH31 Toulouse</h3>

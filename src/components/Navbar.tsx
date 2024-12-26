@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { SUPABASE_URL } from "@/config/supabase";
+import { CLUB_LOGO_URL } from "@/config/logo";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
-  const logoUrl = `${SUPABASE_URL}/storage/v1/object/public/club-assets/club-logo.png`;
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -31,9 +30,9 @@ const Navbar = () => {
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center gap-3">
               <img 
-                src={logoUrl}
+                src={CLUB_LOGO_URL}
                 alt="Logo CSAVH31 Toulouse" 
-                className="h-10 w-auto object-contain"
+                className="h-10 w-auto object-contain rounded-full"
                 onError={(e) => console.error('Erreur de chargement du logo:', e)}
               />
               <span className="text-xl font-bold text-white">CSAVH31 Toulouse</span>
