@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Upload, RefreshCw, Loader2 } from "lucide-react";
@@ -8,12 +8,13 @@ import { supabase } from "@/integrations/supabase/client";
 interface DocumentUploaderProps {
   type: DocumentType;
   existingDocument: boolean;
-  onUploadSuccess: () => void;
+  onUploadSuccess: (file: File) => void;
 }
 
 export const DocumentUploader = ({ type, existingDocument, onUploadSuccess }: DocumentUploaderProps) => {
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     console.log("File input change detected");
@@ -28,62 +29,7 @@ export const DocumentUploader = ({ type, existingDocument, onUploadSuccess }: Do
       console.log("Starting file upload process...");
       console.log("File details:", { name: file.name, size: file.size, type: file.type });
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.error("No session found");
-        toast({
-          title: "Erreur d'authentification",
-          description: "Vous devez être connecté pour importer un document",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${session.user.id}/${type}/${crypto.randomUUID()}.${fileExt}`;
-      console.log("Generated file path:", filePath);
-
-      console.log("Uploading file to storage...");
-      const { error: uploadError } = await supabase.storage
-        .from('user-documents')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (uploadError) {
-        console.error("Storage upload error:", uploadError);
-        throw new Error(`Erreur lors de l'upload: ${uploadError.message}`);
-      }
-
-      console.log("File uploaded successfully to storage");
-
-      console.log("Updating database record...");
-      const { error: dbError } = await supabase
-        .from('user_documents')
-        .upsert({
-          user_id: session.user.id,
-          document_type: type,
-          file_path: filePath,
-          file_name: file.name,
-          uploaded_by: session.user.id
-        }, {
-          onConflict: 'user_id,document_type'
-        });
-
-      if (dbError) {
-        console.error("Database update error:", dbError);
-        throw new Error(`Erreur lors de la mise à jour de la base de données: ${dbError.message}`);
-      }
-
-      console.log("Database record updated successfully");
-
-      toast({
-        title: "Succès",
-        description: "Document importé avec succès"
-      });
-
-      onUploadSuccess();
+      onUploadSuccess(file);
     } catch (error) {
       console.error("Error in upload process:", error);
       toast({
@@ -98,8 +44,6 @@ export const DocumentUploader = ({ type, existingDocument, onUploadSuccess }: Do
       }
     }
   };
-
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleButtonClick = () => {
     console.log("Upload button clicked, triggering file input click");
