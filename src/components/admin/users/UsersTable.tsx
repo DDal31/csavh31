@@ -38,26 +38,37 @@ export function UsersTable({
     <Table>
       <TableHeader>
         <TableRow className="border-gray-700">
-          <TableHead className="text-gray-300">Email</TableHead>
-          <TableHead className="text-gray-300">Prénom</TableHead>
-          <TableHead className="text-gray-300">Nom</TableHead>
-          <TableHead className="text-gray-300">Rôle Club</TableHead>
-          <TableHead className="text-gray-300">Sport</TableHead>
-          <TableHead className="text-gray-300">Équipe</TableHead>
-          <TableHead className="text-gray-300">Rôle Site</TableHead>
+          <TableHead className="text-gray-300 hidden md:table-cell">Email</TableHead>
+          <TableHead className="text-gray-300 hidden sm:table-cell">Prénom</TableHead>
+          <TableHead className="text-gray-300 hidden sm:table-cell">Nom</TableHead>
+          <TableHead className="text-gray-300 hidden lg:table-cell">Rôle Club</TableHead>
+          <TableHead className="text-gray-300 hidden lg:table-cell">Sport</TableHead>
+          <TableHead className="text-gray-300 hidden lg:table-cell">Équipe</TableHead>
+          <TableHead className="text-gray-300 hidden md:table-cell">Rôle Site</TableHead>
+          <TableHead className="text-gray-300">Informations</TableHead>
           <TableHead className="text-gray-300">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {users.map((user) => (
           <TableRow key={user.id} className="border-gray-700">
-            <TableCell className="text-gray-300">{user.email}</TableCell>
-            <TableCell className="text-gray-300">{user.profile?.first_name}</TableCell>
-            <TableCell className="text-gray-300">{user.profile?.last_name}</TableCell>
-            <TableCell className="text-gray-300">{user.profile?.club_role}</TableCell>
-            <TableCell className="text-gray-300">{user.profile?.sport}</TableCell>
-            <TableCell className="text-gray-300">{user.profile?.team}</TableCell>
-            <TableCell className="text-gray-300">{user.profile?.site_role}</TableCell>
+            <TableCell className="text-gray-300 hidden md:table-cell">{user.email}</TableCell>
+            <TableCell className="text-gray-300 hidden sm:table-cell">{user.profile?.first_name}</TableCell>
+            <TableCell className="text-gray-300 hidden sm:table-cell">{user.profile?.last_name}</TableCell>
+            <TableCell className="text-gray-300 hidden lg:table-cell">{user.profile?.club_role}</TableCell>
+            <TableCell className="text-gray-300 hidden lg:table-cell">{user.profile?.sport}</TableCell>
+            <TableCell className="text-gray-300 hidden lg:table-cell">{user.profile?.team}</TableCell>
+            <TableCell className="text-gray-300 hidden md:table-cell">{user.profile?.site_role}</TableCell>
+            <TableCell className="text-gray-300 md:hidden">
+              <div className="space-y-1">
+                <p className="font-medium">{user.email}</p>
+                <p>{user.profile?.first_name} {user.profile?.last_name}</p>
+                <p className="text-sm text-gray-400">
+                  {user.profile?.club_role} - {user.profile?.sport} - {user.profile?.team}
+                </p>
+                <p className="text-sm text-gray-400">Rôle: {user.profile?.site_role}</p>
+              </div>
+            </TableCell>
             <TableCell>
               <UserActions
                 user={user}

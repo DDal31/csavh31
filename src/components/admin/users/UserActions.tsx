@@ -41,12 +41,12 @@ export function UserActions({
   setIsEditDialogOpen,
 }: UserActionsProps) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogTrigger asChild>
           <Button
             variant="outline"
-            className="bg-blue-600 hover:bg-blue-700 text-white border-none"
+            className="bg-blue-600 hover:bg-blue-700 text-white border-none w-full sm:w-auto"
           >
             Modifier
           </Button>
@@ -77,10 +77,11 @@ export function UserActions({
         <AlertDialogTrigger asChild>
           <Button
             variant="destructive"
-            size="icon"
-            className="hover:bg-red-700"
+            className="hover:bg-red-700 w-full sm:w-auto flex items-center justify-center gap-2"
+            aria-label={`Supprimer l'utilisateur ${user.profile.first_name} ${user.profile.last_name}`}
           >
             <Trash2 className="h-4 w-4" />
+            <span className="sm:hidden">Supprimer</span>
           </Button>
         </AlertDialogTrigger>
         <AlertDialogContent className="bg-gray-800 border-gray-700">

@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -23,6 +24,7 @@ type TrainingListProps = {
 };
 
 export function TrainingList({ onAddClick, onEditClick }: TrainingListProps) {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { data: trainings, isLoading, refetch } = useQuery({
     queryKey: ["trainings"],
@@ -76,6 +78,15 @@ export function TrainingList({ onAddClick, onEditClick }: TrainingListProps) {
 
   return (
     <div className="space-y-8">
+      <Button 
+        onClick={() => navigate('/admin')} 
+        variant="ghost" 
+        className="text-white hover:text-gray-300 mb-6 w-full sm:w-auto"
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Retour au tableau de bord
+      </Button>
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-2xl sm:text-3xl font-bold text-white bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
           Entraînements à venir
