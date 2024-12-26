@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Pencil, Trash2, Loader2 } from "lucide-react";
+import { Pencil, Trash2, Loader2, ArrowUp, ArrowDown } from "lucide-react";
 import ContactForm from "./ContactForm";
 
 interface Contact {
@@ -14,6 +14,7 @@ interface Contact {
   phone?: string;
   email?: string;
   photo_url?: string;
+  display_order: number;
 }
 
 const ContactsList = () => {
@@ -27,7 +28,7 @@ const ContactsList = () => {
       const { data, error } = await supabase
         .from('contacts')
         .select('*')
-        .order('role');
+        .order('display_order');
 
       if (error) throw error;
       setContacts(data || []);
@@ -74,6 +75,60 @@ const ContactsList = () => {
     }
   };
 
+  const handleMoveContact = async (contact: Contact, direction: 'up' | 'down') => {
+    const currentIndex = contacts.findIndex(c => c.id === contact.id);
+    if (
+      (direction === 'up' && currentIndex === 0) ||
+      (direction === 'down' && currentIndex === contacts.length - 1)
+    ) {
+      return;
+    }
+
+    const newContacts = [...contacts];
+    const swapIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    
+    // Swap display_order values
+    const tempOrder = newContacts[currentIndex].display_order;
+    newContacts[currentIndex].display_order = newContacts[swapIndex].display_order;
+    newContacts[swapIndex].display_order = tempOrder;
+
+    // Update the database
+    try {
+      const { error } = await supabase
+        .from('contacts')
+        .upsert([
+          {
+            id: newContacts[currentIndex].id,
+            display_order: newContacts[currentIndex].display_order
+          },
+          {
+            id: newContacts[swapIndex].id,
+            display_order: newContacts[swapIndex].display_order
+          }
+        ]);
+
+      if (error) throw error;
+
+      // Swap positions in the local state
+      [newContacts[currentIndex], newContacts[swapIndex]] = 
+      [newContacts[swapIndex], newContacts[currentIndex]];
+      
+      setContacts(newContacts);
+
+      toast({
+        title: "Succès",
+        description: "L'ordre a été mis à jour",
+      });
+    } catch (error) {
+      console.error('Error updating contact order:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de modifier l'ordre",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center p-8">
@@ -101,7 +156,7 @@ const ContactsList = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {contacts.map((contact) => (
+      {contacts.map((contact, index) => (
         <Card key={contact.id} className="bg-gray-800 border-gray-700">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
@@ -134,6 +189,24 @@ const ContactsList = () => {
             </div>
 
             <div className="mt-4 flex justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleMoveContact(contact, 'up')}
+                disabled={index === 0}
+                className="bg-gray-600 hover:bg-gray-700 text-white border-none"
+              >
+                <ArrowUp className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleMoveContact(contact, 'down')}
+                disabled={index === contacts.length - 1}
+                className="bg-gray-600 hover:bg-gray-700 text-white border-none"
+              >
+                <ArrowDown className="h-4 w-4" />
+              </Button>
               <Button
                 variant="outline"
                 size="sm"

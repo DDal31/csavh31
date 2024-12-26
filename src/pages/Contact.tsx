@@ -35,7 +35,7 @@ const Contact = () => {
         .from("contacts")
         .select("*")
         .eq("status", "active")
-        .order("role");
+        .order('display_order');
 
       if (error) {
         console.error("Error fetching contacts:", error);
