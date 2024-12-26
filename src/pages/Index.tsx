@@ -3,7 +3,7 @@ import Footer from "@/components/Footer";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Newspaper, Mail, Podcast } from "lucide-react";
+import { User, Newspaper, Mail, Podcast, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
