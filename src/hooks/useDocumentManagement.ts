@@ -56,12 +56,12 @@ export const useDocumentManagement = () => {
     }
   };
 
-  const handleDownload = async (document: UserDocument) => {
+  const handleDownload = async (userDocument: UserDocument) => {
     try {
-      console.log("useDocumentManagement: Starting download for document:", document.file_path);
+      console.log("useDocumentManagement: Starting download for document:", userDocument.file_path);
       const { data, error } = await supabase.storage
         .from('user-documents')
-        .download(document.file_path);
+        .download(userDocument.file_path);
 
       if (error) {
         console.error("useDocumentManagement: Download error:", error);
@@ -69,12 +69,12 @@ export const useDocumentManagement = () => {
       }
 
       const url = URL.createObjectURL(data);
-      const a = document.createElement('a');
+      const a = window.document.createElement('a');
       a.href = url;
-      a.download = document.file_name;
-      document.body.appendChild(a);
+      a.download = userDocument.file_name;
+      window.document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
+      window.document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
       console.log("useDocumentManagement: Download completed successfully");
