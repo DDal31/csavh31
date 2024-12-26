@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { UserWithDocuments } from "@/types/documents";
+import type { UserWithDocuments, DocumentType } from "@/types/documents";
 import { UserDocumentCard } from "@/components/admin/documents/UserDocumentCard";
 import { useDocumentManagement } from "@/hooks/useDocumentManagement";
 
@@ -85,7 +85,7 @@ const AdminDocuments = () => {
     }
   };
 
-  const handleUploadSuccess = async (userId: string, type: string, file: File) => {
+  const handleUploadSuccess = async (userId: string, type: DocumentType, file: File) => {
     const success = await handleFileUpload(userId, type, file);
     if (success) {
       await fetchUsersAndDocuments();
