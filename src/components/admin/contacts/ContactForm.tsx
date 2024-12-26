@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, Upload } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 const contactSchema = z.object({
   role: z.string().min(1, "Le rôle est requis"),
@@ -82,23 +82,22 @@ const ContactForm = ({ onClose, onSuccess, contact }: ContactFormProps) => {
         photoUrl = publicUrl;
       }
 
+      const contactData = {
+        ...data,
+        photo_url: photoUrl,
+      };
+
       if (contact?.id) {
         const { error } = await supabase
           .from('contacts')
-          .update({
-            ...data,
-            photo_url: photoUrl,
-          })
+          .update(contactData)
           .eq('id', contact.id);
 
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('contacts')
-          .insert([{
-            ...data,
-            photo_url: photoUrl,
-          }]);
+          .insert([contactData]);
 
         if (error) throw error;
       }
