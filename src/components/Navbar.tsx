@@ -6,6 +6,7 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
+  const logoUrl = `${supabase.supabaseUrl}/storage/v1/object/public/club-assets/club-logo.png`;
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -29,7 +30,7 @@ const Navbar = () => {
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center gap-3">
               <img 
-                src="/club-logo.png" 
+                src={logoUrl}
                 alt="Logo CSAVH31 Toulouse" 
                 className="h-10 w-auto"
                 aria-hidden="true"

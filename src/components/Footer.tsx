@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
 import { Github, Twitter, Linkedin } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Footer = () => {
+  const logoUrl = `${supabase.supabaseUrl}/storage/v1/object/public/club-assets/club-logo.png`;
+
   return (
     <footer className="bg-gray-800 text-gray-300 border-t border-gray-700">
       <div className="container mx-auto px-4 py-12">
@@ -9,7 +12,7 @@ const Footer = () => {
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <img 
-                src="/club-logo.png" 
+                src={logoUrl}
                 alt="Logo CSAVH31 Toulouse" 
                 className="h-12 w-auto"
                 aria-hidden="true"
