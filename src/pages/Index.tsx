@@ -1,9 +1,9 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, User, Newspaper, Mail, Podcast } from "lucide-react";
+import { User, Newspaper, Mail, Podcast } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
@@ -51,17 +51,12 @@ const Index = () => {
     },
   });
 
-  const getContentForSection = (section: string) => {
-    return contents?.find((content) => content.section === section)?.content || "";
-  };
-
   const tiles = [
     {
       title: "Espace Membre",
       icon: User,
       route: "/login",
       bgColor: "bg-blue-600 hover:bg-blue-700",
-      description: "Accédez à votre espace personnel",
       ariaLabel: "Accéder à l'espace membre"
     },
     {
@@ -69,7 +64,6 @@ const Index = () => {
       icon: Newspaper,
       route: "/actualites",
       bgColor: "bg-green-600 hover:bg-green-700",
-      description: getContentForSection("actualites").substring(0, 100) + "...",
       ariaLabel: "Consulter les actualités du club"
     },
     {
@@ -77,7 +71,6 @@ const Index = () => {
       icon: Mail,
       route: "/contact",
       bgColor: "bg-purple-600 hover:bg-purple-700",
-      description: getContentForSection("contact").substring(0, 100) + "...",
       ariaLabel: "Nous contacter"
     },
     {
@@ -85,7 +78,6 @@ const Index = () => {
       icon: Podcast,
       route: "/podcast",
       bgColor: "bg-orange-600 hover:bg-orange-700",
-      description: "Écoutez nos derniers podcasts",
       ariaLabel: "Écouter nos podcasts"
     }
   ];
@@ -99,7 +91,7 @@ const Index = () => {
           CSAVH31 Toulouse
         </h1>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 max-w-6xl mx-auto mb-16">
+        <div className="grid grid-cols-2 gap-2 sm:gap-4 max-w-6xl mx-auto mb-16">
           {tiles.map((tile) => (
             <Card 
               key={tile.title}
@@ -109,20 +101,15 @@ const Index = () => {
               aria-label={tile.ariaLabel}
               tabIndex={0}
             >
-              <CardHeader className="text-center p-2 sm:p-4 pb-2">
+              <CardHeader className="text-center p-4 sm:p-6">
                 <tile.icon 
-                  className="w-6 h-6 sm:w-8 sm:h-8 md:w-12 md:h-12 mx-auto mb-1 sm:mb-2 text-white" 
+                  className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-4 text-white" 
                   aria-hidden="true"
                 />
-                <CardTitle className="text-xs sm:text-sm md:text-xl font-bold text-white">
+                <CardTitle className="text-sm sm:text-lg font-bold text-white">
                   {tile.title}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-2 sm:p-4 pt-0">
-                <p className="text-xs sm:text-sm text-gray-100 line-clamp-2">
-                  {tile.description}
-                </p>
-              </CardContent>
             </Card>
           ))}
         </div>
