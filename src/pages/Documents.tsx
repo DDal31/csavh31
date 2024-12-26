@@ -4,17 +4,18 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Upload, RefreshCw, Loader2 } from "lucide-react";
+import { ArrowLeft, Download, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { UserDocument, DocumentType } from "@/types/documents";
 import { DOCUMENT_LABELS } from "@/types/documents";
+import { DocumentUploader } from "@/components/documents/DocumentUploader";
+import { DocumentDownloader } from "@/components/documents/DocumentDownloader";
 
 const Documents = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [documents, setDocuments] = useState<UserDocument[]>([]);
-  const [uploading, setUploading] = useState<DocumentType | null>(null);
 
   useEffect(() => {
     fetchDocuments();
@@ -41,79 +42,6 @@ const Documents = () => {
       toast({
         title: "Erreur",
         description: "Impossible de récupérer vos documents",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleFileUpload = async (type: DocumentType, file: File) => {
-    try {
-      setUploading(type);
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Non authentifié");
-
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${session.user.id}/${type}/${crypto.randomUUID()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('user-documents')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { error: dbError } = await supabase
-        .from('user_documents')
-        .upsert({
-          user_id: session.user.id,
-          document_type: type,
-          file_path: filePath,
-          file_name: file.name,
-          uploaded_by: session.user.id
-        }, {
-          onConflict: 'user_id,document_type'
-        });
-
-      if (dbError) throw dbError;
-
-      toast({
-        title: "Succès",
-        description: "Document importé avec succès"
-      });
-
-      fetchDocuments();
-    } catch (error) {
-      console.error("Error uploading document:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible d'importer le document",
-        variant: "destructive"
-      });
-    } finally {
-      setUploading(null);
-    }
-  };
-
-  const handleDownload = async (document: UserDocument) => {
-    try {
-      const { data, error } = await supabase.storage
-        .from('user-documents')
-        .download(document.file_path);
-
-      if (error) throw error;
-
-      const url = URL.createObjectURL(data);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = document.file_name;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Error downloading document:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de télécharger le document",
         variant: "destructive"
       });
     }
@@ -171,61 +99,26 @@ const Documents = () => {
                         <Button
                           variant="outline"
                           className="bg-blue-600 hover:bg-blue-700 text-white border-none"
-                          onClick={() => handleDownload(document)}
+                          onClick={() => {
+                            const downloader = DocumentDownloader({ document });
+                            downloader.handleDownload();
+                          }}
                         >
                           <Download className="h-4 w-4 mr-2" />
                           Télécharger
                         </Button>
-                        <label className="cursor-pointer">
-                          <input
-                            type="file"
-                            className="hidden"
-                            accept=".pdf,.jpg,.jpeg,.png"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) handleFileUpload(type as DocumentType, file);
-                            }}
-                            disabled={!!uploading}
-                          />
-                          <Button
-                            variant="outline"
-                            className="bg-green-600 hover:bg-green-700 text-white border-none"
-                            disabled={!!uploading}
-                          >
-                            {uploading === type ? (
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            ) : (
-                              <RefreshCw className="h-4 w-4 mr-2" />
-                            )}
-                            Changer
-                          </Button>
-                        </label>
+                        <DocumentUploader
+                          type={type as DocumentType}
+                          existingDocument={true}
+                          onUploadSuccess={fetchDocuments}
+                        />
                       </>
                     ) : (
-                      <label className="cursor-pointer">
-                        <input
-                          type="file"
-                          className="hidden"
-                          accept=".pdf,.jpg,.jpeg,.png"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handleFileUpload(type as DocumentType, file);
-                          }}
-                          disabled={!!uploading}
-                        />
-                        <Button
-                          variant="outline"
-                          className="bg-green-600 hover:bg-green-700 text-white border-none"
-                          disabled={!!uploading}
-                        >
-                          {uploading === type ? (
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          ) : (
-                            <Upload className="h-4 w-4 mr-2" />
-                          )}
-                          Importer
-                        </Button>
-                      </label>
+                      <DocumentUploader
+                        type={type as DocumentType}
+                        existingDocument={false}
+                        onUploadSuccess={fetchDocuments}
+                      />
                     )}
                   </div>
                 </div>
