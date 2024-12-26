@@ -13,9 +13,9 @@ interface UserDocumentCardProps {
 export function UserDocumentCard({ user, uploading, onUpload, onDownload }: UserDocumentCardProps) {
   console.log("UserDocumentCard: Rendering for user:", user.email);
 
-  const handleUpload = async (type: DocumentType, file: File) => {
+  const handleUpload = (type: DocumentType, file: File) => {
     console.log("UserDocumentCard: Upload requested for type:", type, "file:", file.name);
-    await onUpload(user.id, type, file);
+    onUpload(user.id, type, file);
   };
 
   const getDocumentByType = (type: DocumentType) => {
