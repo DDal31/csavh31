@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, FileText, Mail, Newspaper, Palette } from "lucide-react";
+import { Loader2, FileText, Mail, Newspaper, Palette, Users } from "lucide-react";
 
 const AdminSettings = () => {
   const navigate = useNavigate();
@@ -50,11 +50,11 @@ const AdminSettings = () => {
       ariaLabel: "Modifier la page de présentation"
     },
     {
-      title: "Modifier Contact",
-      icon: Mail,
-      route: "/admin/settings/contact",
+      title: "Modifier Contacts",
+      icon: Users,
+      route: "/admin/settings/contacts",
       bgColor: "bg-green-600 hover:bg-green-700",
-      ariaLabel: "Modifier la page de contact"
+      ariaLabel: "Gérer les contacts du bureau"
     },
     {
       title: "Gestion des Actualités",

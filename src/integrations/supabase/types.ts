@@ -9,6 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      contacts: {
+        Row: {
+          created_at: string
+          email: string | null
+          first_name: string
+          id: string
+          last_name: string
+          phone: string | null
+          photo_url: string | null
+          role: string
+          status: Database["public"]["Enums"]["contact_status"] | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          first_name: string
+          id?: string
+          last_name: string
+          phone?: string | null
+          photo_url?: string | null
+          role: string
+          status?: Database["public"]["Enums"]["contact_status"] | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          first_name?: string
+          id?: string
+          last_name?: string
+          phone?: string | null
+          photo_url?: string | null
+          role?: string
+          status?: Database["public"]["Enums"]["contact_status"] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pages_content: {
         Row: {
           content: string
@@ -190,6 +229,7 @@ export type Database = {
         | "joueur-arbitre"
         | "entraineur-arbitre"
         | "les-trois"
+      contact_status: "active" | "archived"
       document_type:
         | "medical_certificate"
         | "ophthalmological_certificate"
