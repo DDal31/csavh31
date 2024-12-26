@@ -65,7 +65,7 @@ const Contact = () => {
             </div>
           ) : (
             <div className="space-y-8">
-              {content && (
+              {content && content !== "Contactez-nous pour plus d'informations" && (
                 <div className="bg-gray-800 rounded-lg p-8 shadow-lg border border-gray-700">
                   <p className="text-lg leading-relaxed whitespace-pre-wrap">
                     {content}
