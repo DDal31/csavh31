@@ -14,6 +14,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminTrainings from "./pages/AdminTrainings";
 import AdminDocuments from "./pages/AdminDocuments";
+import AdminSettings from "./pages/AdminSettings";
+import AdminPresentation from "./pages/AdminPresentation";
 import ProfilePage from "./pages/Profile";
 import ProfileEdit from "./pages/ProfileEdit";
 import TrainingRegistration from "./pages/Training";
@@ -43,6 +45,8 @@ const App = () => (
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/trainings" element={<AdminTrainings />} />
           <Route path="/admin/documents" element={<AdminDocuments />} />
+          <Route path="/admin/settings" element={<AdminSettings />} />
+          <Route path="/admin/settings/presentation" element={<AdminPresentation />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/profile/edit" element={<ProfileEdit />} />
         </Routes>

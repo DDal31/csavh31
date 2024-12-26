@@ -14,19 +14,25 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          image_paths: string[] | null
           section: string
+          title: string | null
         }
         Insert: {
           content: string
           created_at?: string
           id?: string
+          image_paths?: string[] | null
           section: string
+          title?: string | null
         }
         Update: {
           content?: string
           created_at?: string
           id?: string
+          image_paths?: string[] | null
           section?: string
+          title?: string | null
         }
         Relationships: []
       }
