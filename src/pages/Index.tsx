@@ -61,28 +61,32 @@ const Index = () => {
       icon: User,
       route: "/login",
       bgColor: "bg-blue-600 hover:bg-blue-700",
-      description: "Accédez à votre espace personnel"
+      description: "Accédez à votre espace personnel",
+      ariaLabel: "Accéder à l'espace membre"
     },
     {
       title: "Actualités",
       icon: Newspaper,
       route: "/actualites",
       bgColor: "bg-green-600 hover:bg-green-700",
-      description: getContentForSection("actualites").substring(0, 100) + "..."
+      description: getContentForSection("actualites").substring(0, 100) + "...",
+      ariaLabel: "Consulter les actualités du club"
     },
     {
       title: "Contact",
       icon: Mail,
       route: "/contact",
       bgColor: "bg-purple-600 hover:bg-purple-700",
-      description: getContentForSection("contact").substring(0, 100) + "..."
+      description: getContentForSection("contact").substring(0, 100) + "...",
+      ariaLabel: "Nous contacter"
     },
     {
       title: "Podcast",
       icon: Podcast,
       route: "/podcast",
       bgColor: "bg-orange-600 hover:bg-orange-700",
-      description: "Écoutez nos derniers podcasts"
+      description: "Écoutez nos derniers podcasts",
+      ariaLabel: "Écouter nos podcasts"
     }
   ];
 
@@ -90,7 +94,7 @@ const Index = () => {
     <div className="min-h-screen bg-gray-900 text-gray-100">
       <Navbar />
       
-      <main className="container mx-auto px-4 py-12 sm:py-24">
+      <main className="container mx-auto px-4 py-12 sm:py-24" role="main">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-8 sm:mb-16 text-white">
           CSAVH31 Toulouse
         </h1>
@@ -99,15 +103,26 @@ const Index = () => {
           {tiles.map((tile) => (
             <Card 
               key={tile.title}
-              className={`${tile.bgColor} border-none cursor-pointer transform transition-all duration-300 hover:scale-105`}
+              className={`${tile.bgColor} border-none cursor-pointer transform transition-all duration-300 hover:scale-105 focus-within:ring-2 focus-within:ring-white`}
               onClick={() => navigate(tile.route)}
+              role="button"
+              aria-label={tile.ariaLabel}
+              tabIndex={0}
             >
               <CardHeader className="text-center p-2 sm:p-4 pb-2">
-                <tile.icon className="w-6 h-6 sm:w-8 sm:h-8 md:w-12 md:h-12 mx-auto mb-1 sm:mb-2 text-white" />
+                <tile.icon 
+                  className="w-6 h-6 sm:w-8 sm:h-8 md:w-12 md:h-12 mx-auto mb-1 sm:mb-2 text-white" 
+                  aria-hidden="true"
+                />
                 <CardTitle className="text-xs sm:text-sm md:text-xl font-bold text-white">
                   {tile.title}
                 </CardTitle>
               </CardHeader>
+              <CardContent className="p-2 sm:p-4 pt-0">
+                <p className="text-xs sm:text-sm text-gray-100 line-clamp-2">
+                  {tile.description}
+                </p>
+              </CardContent>
             </Card>
           ))}
         </div>
@@ -115,8 +130,9 @@ const Index = () => {
         {/* Section Présentation */}
         <div className="max-w-4xl mx-auto">
           {isLoadingPresentation ? (
-            <div className="flex justify-center items-center h-24">
-              <Loader2 className="h-8 w-8 animate-spin" />
+            <div className="flex justify-center items-center h-24" role="status" aria-label="Chargement en cours">
+              <Loader2 className="h-8 w-8 animate-spin" aria-hidden="true" />
+              <span className="sr-only">Chargement en cours...</span>
             </div>
           ) : (
             <div className="bg-gray-800 rounded-lg p-8 shadow-lg border border-gray-700">
@@ -130,7 +146,7 @@ const Index = () => {
                     <img 
                       key={index} 
                       src={imagePath} 
-                      alt={`Image de présentation ${index + 1}`} 
+                      alt={`Image de présentation ${index + 1} du club`}
                       className="w-full h-48 object-cover rounded-lg"
                     />
                   ))}
