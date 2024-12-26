@@ -66,21 +66,21 @@ const Index = () => {
     <div className="min-h-screen bg-gray-900 text-gray-100">
       <Navbar />
       
-      <main className="container mx-auto px-4 py-24">
-        <h1 className="text-4xl md:text-5xl font-bold text-center mb-16 text-white">
+      <main className="container mx-auto px-4 py-12 sm:py-24">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-8 sm:mb-16 text-white">
           Club Sportif de l'Association Valentin Haüy
         </h1>
 
-        <div className="grid grid-cols-3 gap-4 md:gap-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 md:gap-8 max-w-6xl mx-auto">
           {tiles.map((tile) => (
             <Card 
               key={tile.title}
               className={`${tile.bgColor} border-none cursor-pointer transform transition-all duration-300 hover:scale-105`}
               onClick={() => navigate(tile.route)}
             >
-              <CardHeader className="text-center pb-2">
-                <tile.icon className="w-8 h-8 md:w-12 md:h-12 mx-auto mb-2 text-white" />
-                <CardTitle className="text-sm md:text-xl font-bold text-white">
+              <CardHeader className="text-center p-2 sm:p-4 pb-2">
+                <tile.icon className="w-6 h-6 sm:w-8 sm:h-8 md:w-12 md:h-12 mx-auto mb-1 sm:mb-2 text-white" />
+                <CardTitle className="text-xs sm:text-sm md:text-xl font-bold text-white">
                   {tile.title}
                 </CardTitle>
               </CardHeader>
