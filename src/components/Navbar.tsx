@@ -33,8 +33,8 @@ const Navbar = () => {
               <img 
                 src={logoUrl}
                 alt="Logo CSAVH31 Toulouse" 
-                className="h-10 w-auto"
-                aria-hidden="true"
+                className="h-10 w-auto object-contain"
+                onError={(e) => console.error('Erreur de chargement du logo:', e)}
               />
               <span className="text-xl font-bold text-white">CSAVH31 Toulouse</span>
             </Link>

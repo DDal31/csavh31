@@ -14,8 +14,8 @@ const Footer = () => {
               <img 
                 src={logoUrl}
                 alt="Logo CSAVH31 Toulouse" 
-                className="h-12 w-auto"
-                aria-hidden="true"
+                className="h-12 w-auto object-contain"
+                onError={(e) => console.error('Erreur de chargement du logo:', e)}
               />
               <h3 className="text-xl font-bold text-white">CSAVH31 Toulouse</h3>
             </div>
