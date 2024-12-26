@@ -7,7 +7,15 @@ const Footer = () => {
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-4">
-            <h3 className="text-xl font-bold text-white">Club Sportif AVH</h3>
+            <div className="flex items-center gap-3">
+              <img 
+                src="/club-logo.png" 
+                alt="Logo CSAVH31 Toulouse" 
+                className="h-12 w-auto"
+                aria-hidden="true"
+              />
+              <h3 className="text-xl font-bold text-white">CSAVH31 Toulouse</h3>
+            </div>
             <p className="text-sm">
               Association dédiée au sport et au bien-être pour les personnes déficientes visuelles.
             </p>
@@ -48,7 +56,7 @@ const Footer = () => {
         </div>
         
         <div className="border-t border-gray-700 mt-8 pt-8 text-sm text-center">
-          <p>&copy; {new Date().getFullYear()} Club Sportif AVH. Tous droits réservés.</p>
+          <p>&copy; {new Date().getFullYear()} CSAVH31 Toulouse. Tous droits réservés.</p>
         </div>
       </div>
     </footer>
