@@ -30,12 +30,17 @@ export const DocumentUploader = ({ type, existingDocument, onUploadSuccess, user
       console.log("Starting file upload process...");
       console.log("File details:", { name: file.name, size: file.size, type: file.type });
 
-      onUploadSuccess(file);
+      await onUploadSuccess(file);
+      
+      toast({
+        title: "Succès",
+        description: "Document importé avec succès",
+      });
     } catch (error) {
       console.error("Error in upload process:", error);
       toast({
-        title: "Erreur",
-        description: error instanceof Error ? error.message : "Une erreur est survenue lors de l'import",
+        title: "Erreur lors de l'import",
+        description: "Impossible d'importer le document. Veuillez réessayer.",
         variant: "destructive"
       });
     } finally {

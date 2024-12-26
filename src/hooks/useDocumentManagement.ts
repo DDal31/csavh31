@@ -22,7 +22,7 @@ export const useDocumentManagement = () => {
 
       if (uploadError) {
         console.error("Storage upload error:", uploadError);
-        throw uploadError;
+        throw new Error("Erreur lors de l'upload du fichier");
       }
 
       const { data: { session } } = await supabase.auth.getSession();
@@ -43,24 +43,14 @@ export const useDocumentManagement = () => {
 
       if (dbError) {
         console.error("Database update error:", dbError);
-        throw dbError;
+        throw new Error("Erreur lors de la mise à jour de la base de données");
       }
 
       console.log("Upload completed successfully");
-      toast({
-        title: "Succès",
-        description: "Document importé avec succès"
-      });
-
       return true;
     } catch (error) {
       console.error("Error in upload process:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible d'importer le document",
-        variant: "destructive"
-      });
-      return false;
+      throw error;
     } finally {
       setUploading(null);
     }
@@ -75,7 +65,7 @@ export const useDocumentManagement = () => {
 
       if (error) {
         console.error("Download error:", error);
-        throw error;
+        throw new Error("Impossible de télécharger le document");
       }
 
       const url = URL.createObjectURL(data);
