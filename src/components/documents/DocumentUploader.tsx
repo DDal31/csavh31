@@ -15,20 +15,39 @@ export const DocumentUploader = ({ type, existingDocument, onUploadSuccess }: Do
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
 
-  const handleFileUpload = async (file: File) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
     try {
       setUploading(true);
+      console.log("Starting file upload for type:", type);
+
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Non authentifié");
+      if (!session) {
+        toast({
+          title: "Erreur",
+          description: "Vous devez être connecté pour importer un document",
+          variant: "destructive"
+        });
+        return;
+      }
 
       const fileExt = file.name.split('.').pop();
       const filePath = `${session.user.id}/${type}/${crypto.randomUUID()}.${fileExt}`;
+
+      console.log("Uploading file to path:", filePath);
 
       const { error: uploadError } = await supabase.storage
         .from('user-documents')
         .upload(filePath, file);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error("Upload error:", uploadError);
+        throw uploadError;
+      }
+
+      console.log("File uploaded successfully, updating database...");
 
       const { error: dbError } = await supabase
         .from('user_documents')
@@ -42,7 +61,12 @@ export const DocumentUploader = ({ type, existingDocument, onUploadSuccess }: Do
           onConflict: 'user_id,document_type'
         });
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        console.error("Database error:", dbError);
+        throw dbError;
+      }
+
+      console.log("Database updated successfully");
 
       toast({
         title: "Succès",
@@ -59,35 +83,39 @@ export const DocumentUploader = ({ type, existingDocument, onUploadSuccess }: Do
       });
     } finally {
       setUploading(false);
+      // Reset the input value to allow uploading the same file again
+      if (event.target) {
+        event.target.value = '';
+      }
     }
   };
 
   return (
-    <label className="cursor-pointer">
-      <input
-        type="file"
-        className="hidden"
-        accept=".pdf,.jpg,.jpeg,.png"
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) handleFileUpload(file);
-        }}
-        disabled={uploading}
-      />
-      <Button
-        variant="outline"
-        className="bg-green-600 hover:bg-green-700 text-white border-none"
-        disabled={uploading}
-      >
-        {uploading ? (
-          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-        ) : existingDocument ? (
-          <RefreshCw className="h-4 w-4 mr-2" />
-        ) : (
-          <Upload className="h-4 w-4 mr-2" />
-        )}
-        {existingDocument ? "Changer" : "Importer"}
-      </Button>
-    </label>
+    <div className="inline-block">
+      <label className="cursor-pointer">
+        <input
+          type="file"
+          className="hidden"
+          accept=".pdf,.jpg,.jpeg,.png"
+          onChange={handleFileUpload}
+          disabled={uploading}
+        />
+        <Button
+          variant="outline"
+          className="bg-green-600 hover:bg-green-700 text-white border-none"
+          disabled={uploading}
+          type="button"
+        >
+          {uploading ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : existingDocument ? (
+            <RefreshCw className="h-4 w-4 mr-2" />
+          ) : (
+            <Upload className="h-4 w-4 mr-2" />
+          )}
+          {existingDocument ? "Changer" : "Importer"}
+        </Button>
+      </label>
+    </div>
   );
 };
