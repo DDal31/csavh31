@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, User, Activity, Calendar, FileText, MessageSquare, Shield } from "lucide-react";
 
 const Dashboard = () => {
@@ -65,20 +65,6 @@ const Dashboard = () => {
       route: "/attendance",
       bgColor: "bg-orange-600 hover:bg-orange-700",
       description: "Consulter les présences aux entraînements"
-    },
-    {
-      title: "Documents",
-      icon: FileText,
-      route: "/documents",
-      bgColor: "bg-purple-600 hover:bg-purple-700",
-      description: "Accéder à vos documents"
-    },
-    {
-      title: "Conseil",
-      icon: MessageSquare,
-      route: "/advice",
-      bgColor: "bg-indigo-600 hover:bg-indigo-700",
-      description: "Obtenir des conseils personnalisés"
     }
   ];
 
@@ -100,7 +86,7 @@ const Dashboard = () => {
               Bienvenue !
             </h1>
             <button
-              onClick={handleLogout}
+              onClick={() => supabase.auth.signOut()}
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
             >
               Déconnexion
@@ -115,16 +101,11 @@ const Dashboard = () => {
                 onClick={() => navigate(tile.route)}
               >
                 <CardHeader className="text-center pb-2">
-                  <tile.icon className="w-8 h-8 md:w-16 md:h-16 mx-auto mb-2 md:mb-4 text-white" />
-                  <CardTitle className="text-sm md:text-2xl font-bold text-white">
+                  <tile.icon className="w-8 h-8 md:w-12 md:h-12 mx-auto mb-2 text-white" />
+                  <CardTitle className="text-sm md:text-xl font-bold text-white">
                     {tile.title}
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-xs md:text-base text-gray-100 text-center line-clamp-3">
-                    {tile.description}
-                  </p>
-                </CardContent>
               </Card>
             ))}
             
@@ -134,16 +115,11 @@ const Dashboard = () => {
                 onClick={() => navigate("/admin")}
               >
                 <CardHeader className="text-center pb-2">
-                  <Shield className="w-8 h-8 md:w-16 md:h-16 mx-auto mb-2 md:mb-4 text-white" />
-                  <CardTitle className="text-sm md:text-2xl font-bold text-white">
+                  <Shield className="w-8 h-8 md:w-12 md:h-12 mx-auto mb-2 text-white" />
+                  <CardTitle className="text-sm md:text-xl font-bold text-white">
                     Dashboard Admin
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-xs md:text-base text-gray-100 text-center">
-                    Accéder à l'espace administrateur
-                  </p>
-                </CardContent>
               </Card>
             )}
           </div>

@@ -3,7 +3,7 @@ import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, FileText, Newspaper, Mail, BookOpen, User } from "lucide-react";
+import { Loader2, User, Newspaper, Mail, Podcast } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
@@ -33,11 +33,11 @@ const Index = () => {
 
   const tiles = [
     {
-      title: "Présentation",
-      icon: FileText,
-      route: "/presentation",
+      title: "Espace Membre",
+      icon: User,
+      route: "/login",
       bgColor: "bg-blue-600 hover:bg-blue-700",
-      description: getContentForSection("presentation").substring(0, 100) + "..."
+      description: "Accédez à votre espace personnel"
     },
     {
       title: "Actualités",
@@ -47,13 +47,6 @@ const Index = () => {
       description: getContentForSection("actualites").substring(0, 100) + "..."
     },
     {
-      title: "Blog",
-      icon: BookOpen,
-      route: "/blog/welcome",
-      bgColor: "bg-orange-600 hover:bg-orange-700",
-      description: "Découvrez nos articles et actualités détaillés"
-    },
-    {
       title: "Contact",
       icon: Mail,
       route: "/contact",
@@ -61,11 +54,11 @@ const Index = () => {
       description: getContentForSection("contact").substring(0, 100) + "..."
     },
     {
-      title: "Espace Membre",
-      icon: User,
-      route: "/login",
-      bgColor: "bg-indigo-600 hover:bg-indigo-700",
-      description: "Accédez à votre espace personnel"
+      title: "Podcast",
+      icon: Podcast,
+      route: "/podcast",
+      bgColor: "bg-orange-600 hover:bg-orange-700",
+      description: "Écoutez nos derniers podcasts"
     }
   ];
 
@@ -86,20 +79,11 @@ const Index = () => {
               onClick={() => navigate(tile.route)}
             >
               <CardHeader className="text-center pb-2">
-                <tile.icon className="w-8 h-8 md:w-16 md:h-16 mx-auto mb-2 md:mb-4 text-white" />
-                <CardTitle className="text-sm md:text-2xl font-bold text-white">
+                <tile.icon className="w-8 h-8 md:w-12 md:h-12 mx-auto mb-2 text-white" />
+                <CardTitle className="text-sm md:text-xl font-bold text-white">
                   {tile.title}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-xs md:text-base text-gray-100 text-center line-clamp-3">
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 md:h-6 md:w-6 animate-spin mx-auto" />
-                  ) : (
-                    tile.description
-                  )}
-                </p>
-              </CardContent>
             </Card>
           ))}
         </div>
