@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, Upload, X, AlertCircle } from "lucide-react";
+import { Loader2, Upload, X } from "lucide-react";
 
 const AdminPresentation = () => {
   const navigate = useNavigate();
@@ -52,7 +52,6 @@ const AdminPresentation = () => {
           setContent(presentationData.content || "");
           setImages(presentationData.image_paths || []);
         } else {
-          // If no data exists, set default values
           setTitle("Présentation");
           setContent("Contenu de présentation par défaut");
         }
@@ -122,15 +121,20 @@ const AdminPresentation = () => {
         newImagePaths.push(publicUrl);
       }
 
-      // Upsert content in database
+      // Upsert content in database using the unique constraint on section
       const { error: upsertError } = await supabase
         .from('pages_content')
-        .upsert({
-          section: 'presentation',
-          title,
-          content,
-          image_paths: newImagePaths
-        }, { onConflict: 'section' });
+        .upsert(
+          {
+            section: 'presentation',
+            title,
+            content,
+            image_paths: newImagePaths
+          },
+          {
+            onConflict: 'section'
+          }
+        );
 
       if (upsertError) throw upsertError;
 
