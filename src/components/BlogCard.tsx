@@ -22,8 +22,8 @@ const BlogCard = ({
   categories,
 }: BlogCardProps) => {
   return (
-    <Link to={`/actualites/${id}`} aria-label={`Voir l'article : ${title}`}>
-      <Card className="h-full overflow-hidden hover:shadow-lg transition-shadow duration-300">
+    <Link to={`/actualites/${id}`} className="block" aria-label={`Voir l'article : ${title}`}>
+      <Card className="h-full overflow-hidden hover:shadow-lg transition-shadow duration-300 bg-gray-800 border-gray-700">
         <div className="relative">
           <AspectRatio ratio={16 / 9} className="bg-muted">
             <img
@@ -37,23 +37,25 @@ const BlogCard = ({
             />
           </AspectRatio>
         </div>
-        <CardContent className="p-4">
-          <div className="space-y-2">
-            <div className="flex gap-2 mb-2">
+        <CardContent className="p-6">
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2 mb-2">
               {categories.map((category) => (
                 <span
                   key={category}
-                  className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full"
+                  className="px-3 py-1 text-xs font-medium bg-primary/20 text-primary rounded-full"
                 >
                   {category}
                 </span>
               ))}
             </div>
-            <h3 className="text-xl font-bold leading-tight line-clamp-2">{title}</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3">
+            <h3 className="text-2xl font-bold leading-tight line-clamp-2 text-gray-100">
+              {title}
+            </h3>
+            <p className="text-sm text-gray-400 line-clamp-3">
               {excerpt}
             </p>
-            <div className="flex items-center justify-between text-sm text-gray-500">
+            <div className="flex items-center justify-between text-sm text-gray-500 pt-2 border-t border-gray-700">
               <span>{author}</span>
               <time dateTime={date}>{date}</time>
             </div>

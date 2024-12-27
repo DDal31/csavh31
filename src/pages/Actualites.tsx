@@ -3,9 +3,10 @@ import Footer from "@/components/Footer";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import BlogCard from "@/components/BlogCard";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
 
 interface NewsItem {
   id: string;
@@ -13,18 +14,25 @@ interface NewsItem {
   content: string;
   image_path: string | null;
   published_at: string;
+  author: {
+    first_name: string;
+    last_name: string;
+  } | null;
 }
 
-const placeholderImage = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=800&q=80";
-
 const Actualites = () => {
+  const navigate = useNavigate();
+  
   const { data: news, isLoading } = useQuery({
     queryKey: ["news"],
     queryFn: async () => {
       console.log("Fetching news...");
       const { data, error } = await supabase
         .from("news")
-        .select("*")
+        .select(`
+          *,
+          author:profiles(first_name, last_name)
+        `)
         .eq("status", "published")
         .order("published_at", { ascending: false });
       
@@ -38,13 +46,8 @@ const Actualites = () => {
     },
   });
 
-  const truncateContent = (content: string, maxLength: number = 150) => {
-    if (content.length <= maxLength) return content;
-    return content.slice(0, maxLength) + "...";
-  };
-
-  const formatDate = (dateString: string) => {
-    return format(new Date(dateString), "d MMMM yyyy", { locale: fr });
+  const handleCardClick = (id: string) => {
+    navigate(`/actualites/${id}`);
   };
 
   return (
@@ -62,34 +65,19 @@ const Actualites = () => {
             <span className="sr-only">Chargement des actualités...</span>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {news?.map((item) => (
-              <Card 
-                key={item.id}
-                className="bg-gray-800 border-gray-700 hover:border-primary transition-colors cursor-pointer h-full"
-                role="article"
-              >
-                <div className="aspect-w-16 aspect-h-9 relative">
-                  <img
-                    src={item.image_path || placeholderImage}
-                    alt={`Image illustrant l'article : ${item.title}`}
-                    className="object-cover w-full h-48 rounded-t-lg"
-                  />
-                </div>
-                <CardHeader>
-                  <CardTitle className="text-xl text-gray-100">
-                    {item.title}
-                  </CardTitle>
-                  <p className="text-sm text-gray-400">
-                    Publié le {formatDate(item.published_at)}
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-300 line-clamp-3">
-                    {truncateContent(item.content)}
-                  </p>
-                </CardContent>
-              </Card>
+              <div key={item.id} onClick={() => handleCardClick(item.id)}>
+                <BlogCard
+                  id={item.id}
+                  title={item.title}
+                  excerpt={item.content.substring(0, 150) + "..."}
+                  image={item.image_path || "/placeholder.svg"}
+                  author={item.author ? `${item.author.first_name} ${item.author.last_name}` : "CSAVH31"}
+                  date={format(new Date(item.published_at), "d MMMM yyyy", { locale: fr })}
+                  categories={["Actualité"]}
+                />
+              </div>
             ))}
           </div>
         )}

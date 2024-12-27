@@ -46,14 +46,12 @@ const NewsArticle = () => {
 
       const articleData = data as NewsArticleType;
 
-      // Parse the content JSON string if it exists
       if (articleData && articleData.content) {
         try {
           articleData.sections = JSON.parse(articleData.content);
           console.log("Parsed sections:", articleData.sections);
         } catch (e) {
           console.error("Error parsing article sections:", e);
-          // If parsing fails, treat content as a simple string
           articleData.sections = [{
             subtitle: "",
             content: articleData.content,
@@ -69,7 +67,7 @@ const NewsArticle = () => {
   });
 
   if (!id || id === 'undefined') {
-    return null; // Will be redirected by useEffect
+    return null;
   }
 
   if (isLoading) {
@@ -102,7 +100,7 @@ const NewsArticle = () => {
       <Navbar />
       
       <main className="container mx-auto px-4 py-8 lg:py-16">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <Link 
             to="/actualites" 
             className="inline-flex items-center text-primary hover:text-primary/80 mb-8"
@@ -111,9 +109,9 @@ const NewsArticle = () => {
             Retour aux actualités
           </Link>
 
-          <article className="space-y-8">
-            <header className="text-center space-y-6">
-              <h1 className="text-4xl lg:text-5xl font-bold leading-tight">
+          <article className="bg-gray-800 rounded-lg border border-gray-700 p-8 mb-8">
+            <header className="text-center space-y-6 mb-8">
+              <h1 className="text-4xl lg:text-5xl font-bold leading-tight text-gray-100">
                 {article.title}
               </h1>
               
@@ -132,7 +130,7 @@ const NewsArticle = () => {
             </header>
 
             {article.image_path && (
-              <div className="aspect-video relative rounded-lg overflow-hidden">
+              <div className="aspect-video relative rounded-lg overflow-hidden mb-8 shadow-lg">
                 <img
                   src={article.image_path}
                   alt={`Image principale de l'article : ${article.title}`}
@@ -140,23 +138,23 @@ const NewsArticle = () => {
                 />
               </div>
             )}
-
-            <div className="prose prose-invert max-w-none">
-              {article.sections ? (
-                <div className="space-y-16">
-                  {article.sections.map((section, index) => (
-                    <ArticleSection 
-                      key={index}
-                      section={section}
-                      index={index}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <p className="whitespace-pre-wrap">{article.content}</p>
-              )}
-            </div>
           </article>
+
+          <div className="space-y-8">
+            {article.sections ? (
+              article.sections.map((section, index) => (
+                <ArticleSection 
+                  key={index}
+                  section={section}
+                  index={index}
+                />
+              ))
+            ) : (
+              <div className="bg-gray-800 rounded-lg border border-gray-700 p-8">
+                <p className="text-gray-300 whitespace-pre-wrap">{article.content}</p>
+              </div>
+            )}
+          </div>
         </div>
       </main>
 

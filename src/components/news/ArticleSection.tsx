@@ -10,28 +10,34 @@ export const ArticleSection = ({ section, index }: ArticleSectionProps) => {
   const hasValidImage = section.imagePath && !section.imagePath.startsWith('blob:');
 
   return (
-    <section 
-      className={`flex flex-col lg:flex-row gap-8 items-center ${
+    <section className="bg-gray-800 rounded-lg border border-gray-700 p-8 mb-8">
+      <div className={`flex flex-col lg:flex-row gap-8 items-center ${
         isEven ? "lg:flex-row" : "lg:flex-row-reverse"
-      }`}
-    >
-      {hasValidImage && (
-        <div className="lg:w-1/2">
-          <img
-            src={section.imagePath}
-            alt={`Image illustrant la section : ${section.subtitle}`}
-            className="rounded-lg object-cover w-full h-full"
-          />
-        </div>
-      )}
-      <div className={`${hasValidImage ? "lg:w-1/2" : "lg:w-full"}`}>
-        {section.subtitle && (
-          <h2 className="text-2xl font-bold mb-4">{section.subtitle}</h2>
+      }`}>
+        {hasValidImage && (
+          <div className="lg:w-1/2">
+            <img
+              src={section.imagePath}
+              alt={`Image illustrant la section : ${section.subtitle}`}
+              className="rounded-lg object-cover w-full h-full shadow-lg"
+            />
+          </div>
         )}
-        <div className="prose prose-invert">
-          {section.content.split('\n').map((paragraph, pIndex) => (
-            <p key={pIndex}>{paragraph}</p>
-          ))}
+        <div className={`${hasValidImage ? "lg:w-1/2" : "w-full"}`}>
+          {section.subtitle && (
+            <h2 className="text-2xl font-bold mb-6 text-gray-100">
+              {section.subtitle}
+            </h2>
+          )}
+          <div className="prose prose-invert max-w-none">
+            {section.content.split('\n').map((paragraph, pIndex) => (
+              paragraph && (
+                <p key={pIndex} className="text-gray-300 leading-relaxed mb-4">
+                  {paragraph}
+                </p>
+              )
+            ))}
+          </div>
         </div>
       </div>
     </section>
