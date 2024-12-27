@@ -31,10 +31,10 @@ export function TrainingTypeField({ form }: Props) {
         name="type"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-[#9b87f5] font-medium">Type d'entraînement</FormLabel>
+            <FormLabel className="text-white font-medium">Type d'entraînement</FormLabel>
             <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl>
-                <SelectTrigger className="bg-white/10 border-white/20 text-gray-200">
+                <SelectTrigger className="bg-white/10 border-white/20 text-white">
                   <SelectValue placeholder="Sélectionnez un type" />
                 </SelectTrigger>
               </FormControl>
@@ -44,7 +44,7 @@ export function TrainingTypeField({ form }: Props) {
                 <SelectItem value="other">Autre</SelectItem>
               </SelectContent>
             </Select>
-            <FormMessage />
+            <FormMessage className="text-white" />
           </FormItem>
         )}
       />
@@ -55,17 +55,17 @@ export function TrainingTypeField({ form }: Props) {
           name="otherTypeDetails"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-[#9b87f5] font-medium">
+              <FormLabel className="text-white font-medium">
                 Précisez le type d'entraînement
               </FormLabel>
               <FormControl>
                 <Input 
                   placeholder="Type d'entraînement" 
                   {...field} 
-                  className="bg-white/10 border-white/20 text-gray-200 placeholder:text-gray-400"
+                  className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
                 />
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-white" />
             </FormItem>
           )}
         />

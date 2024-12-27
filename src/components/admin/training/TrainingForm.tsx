@@ -98,34 +98,34 @@ export function TrainingForm({ training, onSuccess, onCancel }: TrainingFormProp
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold text-white bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
+        <h2 className="text-3xl font-bold text-white">
           {isEditing ? "Modifier l'entraînement" : "Créer un entraînement"}
         </h2>
         <Button 
           variant="outline" 
           onClick={onCancel}
-          className="border-[#9b87f5] text-[#9b87f5] hover:bg-[#9b87f5] hover:text-white flex items-center gap-2"
+          className="border-white/20 text-white hover:bg-white/10"
           aria-label="Retour à la liste des entraînements"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-4 w-4 mr-2" />
           Retour
         </Button>
       </div>
 
-      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-8 shadow-xl">
+      <div className="bg-gray-800/50 backdrop-blur-lg rounded-xl p-8 shadow-xl">
         <Form {...form}>
           <form 
             onSubmit={form.handleSubmit(onSubmit)} 
             className="space-y-6"
             aria-label={`Formulaire pour ${isEditing ? "modifier" : "créer"} un entraînement`}
           >
-            <AccessibleTrainingTypeField form={form} />
-            <AccessibleTrainingDateField form={form} />
-            <AccessibleTrainingTimeFields form={form} />
+            <TrainingTypeField form={form} />
+            <TrainingDateField form={form} />
+            <TrainingTimeFields form={form} />
             
             <Button 
               type="submit" 
-              className="w-full bg-[#9b87f5] hover:bg-[#7E69AB] text-white mt-8"
+              className="w-full bg-white/10 hover:bg-white/20 text-white"
               aria-label={isEditing ? "Modifier l'entraînement" : "Créer l'entraînement"}
             >
               {isEditing ? "Modifier l'entraînement" : "Créer l'entraînement"}

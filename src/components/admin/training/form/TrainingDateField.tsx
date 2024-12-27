@@ -30,7 +30,7 @@ export function TrainingDateField({ form }: Props) {
       name="date"
       render={({ field }) => (
         <FormItem className="flex flex-col">
-          <FormLabel className="text-[#9b87f5] font-medium">
+          <FormLabel className="text-white font-medium">
             Date de l'entraînement
           </FormLabel>
           <Popover>
@@ -39,7 +39,7 @@ export function TrainingDateField({ form }: Props) {
                 <Button
                   variant={"outline"}
                   className={cn(
-                    "w-full pl-3 text-left font-normal bg-white/10 border-white/20 text-gray-200",
+                    "w-full pl-3 text-left font-normal bg-white/10 border-white/20 text-white",
                     !field.value && "text-gray-400"
                   )}
                 >
@@ -64,7 +64,7 @@ export function TrainingDateField({ form }: Props) {
               />
             </PopoverContent>
           </Popover>
-          <FormMessage />
+          <FormMessage className="text-white" />
         </FormItem>
       )}
     />

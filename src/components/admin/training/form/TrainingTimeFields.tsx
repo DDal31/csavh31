@@ -22,15 +22,15 @@ export function TrainingTimeFields({ form }: Props) {
         name="startTime"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-[#9b87f5] font-medium">Heure de début</FormLabel>
+            <FormLabel className="text-white font-medium">Heure de début</FormLabel>
             <FormControl>
               <Input 
                 type="time" 
                 {...field} 
-                className="bg-white/10 border-white/20 text-gray-200"
+                className="bg-white/10 border-white/20 text-white"
               />
             </FormControl>
-            <FormMessage />
+            <FormMessage className="text-white" />
           </FormItem>
         )}
       />
@@ -40,15 +40,15 @@ export function TrainingTimeFields({ form }: Props) {
         name="endTime"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-[#9b87f5] font-medium">Heure de fin</FormLabel>
+            <FormLabel className="text-white font-medium">Heure de fin</FormLabel>
             <FormControl>
               <Input 
                 type="time" 
                 {...field} 
-                className="bg-white/10 border-white/20 text-gray-200"
+                className="bg-white/10 border-white/20 text-white"
               />
             </FormControl>
-            <FormMessage />
+            <FormMessage className="text-white" />
           </FormItem>
         )}
       />
