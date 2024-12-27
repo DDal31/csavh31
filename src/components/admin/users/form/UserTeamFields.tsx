@@ -1,10 +1,10 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { UseFormReturn } from "react-hook-form";
-import type { CreateUserData } from "@/types/auth";
+import type { CreateUserData, AdminUserEditData } from "@/types/auth";
 
 interface UserTeamFieldsProps {
-  form: UseFormReturn<CreateUserData>;
+  form: UseFormReturn<CreateUserData | AdminUserEditData>;
 }
 
 export const UserTeamFields = ({ form }: UserTeamFieldsProps) => {

@@ -17,7 +17,7 @@ interface AdminUserEditFormProps {
 
 export function AdminUserEditForm({ profile, onSubmit, isLoading }: AdminUserEditFormProps) {
   const form = useForm<AdminUserEditData>({
-    resolver: zodResolver(profileSchema.omit({ password: true })),
+    resolver: zodResolver(profileSchema.omit({ id: true, password: true })),
     defaultValues: {
       first_name: profile.first_name,
       last_name: profile.last_name,
