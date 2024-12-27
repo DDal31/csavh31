@@ -62,6 +62,21 @@ const NewsArticle = () => {
         throw error;
       }
 
+      // Parse the content JSON string if it exists
+      if (data && data.content) {
+        try {
+          data.sections = JSON.parse(data.content);
+        } catch (e) {
+          console.error("Error parsing article sections:", e);
+          // If parsing fails, treat content as a simple string
+          data.sections = [{
+            subtitle: "",
+            content: data.content,
+            imagePath: ""
+          }];
+        }
+      }
+
       console.log("Fetched news article:", data);
       return data as NewsArticle;
     },
@@ -151,7 +166,7 @@ const NewsArticle = () => {
                         index % 2 === 0 ? "lg:flex-row" : "lg:flex-row-reverse"
                       }`}
                     >
-                      {section.imagePath && (
+                      {section.imagePath && !section.imagePath.startsWith('blob:') && (
                         <div className="lg:w-1/2">
                           <img
                             src={section.imagePath}
@@ -160,10 +175,14 @@ const NewsArticle = () => {
                           />
                         </div>
                       )}
-                      <div className={`lg:w-1/2 ${!section.imagePath ? "lg:w-full" : ""}`}>
-                        <h2 className="text-2xl font-bold mb-4">{section.subtitle}</h2>
+                      <div className={`lg:w-1/2 ${!section.imagePath || section.imagePath.startsWith('blob:') ? "lg:w-full" : ""}`}>
+                        {section.subtitle && (
+                          <h2 className="text-2xl font-bold mb-4">{section.subtitle}</h2>
+                        )}
                         <div className="prose prose-invert">
-                          <p>{section.content}</p>
+                          {section.content.split('\n').map((paragraph, pIndex) => (
+                            <p key={pIndex}>{paragraph}</p>
+                          ))}
                         </div>
                       </div>
                     </section>
