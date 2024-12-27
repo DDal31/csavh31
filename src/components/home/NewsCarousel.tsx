@@ -9,8 +9,14 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { useEffect, useState } from "react";
+import Autoplay from "embla-carousel-autoplay";
 
 export const NewsCarousel = () => {
+  const [autoplayPlugin] = useState(() => 
+    Autoplay({ delay: 5000, stopOnInteraction: true })
+  );
+
   const { data: news, isLoading } = useQuery({
     queryKey: ["news"],
     queryFn: async () => {
@@ -54,30 +60,41 @@ export const NewsCarousel = () => {
   }
 
   return (
-    <Carousel
-      opts={{
-        align: "start",
-        loop: true,
-      }}
-      className="w-full"
-    >
-      <CarouselContent>
-        {news.map((article) => (
-          <CarouselItem key={article.id} className="md:basis-1/2 lg:basis-1/3">
-            <BlogCard
-              title={article.title}
-              excerpt={article.content.substring(0, 150) + "..."}
-              image={article.image_path || "/placeholder.svg"}
-              author="CSAVH31"
-              date={new Date(article.published_at).toLocaleDateString()}
-              categories={["Actualité"]}
-              slug={article.id}
-            />
-          </CarouselItem>
-        ))}
-      </CarouselContent>
-      <CarouselPrevious aria-label="Voir l'actualité précédente" />
-      <CarouselNext aria-label="Voir l'actualité suivante" />
-    </Carousel>
+    <div className="w-full aspect-[16/9] max-w-4xl mx-auto">
+      <Carousel
+        opts={{
+          align: "center",
+          loop: true,
+        }}
+        plugins={[autoplayPlugin]}
+        className="w-full h-full"
+      >
+        <CarouselContent>
+          {news.map((article) => (
+            <CarouselItem key={article.id} className="w-full">
+              <div className="w-full h-full px-2">
+                <BlogCard
+                  title={article.title}
+                  excerpt={article.content.substring(0, 150) + "..."}
+                  image={article.image_path || "/placeholder.svg"}
+                  author="CSAVH31"
+                  date={new Date(article.published_at).toLocaleDateString()}
+                  categories={["Actualité"]}
+                  slug={article.id}
+                />
+              </div>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <CarouselPrevious 
+          aria-label="Voir l'actualité précédente" 
+          className="left-2"
+        />
+        <CarouselNext 
+          aria-label="Voir l'actualité suivante" 
+          className="right-2"
+        />
+      </Carousel>
+    </div>
   );
 };
