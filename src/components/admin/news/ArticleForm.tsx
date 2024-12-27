@@ -6,11 +6,13 @@ import { Card } from "@/components/ui/card";
 import { Eye, Plus, Send, ArrowLeft } from "lucide-react";
 import { ImageUpload } from "./ImageUpload";
 import { ArticleSection } from "./ArticleSection";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Section {
   subtitle: string;
   content: string;
   imagePath?: string;
+  imageFile?: File;
 }
 
 interface ArticleFormProps {
@@ -42,15 +44,65 @@ export const ArticleForm = ({ onSubmit, onPreview, isSubmitting, onBack }: Artic
     setSections([...sections, { subtitle: "", content: "", imagePath: "" }]);
   };
 
-  const updateSection = (index: number, field: keyof Section, value: string) => {
+  const updateSection = (index: number, field: keyof Section, value: string | File) => {
     const newSections = [...sections];
-    newSections[index][field] = value;
+    if (field === "imagePath" && value instanceof File) {
+      // Store the file object for later upload
+      newSections[index].imageFile = value;
+      // Create a temporary preview URL
+      newSections[index].imagePath = URL.createObjectURL(value);
+    } else {
+      newSections[index][field] = value as string;
+    }
     setSections(newSections);
+  };
+
+  const uploadSectionImage = async (file: File): Promise<string> => {
+    const fileExt = file.name.split('.').pop();
+    const filePath = `${crypto.randomUUID()}.${fileExt}`;
+    
+    const { error: uploadError } = await supabase.storage
+      .from('club-assets')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      console.error("Error uploading section image:", uploadError);
+      throw uploadError;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('club-assets')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit({ title, mainImage, sections });
+    
+    // Process sections to upload images and get permanent URLs
+    const processedSections = await Promise.all(
+      sections.map(async (section) => {
+        const processedSection = { ...section };
+        if (section.imageFile) {
+          try {
+            const publicUrl = await uploadSectionImage(section.imageFile);
+            processedSection.imagePath = publicUrl;
+          } catch (error) {
+            console.error("Failed to upload section image:", error);
+          }
+        }
+        // Remove the temporary imageFile property
+        delete processedSection.imageFile;
+        return processedSection;
+      })
+    );
+
+    await onSubmit({ 
+      title, 
+      mainImage, 
+      sections: processedSections 
+    });
   };
 
   return (

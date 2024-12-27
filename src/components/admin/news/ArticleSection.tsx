@@ -7,11 +7,12 @@ interface Section {
   subtitle: string;
   content: string;
   imagePath?: string;
+  imageFile?: File;
 }
 
 interface ArticleSectionProps {
   section: Section;
-  onChange: (field: keyof Section, value: string) => void;
+  onChange: (field: keyof Section, value: string | File) => void;
   index: number;
 }
 
@@ -57,7 +58,7 @@ export const ArticleSection = ({ section, onChange, index }: ArticleSectionProps
           label="Image de section"
           onChange={(file) => {
             if (file) {
-              onChange("imagePath", URL.createObjectURL(file));
+              onChange("imagePath", file);
             }
           }}
           preview={section.imagePath}
