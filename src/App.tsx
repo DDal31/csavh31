@@ -12,6 +12,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
+import AdminUserEdit from "./pages/AdminUserEdit";
 import AdminTrainings from "./pages/AdminTrainings";
 import AdminDocuments from "./pages/AdminDocuments";
 import AdminSettings from "./pages/AdminSettings";
@@ -44,6 +45,7 @@ const App = () => (
           <Route path="/documents" element={<Documents />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/users/:userId/edit" element={<AdminUserEdit />} />
           <Route path="/admin/trainings" element={<AdminTrainings />} />
           <Route path="/admin/documents" element={<AdminDocuments />} />
           <Route path="/admin/settings" element={<AdminSettings />} />

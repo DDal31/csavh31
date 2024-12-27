@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,7 +11,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import type { Profile } from "@/types/profile";
 
 interface UserActionsProps {
@@ -26,10 +27,21 @@ export function UserActions({
   user,
   onDeleteUser,
 }: UserActionsProps) {
+  const navigate = useNavigate();
   const fullName = `${user.profile.first_name} ${user.profile.last_name}`.trim();
 
   return (
     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+      <Button
+        variant="outline"
+        className="bg-blue-600 hover:bg-blue-700 text-white border-none w-full sm:w-auto flex items-center justify-center gap-2"
+        onClick={() => navigate(`/admin/users/${user.id}/edit`)}
+        aria-label={`Modifier le profil de ${fullName}`}
+      >
+        <Pencil className="h-4 w-4" />
+        <span className="sm:hidden">Modifier</span>
+      </Button>
+
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button
