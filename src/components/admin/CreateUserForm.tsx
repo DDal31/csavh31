@@ -55,7 +55,7 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
           aria-label="Formulaire de création d'utilisateur"
         >
           <div className="space-y-4">
-            <UserBasicInfoFields form={form} isCreating={true} />
+            <UserBasicInfoFields form={form} isCreating />
             <UserRoleFields form={form} />
             <UserTeamFields form={form} />
           </div>

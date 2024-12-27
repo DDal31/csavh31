@@ -119,9 +119,9 @@ export function TrainingForm({ training, onSuccess, onCancel }: TrainingFormProp
             className="space-y-6"
             aria-label={`Formulaire pour ${isEditing ? "modifier" : "créer"} un entraînement`}
           >
-            <TrainingTypeField form={form} />
-            <TrainingDateField form={form} />
-            <TrainingTimeFields form={form} />
+            <AccessibleTrainingTypeField form={form} />
+            <AccessibleTrainingDateField form={form} />
+            <AccessibleTrainingTimeFields form={form} />
             
             <Button 
               type="submit" 

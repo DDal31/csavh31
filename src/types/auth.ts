@@ -12,7 +12,7 @@ export interface BaseUserData {
   site_role: SiteRole;
 }
 
-// Type for creating new users (includes password)
+// Type for creating new users (includes required password)
 export interface CreateUserData extends BaseUserData {
   password: string;
 }
@@ -21,4 +21,4 @@ export interface CreateUserData extends BaseUserData {
 export type AdminUserEditData = BaseUserData;
 
 // Form type that can handle both create and edit cases
-export type UserFormData = BaseUserData & { password?: string };
+export type UserFormData = CreateUserData;
