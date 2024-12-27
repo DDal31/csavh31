@@ -1,12 +1,5 @@
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -17,8 +10,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Trash2 } from "lucide-react";
-import ProfileEditForm from "@/components/ProfileEditForm";
+import { Trash2 } from "lucide-react";
 import type { Profile } from "@/types/profile";
 
 interface UserActionsProps {
@@ -27,70 +19,17 @@ interface UserActionsProps {
     email: string;
     profile: Profile;
   };
-  onUpdateProfile: (data: Profile) => void;
   onDeleteUser: (userId: string) => void;
-  isEditDialogOpen: boolean;
-  setIsEditDialogOpen: (open: boolean) => void;
 }
 
 export function UserActions({
   user,
-  onUpdateProfile,
   onDeleteUser,
-  isEditDialogOpen,
-  setIsEditDialogOpen,
 }: UserActionsProps) {
   const fullName = `${user.profile.first_name} ${user.profile.last_name}`.trim();
-  const modifyButtonLabel = `Modifier ${fullName}`;
-
-  const handleSubmit = (data: Profile) => {
-    console.log("Updating profile for user:", user.id);
-    console.log("Profile ID being updated:", user.profile.id);
-    console.log("With data:", data);
-    
-    // Assurons-nous que nous utilisons le bon ID
-    onUpdateProfile({
-      ...data,
-      id: user.profile.id
-    });
-  };
 
   return (
     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogTrigger asChild>
-          <Button
-            variant="outline"
-            className="bg-blue-600 hover:bg-blue-700 text-white border-none w-full sm:w-auto"
-            aria-label={modifyButtonLabel}
-          >
-            Modifier
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="bg-gray-800 border-gray-700">
-          <DialogHeader>
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                className="text-white w-fit flex items-center gap-2 hover:text-gray-300"
-                onClick={() => setIsEditDialogOpen(false)}
-                aria-label="Retour à la liste des utilisateurs"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Retour
-              </Button>
-              <DialogTitle className="text-white">Modifier le profil de {fullName}</DialogTitle>
-            </div>
-          </DialogHeader>
-          <ProfileEditForm
-            profile={user.profile}
-            onSubmit={handleSubmit}
-            isLoading={false}
-            isAdmin={true}
-          />
-        </DialogContent>
-      </Dialog>
-
       <AlertDialog>
         <AlertDialogTrigger asChild>
           <Button

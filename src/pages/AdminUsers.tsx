@@ -28,8 +28,6 @@ const AdminUsers = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   useEffect(() => {
@@ -109,42 +107,6 @@ const AdminUsers = () => {
     }
   };
 
-  const handleUpdateProfile = async (data: Profile) => {
-    try {
-      console.log("Updating profile with data:", data);
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          first_name: data.first_name,
-          last_name: data.last_name,
-          email: data.email,
-          phone: data.phone,
-          club_role: data.club_role,
-          sport: data.sport,
-          team: data.team,
-          site_role: data.site_role
-        })
-        .eq('id', data.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Succès",
-        description: "Le profil a été mis à jour avec succès",
-      });
-      
-      setIsEditDialogOpen(false);
-      fetchUsers();
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour du profil:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de mettre à jour le profil",
-        variant: "destructive"
-      });
-    }
-  };
-
   const handleDeleteUser = async (userId: string) => {
     try {
       const { error } = await supabase.functions.invoke('manage-users', {
@@ -202,12 +164,7 @@ const AdminUsers = () => {
 
           <UsersTable
             users={users}
-            onUpdateProfile={handleUpdateProfile}
             onDeleteUser={handleDeleteUser}
-            selectedUser={selectedUser}
-            setSelectedUser={setSelectedUser}
-            isEditDialogOpen={isEditDialogOpen}
-            setIsEditDialogOpen={setIsEditDialogOpen}
           />
         </div>
       </main>

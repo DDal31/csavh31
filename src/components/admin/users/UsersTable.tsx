@@ -17,22 +17,12 @@ interface User {
 
 interface UsersTableProps {
   users: User[];
-  onUpdateProfile: (data: Profile) => void;
   onDeleteUser: (userId: string) => void;
-  selectedUser: User | null;
-  setSelectedUser: (user: User | null) => void;
-  isEditDialogOpen: boolean;
-  setIsEditDialogOpen: (open: boolean) => void;
 }
 
 export function UsersTable({
   users,
-  onUpdateProfile,
   onDeleteUser,
-  selectedUser,
-  setSelectedUser,
-  isEditDialogOpen,
-  setIsEditDialogOpen
 }: UsersTableProps) {
   return (
     <div role="region" aria-label="Liste des utilisateurs">
@@ -73,10 +63,7 @@ export function UsersTable({
               <TableCell>
                 <UserActions
                   user={user}
-                  onUpdateProfile={onUpdateProfile}
                   onDeleteUser={onDeleteUser}
-                  isEditDialogOpen={isEditDialogOpen}
-                  setIsEditDialogOpen={setIsEditDialogOpen}
                 />
               </TableCell>
             </TableRow>
