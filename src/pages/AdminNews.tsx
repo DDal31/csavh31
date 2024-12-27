@@ -65,7 +65,7 @@ const AdminNews = () => {
           id,
           title,
           published_at,
-          author:author_id (
+          author:profiles!news_author_id_fkey (
             first_name,
             last_name
           )

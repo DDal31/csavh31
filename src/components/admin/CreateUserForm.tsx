@@ -33,21 +33,7 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
 
   const handleSubmit = (data: CreateUserData) => {
     console.log("Creating user with data:", data);
-    const formattedData = {
-      email: data.email,
-      password: data.password,
-      profile: {
-        first_name: data.first_name,
-        last_name: data.last_name,
-        email: data.email,
-        phone: data.phone,
-        club_role: data.club_role,
-        sport: data.sport,
-        team: data.team,
-        site_role: data.site_role
-      }
-    };
-    onSubmit(formattedData);
+    onSubmit(data);
   };
 
   return (

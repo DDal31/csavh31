@@ -1,4 +1,5 @@
 import type { ProfileFormData } from "@/schemas/profileSchema";
+import type { ClubRole, SportType, TeamType, SiteRole } from "@/types/profile";
 
 // Base type for user data
 export interface BaseUserData extends Omit<ProfileFormData, 'password'> {
@@ -6,10 +7,10 @@ export interface BaseUserData extends Omit<ProfileFormData, 'password'> {
   last_name: string;
   email: string;
   phone?: string;
-  club_role: string;
-  sport: string;
-  team: string;
-  site_role: string;
+  club_role: ClubRole;
+  sport: SportType;
+  team: TeamType;
+  site_role: SiteRole;
 }
 
 // Type for creating new users (includes password)
