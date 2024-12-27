@@ -130,11 +130,11 @@ const NewsArticle = () => {
             </header>
 
             {article.image_path && (
-              <div className="aspect-video relative rounded-lg overflow-hidden mb-8 shadow-lg">
+              <div className="flex justify-center mb-8">
                 <img
                   src={article.image_path}
                   alt={`Image principale de l'article : ${article.title}`}
-                  className="object-cover w-full h-full"
+                  className="max-w-full h-auto rounded-lg shadow-lg max-h-[600px] object-contain"
                 />
               </div>
             )}
