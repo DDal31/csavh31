@@ -29,7 +29,7 @@ const BlogCard = ({
             <img
               src={image}
               alt={title}
-              className="object-cover w-full h-full"
+              className="object-cover object-top w-full h-full"
               onError={(e) => {
                 const img = e.target as HTMLImageElement;
                 img.src = "/placeholder.svg";
