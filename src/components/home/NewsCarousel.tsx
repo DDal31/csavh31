@@ -74,13 +74,13 @@ export const NewsCarousel = () => {
             <CarouselItem key={article.id} className="w-full">
               <div className="w-full h-full px-2">
                 <BlogCard
+                  id={article.id}
                   title={article.title}
                   excerpt={article.content.substring(0, 150) + "..."}
                   image={article.image_path || "/placeholder.svg"}
                   author="CSAVH31"
                   date={new Date(article.published_at).toLocaleDateString()}
                   categories={["Actualité"]}
-                  slug={article.id}
                 />
               </div>
             </CarouselItem>
