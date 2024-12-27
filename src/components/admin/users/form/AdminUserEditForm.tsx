@@ -11,7 +11,7 @@ import type { AdminUserEditData } from "@/types/auth";
 
 interface AdminUserEditFormProps {
   profile: Profile;
-  onSubmit: (data: Omit<Profile, "id" | "created_at" | "updated_at">) => void;
+  onSubmit: (data: AdminUserEditData) => void;
   isLoading: boolean;
 }
 
