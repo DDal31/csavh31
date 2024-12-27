@@ -26,29 +26,29 @@ export function AccessibleTrainingTypeField({ form }: Props) {
         name="type"
         render={({ field }) => (
           <FormItem className="space-y-3">
-            <FormLabel className="text-[#9b87f5] font-medium">Type d'entraînement</FormLabel>
+            <FormLabel className="text-white font-medium">Type d'entraînement</FormLabel>
             <FormControl>
               <RadioGroup
                 onValueChange={field.onChange}
                 defaultValue={field.value}
-                className="flex flex-col space-y-1"
+                className="flex flex-col space-y-3"
                 aria-label="Sélectionnez le type d'entraînement"
               >
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-3">
                   <RadioGroupItem value="goalball" id="goalball" />
-                  <Label htmlFor="goalball">Goalball</Label>
+                  <Label htmlFor="goalball" className="text-white cursor-pointer">Goalball</Label>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-3">
                   <RadioGroupItem value="torball" id="torball" />
-                  <Label htmlFor="torball">Torball</Label>
+                  <Label htmlFor="torball" className="text-white cursor-pointer">Torball</Label>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-3">
                   <RadioGroupItem value="other" id="other" />
-                  <Label htmlFor="other">Autre</Label>
+                  <Label htmlFor="other" className="text-white cursor-pointer">Autre</Label>
                 </div>
               </RadioGroup>
             </FormControl>
-            <FormMessage />
+            <FormMessage className="text-white" />
           </FormItem>
         )}
       />
@@ -59,18 +59,18 @@ export function AccessibleTrainingTypeField({ form }: Props) {
           name="otherTypeDetails"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-[#9b87f5] font-medium">
+              <FormLabel className="text-white font-medium">
                 Précisez le type d'entraînement
               </FormLabel>
               <FormControl>
                 <Input 
                   placeholder="Type d'entraînement" 
                   {...field} 
-                  className="bg-white/10 border-white/20 text-gray-200 placeholder:text-gray-400"
+                  className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
                   aria-label="Précisez le type d'entraînement"
                 />
               </FormControl>
-              <FormMessage />
+              <FormMessage className="text-white" />
             </FormItem>
           )}
         />
