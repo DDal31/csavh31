@@ -29,15 +29,10 @@ export function AdminUserEditForm({ profile, onSubmit, isLoading }: AdminUserEdi
     }
   });
 
-  const handleSubmit = (data: any) => {
-    console.log("Submitting form with data:", data);
-    onSubmit(data);
-  };
-
   return (
     <Form {...form}>
       <form 
-        onSubmit={form.handleSubmit(handleSubmit)} 
+        onSubmit={form.handleSubmit(onSubmit)} 
         className="space-y-6"
         aria-label={`Formulaire de modification pour ${profile.first_name} ${profile.last_name}`}
       >

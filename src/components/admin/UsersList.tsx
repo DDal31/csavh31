@@ -8,13 +8,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -25,8 +18,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Trash2 } from "lucide-react";
-import ProfileEditForm from "@/components/ProfileEditForm";
+import { Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import type { Profile } from "@/types/profile";
 
 interface User {
@@ -37,23 +30,15 @@ interface User {
 
 interface UsersListProps {
   users: User[];
-  onUpdateProfile: (data: Profile) => void;
   onDeleteUser: (userId: string) => void;
-  selectedUser: User | null;
-  setSelectedUser: (user: User | null) => void;
-  isEditDialogOpen: boolean;
-  setIsEditDialogOpen: (open: boolean) => void;
 }
 
 const UsersList = ({
   users,
-  onUpdateProfile,
   onDeleteUser,
-  selectedUser,
-  setSelectedUser,
-  isEditDialogOpen,
-  setIsEditDialogOpen
 }: UsersListProps) => {
+  const navigate = useNavigate();
+  
   return (
     <div className="bg-gray-800 rounded-lg shadow-lg overflow-hidden border border-gray-700">
       <Table>
@@ -81,39 +66,14 @@ const UsersList = ({
               <TableCell className="text-gray-300">{user.profile?.site_role}</TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
-                  <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="bg-blue-600 hover:bg-blue-700 text-white border-none"
-                        onClick={() => setSelectedUser(user)}
-                      >
-                        Modifier
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="bg-gray-800 border-gray-700">
-                      <DialogHeader>
-                        <div className="flex items-center gap-2">
-                          <Button 
-                            variant="ghost" 
-                            className="text-white w-fit flex items-center gap-2 hover:text-gray-300"
-                            onClick={() => setIsEditDialogOpen(false)}
-                          >
-                            <ArrowLeft className="h-4 w-4" />
-                            Retour
-                          </Button>
-                          <DialogTitle className="text-white">Modifier le profil</DialogTitle>
-                        </div>
-                      </DialogHeader>
-                      {selectedUser && (
-                        <ProfileEditForm
-                          profile={selectedUser.profile}
-                          onSubmit={onUpdateProfile}
-                          isLoading={false}
-                        />
-                      )}
-                    </DialogContent>
-                  </Dialog>
+                  <Button
+                    variant="outline"
+                    className="bg-blue-600 hover:bg-blue-700 text-white border-none"
+                    onClick={() => navigate(`/admin/users/${user.id}/edit`)}
+                    aria-label={`Modifier le profil de ${user.profile?.first_name} ${user.profile?.last_name}`}
+                  >
+                    Modifier
+                  </Button>
 
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
