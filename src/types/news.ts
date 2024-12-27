@@ -11,3 +11,13 @@ export interface ArticleFormData {
   mainImageUrl?: string;
   sections: Section[];
 }
+
+export interface NewsArticle {
+  id: string;
+  title: string;
+  content: string;
+  image_path?: string;
+  published_at: string;
+  author_id: string;
+  status: 'draft' | 'published' | 'archived';
+}

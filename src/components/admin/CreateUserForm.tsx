@@ -4,9 +4,9 @@ import { profileSchema } from "@/schemas/profileSchema";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { ArrowLeft } from "lucide-react";
-import { UserBasicInfoFields } from "./users/form/UserBasicInfoFields";
-import { UserRoleFields } from "./users/form/UserRoleFields";
-import { UserTeamFields } from "./users/form/UserTeamFields";
+import UserBasicInfoFields from "./users/form/UserBasicInfoFields";
+import UserRoleFields from "./users/form/UserRoleFields";
+import UserTeamFields from "./users/form/UserTeamFields";
 import type { CreateUserData } from "@/types/auth";
 
 interface CreateUserFormProps {

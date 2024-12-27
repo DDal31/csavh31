@@ -1,7 +1,7 @@
 import { UseFormReturn } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { UserFormData } from "@/types/auth";
+import type { UserFormData } from "@/types/auth";
 
 interface UserBasicInfoFieldsProps {
   form: UseFormReturn<UserFormData>;
