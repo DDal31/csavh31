@@ -21,6 +21,7 @@ import AdminPresentation from "./pages/AdminPresentation";
 import AdminContacts from "./pages/AdminContacts";
 import AdminNews from "./pages/AdminNews";
 import AdminNewsCreate from "./pages/AdminNewsCreate";
+import AdminNewsEdit from "./pages/AdminNewsEdit";
 import ProfilePage from "./pages/Profile";
 import ProfileEdit from "./pages/ProfileEdit";
 import TrainingRegistration from "./pages/Training";
@@ -57,6 +58,7 @@ const App = () => (
           <Route path="/admin/settings/contacts" element={<AdminContacts />} />
           <Route path="/admin/settings/news" element={<AdminNews />} />
           <Route path="/admin/settings/news/create" element={<AdminNewsCreate />} />
+          <Route path="/admin/settings/news/:id/edit" element={<AdminNewsEdit />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/profile/edit" element={<ProfileEdit />} />
         </Routes>
