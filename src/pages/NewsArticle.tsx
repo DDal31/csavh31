@@ -1,13 +1,13 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useEffect } from "react";
 
 interface Section {
   subtitle: string;
@@ -30,10 +30,23 @@ interface NewsArticle {
 
 const NewsArticle = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+
+  // Redirect if no valid ID is provided
+  useEffect(() => {
+    if (!id || id === 'undefined') {
+      console.log("Invalid news article ID, redirecting to news list");
+      navigate('/actualites');
+    }
+  }, [id, navigate]);
 
   const { data: article, isLoading } = useQuery({
     queryKey: ["news", id],
     queryFn: async () => {
+      if (!id || id === 'undefined') {
+        throw new Error("Invalid article ID");
+      }
+
       console.log("Fetching news article:", id);
       const { data, error } = await supabase
         .from("news")
@@ -42,7 +55,7 @@ const NewsArticle = () => {
           author:profiles(first_name, last_name)
         `)
         .eq("id", id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error fetching news article:", error);
@@ -52,7 +65,12 @@ const NewsArticle = () => {
       console.log("Fetched news article:", data);
       return data as NewsArticle;
     },
+    enabled: !!id && id !== 'undefined',
   });
+
+  if (!id || id === 'undefined') {
+    return null; // Will be redirected by useEffect
+  }
 
   if (isLoading) {
     return (
