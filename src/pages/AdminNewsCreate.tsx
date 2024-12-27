@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSession } from "@supabase/auth-helpers-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ArticleForm } from "@/components/admin/news/ArticleForm";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { Loader2 } from "lucide-react";
 
 interface Section {
   subtitle: string;
@@ -15,31 +17,59 @@ export default function AdminNewsCreate() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const session = useSession();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
-      if (!session?.user?.id) {
-        toast({
-          title: "Erreur d'authentification",
-          description: "Vous devez être connecté pour accéder à cette page",
-          variant: "destructive",
-        });
-        navigate("/login");
-        return;
-      }
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          toast({
+            title: "Erreur d'authentification",
+            description: "Vous devez être connecté pour accéder à cette page",
+            variant: "destructive",
+          });
+          navigate("/login");
+          return;
+        }
 
-      // Vérifier si l'utilisateur est admin
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("site_role")
-        .eq("id", session.user.id)
-        .single();
+        console.log("Vérification du rôle admin pour l'utilisateur:", session.user.id);
+        
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("site_role")
+          .eq("id", session.user.id)
+          .single();
 
-      if (!profile || profile.site_role !== "admin") {
+        if (profileError) {
+          console.error("Erreur lors de la vérification du profil:", profileError);
+          toast({
+            title: "Erreur",
+            description: "Impossible de vérifier vos droits d'accès",
+            variant: "destructive",
+          });
+          navigate("/dashboard");
+          return;
+        }
+
+        if (!profile || profile.site_role !== "admin") {
+          console.log("Accès refusé : l'utilisateur n'est pas admin", profile);
+          toast({
+            title: "Accès refusé",
+            description: "Vous devez être administrateur pour publier des articles",
+            variant: "destructive",
+          });
+          navigate("/dashboard");
+          return;
+        }
+
+        setLoading(false);
+      } catch (error) {
+        console.error("Erreur lors de la vérification des droits admin:", error);
         toast({
-          title: "Accès refusé",
-          description: "Vous n'avez pas les droits pour publier des articles",
+          title: "Erreur",
+          description: "Une erreur est survenue lors de la vérification de vos droits",
           variant: "destructive",
         });
         navigate("/dashboard");
@@ -47,7 +77,7 @@ export default function AdminNewsCreate() {
     };
 
     checkAuth();
-  }, [session, navigate, toast]);
+  }, [navigate, toast]);
 
   const handleSubmit = async ({ title, mainImage, sections }: {
     title: string;
@@ -125,17 +155,29 @@ export default function AdminNewsCreate() {
     });
   };
 
-  return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <h1 className="text-2xl font-bold mb-6">Créer un nouvel article</h1>
-        <ArticleForm
-          onSubmit={handleSubmit}
-          onPreview={handlePreview}
-          isSubmitting={isSubmitting}
-          onBack={() => navigate('/admin/settings/news')}
-        />
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-white" />
       </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-900">
+      <Navbar />
+      <main className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <h1 className="text-2xl font-bold mb-6">Créer un nouvel article</h1>
+          <ArticleForm
+            onSubmit={handleSubmit}
+            onPreview={handlePreview}
+            isSubmitting={isSubmitting}
+            onBack={() => navigate('/admin/settings/news')}
+          />
+        </div>
+      </main>
+      <Footer />
     </div>
   );
 }

@@ -31,26 +31,32 @@ const AdminNews = () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
+          console.log("Pas de session trouvée");
           navigate("/login");
           return;
         }
 
-        // Vérification du rôle admin dans la table profiles
+        console.log("Vérification du rôle admin pour l'utilisateur:", session.user.id);
+        
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("site_role")
           .eq("id", session.user.id)
           .single();
 
-        if (profileError || !profile) {
+        if (profileError) {
           console.error("Erreur lors de la vérification du profil:", profileError);
+          toast({
+            title: "Erreur",
+            description: "Impossible de vérifier vos droits d'accès",
+            variant: "destructive",
+          });
           navigate("/dashboard");
           return;
         }
 
-        // Vérification explicite du rôle admin
-        if (profile.site_role !== "admin") {
-          console.log("Accès non autorisé : l'utilisateur n'est pas admin");
+        if (!profile || profile.site_role !== "admin") {
+          console.log("Accès refusé : l'utilisateur n'est pas admin", profile);
           toast({
             title: "Accès refusé",
             description: "Vous devez être administrateur pour accéder à cette page",
@@ -68,7 +74,7 @@ const AdminNews = () => {
     };
 
     checkAuth();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   const fetchNews = async () => {
     try {
