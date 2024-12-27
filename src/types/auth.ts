@@ -18,4 +18,4 @@ export interface CreateUserData extends BaseUserData {
 }
 
 // Type for editing users (no password required)
-export type AdminUserEditData = BaseUserData;
+export interface AdminUserEditData extends BaseUserData {}

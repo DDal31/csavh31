@@ -75,7 +75,7 @@ const AdminNews = () => {
         id: item.id,
         title: item.title,
         published_at: item.published_at,
-        author: item.author || null
+        author: item.author
       }));
 
       setNews(formattedNews);
