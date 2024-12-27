@@ -8,31 +8,13 @@ import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useEffect } from "react";
-
-interface Section {
-  subtitle: string;
-  content: string;
-  imagePath?: string;
-}
-
-interface NewsArticle {
-  id: string;
-  title: string;
-  content: string;
-  image_path: string | null;
-  published_at: string;
-  author: {
-    first_name: string;
-    last_name: string;
-  } | null;
-  sections?: Section[];
-}
+import { ArticleSection } from "@/components/news/ArticleSection";
+import { NewsArticle as NewsArticleType } from "@/types/news";
 
 const NewsArticle = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  // Redirect if no valid ID is provided
   useEffect(() => {
     if (!id || id === 'undefined') {
       console.log("Invalid news article ID, redirecting to news list");
@@ -62,23 +44,26 @@ const NewsArticle = () => {
         throw error;
       }
 
+      const articleData = data as NewsArticleType;
+
       // Parse the content JSON string if it exists
-      if (data && data.content) {
+      if (articleData && articleData.content) {
         try {
-          data.sections = JSON.parse(data.content);
+          articleData.sections = JSON.parse(articleData.content);
+          console.log("Parsed sections:", articleData.sections);
         } catch (e) {
           console.error("Error parsing article sections:", e);
           // If parsing fails, treat content as a simple string
-          data.sections = [{
+          articleData.sections = [{
             subtitle: "",
-            content: data.content,
+            content: articleData.content,
             imagePath: ""
           }];
         }
       }
 
-      console.log("Fetched news article:", data);
-      return data as NewsArticle;
+      console.log("Fetched news article:", articleData);
+      return articleData;
     },
     enabled: !!id && id !== 'undefined',
   });
@@ -160,32 +145,11 @@ const NewsArticle = () => {
               {article.sections ? (
                 <div className="space-y-16">
                   {article.sections.map((section, index) => (
-                    <section 
+                    <ArticleSection 
                       key={index}
-                      className={`flex flex-col lg:flex-row gap-8 items-center ${
-                        index % 2 === 0 ? "lg:flex-row" : "lg:flex-row-reverse"
-                      }`}
-                    >
-                      {section.imagePath && !section.imagePath.startsWith('blob:') && (
-                        <div className="lg:w-1/2">
-                          <img
-                            src={section.imagePath}
-                            alt={`Image illustrant la section : ${section.subtitle}`}
-                            className="rounded-lg object-cover w-full h-full"
-                          />
-                        </div>
-                      )}
-                      <div className={`lg:w-1/2 ${!section.imagePath || section.imagePath.startsWith('blob:') ? "lg:w-full" : ""}`}>
-                        {section.subtitle && (
-                          <h2 className="text-2xl font-bold mb-4">{section.subtitle}</h2>
-                        )}
-                        <div className="prose prose-invert">
-                          {section.content.split('\n').map((paragraph, pIndex) => (
-                            <p key={pIndex}>{paragraph}</p>
-                          ))}
-                        </div>
-                      </div>
-                    </section>
+                      section={section}
+                      index={index}
+                    />
                   ))}
                 </div>
               ) : (
