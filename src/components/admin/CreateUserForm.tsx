@@ -36,23 +36,30 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
         variant="ghost" 
         className="text-white w-fit flex items-center gap-2 hover:text-gray-300 mb-6"
         onClick={onBack}
+        aria-label="Retour à la liste des utilisateurs"
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         Retour
       </Button>
 
       <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" aria-label="Formulaire de création d'utilisateur">
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-gray-300">Email</FormLabel>
+              <FormLabel className="text-gray-300">Adresse email</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="Email" className="bg-gray-700 border-gray-600 text-white" {...field} />
+                <Input 
+                  type="email" 
+                  placeholder="Entrez l'adresse email" 
+                  className="bg-gray-700 border-gray-600 text-white" 
+                  aria-label="Champ pour l'adresse email"
+                  {...field} 
+                />
               </FormControl>
-              <FormMessage className="text-red-400" />
+              <FormMessage className="text-red-400" role="alert" />
             </FormItem>
           )}
         />
@@ -64,9 +71,15 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
             <FormItem>
               <FormLabel className="text-gray-300">Mot de passe</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="Mot de passe" className="bg-gray-700 border-gray-600 text-white" {...field} />
+                <Input 
+                  type="password" 
+                  placeholder="Entrez le mot de passe" 
+                  className="bg-gray-700 border-gray-600 text-white" 
+                  aria-label="Champ pour le mot de passe"
+                  {...field} 
+                />
               </FormControl>
-              <FormMessage className="text-red-400" />
+              <FormMessage className="text-red-400" role="alert" />
             </FormItem>
           )}
         />
@@ -79,9 +92,14 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
               <FormItem>
                 <FormLabel className="text-gray-300">Prénom</FormLabel>
                 <FormControl>
-                  <Input placeholder="Prénom" className="bg-gray-700 border-gray-600 text-white" {...field} />
+                  <Input 
+                    placeholder="Entrez le prénom" 
+                    className="bg-gray-700 border-gray-600 text-white" 
+                    aria-label="Champ pour le prénom"
+                    {...field} 
+                  />
                 </FormControl>
-                <FormMessage className="text-red-400" />
+                <FormMessage className="text-red-400" role="alert" />
               </FormItem>
             )}
           />
@@ -93,9 +111,14 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
               <FormItem>
                 <FormLabel className="text-gray-300">Nom</FormLabel>
                 <FormControl>
-                  <Input placeholder="Nom" className="bg-gray-700 border-gray-600 text-white" {...field} />
+                  <Input 
+                    placeholder="Entrez le nom" 
+                    className="bg-gray-700 border-gray-600 text-white" 
+                    aria-label="Champ pour le nom"
+                    {...field} 
+                  />
                 </FormControl>
-                <FormMessage className="text-red-400" />
+                <FormMessage className="text-red-400" role="alert" />
               </FormItem>
             )}
           />
@@ -108,9 +131,15 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
             <FormItem>
               <FormLabel className="text-gray-300">Téléphone</FormLabel>
               <FormControl>
-                <Input type="tel" placeholder="Téléphone" className="bg-gray-700 border-gray-600 text-white" {...field} />
+                <Input 
+                  type="tel" 
+                  placeholder="Entrez le numéro de téléphone" 
+                  className="bg-gray-700 border-gray-600 text-white" 
+                  aria-label="Champ pour le numéro de téléphone"
+                  {...field} 
+                />
               </FormControl>
-              <FormMessage className="text-red-400" />
+              <FormMessage className="text-red-400" role="alert" />
             </FormItem>
           )}
         />
@@ -124,7 +153,10 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
                 <FormLabel className="text-gray-300">Rôle dans le club</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                    <SelectTrigger 
+                      className="bg-gray-700 border-gray-600 text-white"
+                      aria-label="Sélectionnez le rôle dans le club"
+                    >
                       <SelectValue placeholder="Sélectionnez un rôle" />
                     </SelectTrigger>
                   </FormControl>
@@ -138,7 +170,7 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
                     <SelectItem value="les-trois" className="text-white">Les trois</SelectItem>
                   </SelectContent>
                 </Select>
-                <FormMessage className="text-red-400" />
+                <FormMessage className="text-red-400" role="alert" />
               </FormItem>
             )}
           />
@@ -151,7 +183,10 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
                 <FormLabel className="text-gray-300">Sport</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                    <SelectTrigger 
+                      className="bg-gray-700 border-gray-600 text-white"
+                      aria-label="Sélectionnez le sport pratiqué"
+                    >
                       <SelectValue placeholder="Sélectionnez un sport" />
                     </SelectTrigger>
                   </FormControl>
@@ -161,7 +196,7 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
                     <SelectItem value="both" className="text-white">Les deux</SelectItem>
                   </SelectContent>
                 </Select>
-                <FormMessage className="text-red-400" />
+                <FormMessage className="text-red-400" role="alert" />
               </FormItem>
             )}
           />
@@ -176,7 +211,10 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
                 <FormLabel className="text-gray-300">Équipe</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                    <SelectTrigger 
+                      className="bg-gray-700 border-gray-600 text-white"
+                      aria-label="Sélectionnez l'équipe"
+                    >
                       <SelectValue placeholder="Sélectionnez une équipe" />
                     </SelectTrigger>
                   </FormControl>
@@ -186,7 +224,7 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
                     <SelectItem value="d1_feminine" className="text-white">D1 Féminine</SelectItem>
                   </SelectContent>
                 </Select>
-                <FormMessage className="text-red-400" />
+                <FormMessage className="text-red-400" role="alert" />
               </FormItem>
             )}
           />
@@ -199,7 +237,10 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
                 <FormLabel className="text-gray-300">Rôle sur le site</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                    <SelectTrigger 
+                      className="bg-gray-700 border-gray-600 text-white"
+                      aria-label="Sélectionnez le rôle sur le site"
+                    >
                       <SelectValue placeholder="Sélectionnez un rôle" />
                     </SelectTrigger>
                   </FormControl>
@@ -208,7 +249,7 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
                     <SelectItem value="admin" className="text-white">Administrateur</SelectItem>
                   </SelectContent>
                 </Select>
-                <FormMessage className="text-red-400" />
+                <FormMessage className="text-red-400" role="alert" />
               </FormItem>
             )}
           />
@@ -218,6 +259,7 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
           type="submit" 
           className="w-full bg-blue-600 hover:bg-blue-700 text-white" 
           disabled={isLoading}
+          aria-label={isLoading ? "Création en cours..." : "Créer l'utilisateur"}
         >
           {isLoading ? "Création en cours..." : "Créer l'utilisateur"}
         </Button>

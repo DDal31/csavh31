@@ -30,7 +30,7 @@ const ProfileEditForm = ({ profile, onSubmit, isLoading }: ProfileEditFormProps)
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" aria-label="Formulaire de modification du profil">
         <FormField
           control={form.control}
           name="first_name"
@@ -38,9 +38,13 @@ const ProfileEditForm = ({ profile, onSubmit, isLoading }: ProfileEditFormProps)
             <FormItem>
               <FormLabel className="text-white">Prénom</FormLabel>
               <FormControl>
-                <Input placeholder="Votre prénom" {...field} />
+                <Input 
+                  placeholder="Votre prénom" 
+                  aria-label="Champ pour votre prénom"
+                  {...field} 
+                />
               </FormControl>
-              <FormMessage />
+              <FormMessage role="alert" />
             </FormItem>
           )}
         />
@@ -52,9 +56,13 @@ const ProfileEditForm = ({ profile, onSubmit, isLoading }: ProfileEditFormProps)
             <FormItem>
               <FormLabel className="text-white">Nom de famille</FormLabel>
               <FormControl>
-                <Input placeholder="Votre nom de famille" {...field} />
+                <Input 
+                  placeholder="Votre nom de famille" 
+                  aria-label="Champ pour votre nom de famille"
+                  {...field} 
+                />
               </FormControl>
-              <FormMessage />
+              <FormMessage role="alert" />
             </FormItem>
           )}
         />
@@ -66,9 +74,14 @@ const ProfileEditForm = ({ profile, onSubmit, isLoading }: ProfileEditFormProps)
             <FormItem>
               <FormLabel className="text-white">Adresse e-mail</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="votre@email.com" {...field} />
+                <Input 
+                  type="email" 
+                  placeholder="votre@email.com" 
+                  aria-label="Champ pour votre adresse email"
+                  {...field} 
+                />
               </FormControl>
-              <FormMessage />
+              <FormMessage role="alert" />
             </FormItem>
           )}
         />
@@ -80,9 +93,14 @@ const ProfileEditForm = ({ profile, onSubmit, isLoading }: ProfileEditFormProps)
             <FormItem>
               <FormLabel className="text-white">Numéro de téléphone</FormLabel>
               <FormControl>
-                <Input type="tel" placeholder="06 12 34 56 78" {...field} />
+                <Input 
+                  type="tel" 
+                  placeholder="06 12 34 56 78" 
+                  aria-label="Champ pour votre numéro de téléphone"
+                  {...field} 
+                />
               </FormControl>
-              <FormMessage />
+              <FormMessage role="alert" />
             </FormItem>
           )}
         />
@@ -95,7 +113,7 @@ const ProfileEditForm = ({ profile, onSubmit, isLoading }: ProfileEditFormProps)
               <FormLabel className="text-white">Rôle dans le club</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger aria-label="Sélectionnez votre rôle dans le club">
                     <SelectValue placeholder="Sélectionnez votre rôle" />
                   </SelectTrigger>
                 </FormControl>
@@ -109,7 +127,7 @@ const ProfileEditForm = ({ profile, onSubmit, isLoading }: ProfileEditFormProps)
                   <SelectItem value="les-trois">Les trois</SelectItem>
                 </SelectContent>
               </Select>
-              <FormMessage />
+              <FormMessage role="alert" />
             </FormItem>
           )}
         />
@@ -122,7 +140,7 @@ const ProfileEditForm = ({ profile, onSubmit, isLoading }: ProfileEditFormProps)
               <FormLabel className="text-white">Sport pratiqué</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger aria-label="Sélectionnez votre sport">
                     <SelectValue placeholder="Sélectionnez votre sport" />
                   </SelectTrigger>
                 </FormControl>
@@ -132,7 +150,7 @@ const ProfileEditForm = ({ profile, onSubmit, isLoading }: ProfileEditFormProps)
                   <SelectItem value="both">Les deux</SelectItem>
                 </SelectContent>
               </Select>
-              <FormMessage />
+              <FormMessage role="alert" />
             </FormItem>
           )}
         />
@@ -145,7 +163,7 @@ const ProfileEditForm = ({ profile, onSubmit, isLoading }: ProfileEditFormProps)
               <FormLabel className="text-white">Équipe</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger aria-label="Sélectionnez votre équipe">
                     <SelectValue placeholder="Sélectionnez votre équipe" />
                   </SelectTrigger>
                 </FormControl>
@@ -155,7 +173,7 @@ const ProfileEditForm = ({ profile, onSubmit, isLoading }: ProfileEditFormProps)
                   <SelectItem value="d1_feminine">D1 Féminine</SelectItem>
                 </SelectContent>
               </Select>
-              <FormMessage />
+              <FormMessage role="alert" />
             </FormItem>
           )}
         />
@@ -166,23 +184,25 @@ const ProfileEditForm = ({ profile, onSubmit, isLoading }: ProfileEditFormProps)
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-white">Rôle sur le site</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionnez le rôle sur le site" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="member">Membre</SelectItem>
-                  <SelectItem value="admin">Administrateur</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
+              <FormControl>
+                <Input 
+                  value={field.value === "admin" ? "Administrateur" : "Membre"} 
+                  disabled 
+                  aria-label="Votre rôle sur le site (non modifiable)"
+                  className="bg-gray-700 cursor-not-allowed"
+                />
+              </FormControl>
+              <FormMessage role="alert" />
             </FormItem>
           )}
         />
 
-        <Button type="submit" disabled={isLoading} className="w-full">
+        <Button 
+          type="submit" 
+          disabled={isLoading} 
+          className="w-full"
+          aria-label={isLoading ? "Enregistrement en cours..." : "Enregistrer les modifications"}
+        >
           {isLoading ? "Enregistrement en cours..." : "Enregistrer les modifications"}
         </Button>
       </form>
