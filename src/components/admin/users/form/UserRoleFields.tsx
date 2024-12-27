@@ -1,72 +1,65 @@
+import { UseFormReturn } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { UseFormReturn } from "react-hook-form";
-import type { UserFormData } from "@/types/auth";
+import { UserFormData } from "@/types/auth";
 
 interface UserRoleFieldsProps {
   form: UseFormReturn<UserFormData>;
 }
 
-export const UserRoleFields = ({ form }: UserRoleFieldsProps) => {
+const UserRoleFields = ({ form }: UserRoleFieldsProps) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <>
       <FormField
         control={form.control}
         name="club_role"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-gray-300" htmlFor="club_role">Rôle dans le club</FormLabel>
+            <FormLabel>Rôle dans le club</FormLabel>
             <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl>
-                <SelectTrigger 
-                  id="club_role"
-                  className="bg-gray-700 border-gray-600 text-white"
-                  aria-label="Sélectionnez le rôle dans le club"
-                >
+                <SelectTrigger>
                   <SelectValue placeholder="Sélectionnez un rôle" />
                 </SelectTrigger>
               </FormControl>
-              <SelectContent className="bg-gray-700 border-gray-600">
-                <SelectItem value="joueur" className="text-white">Joueur</SelectItem>
-                <SelectItem value="entraineur" className="text-white">Entraîneur</SelectItem>
-                <SelectItem value="arbitre" className="text-white">Arbitre</SelectItem>
-                <SelectItem value="joueur-entraineur" className="text-white">Joueur-Entraîneur</SelectItem>
-                <SelectItem value="joueur-arbitre" className="text-white">Joueur-Arbitre</SelectItem>
-                <SelectItem value="entraineur-arbitre" className="text-white">Entraîneur-Arbitre</SelectItem>
-                <SelectItem value="les-trois" className="text-white">Les trois</SelectItem>
+              <SelectContent>
+                <SelectItem value="joueur">Joueur</SelectItem>
+                <SelectItem value="entraineur">Entraîneur</SelectItem>
+                <SelectItem value="arbitre">Arbitre</SelectItem>
+                <SelectItem value="joueur-entraineur">Joueur-Entraîneur</SelectItem>
+                <SelectItem value="joueur-arbitre">Joueur-Arbitre</SelectItem>
+                <SelectItem value="entraineur-arbitre">Entraîneur-Arbitre</SelectItem>
+                <SelectItem value="les-trois">Les Trois</SelectItem>
               </SelectContent>
             </Select>
-            <FormMessage className="text-red-400" role="alert" />
+            <FormMessage />
           </FormItem>
         )}
       />
 
       <FormField
         control={form.control}
-        name="sport"
+        name="site_role"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-gray-300" htmlFor="sport">Sport</FormLabel>
+            <FormLabel>Rôle sur le site</FormLabel>
             <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl>
-                <SelectTrigger 
-                  id="sport"
-                  className="bg-gray-700 border-gray-600 text-white"
-                  aria-label="Sélectionnez le sport"
-                >
-                  <SelectValue placeholder="Sélectionnez un sport" />
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionnez un rôle" />
                 </SelectTrigger>
               </FormControl>
-              <SelectContent className="bg-gray-700 border-gray-600">
-                <SelectItem value="goalball" className="text-white">Goalball</SelectItem>
-                <SelectItem value="torball" className="text-white">Torball</SelectItem>
-                <SelectItem value="both" className="text-white">Les deux</SelectItem>
+              <SelectContent>
+                <SelectItem value="member">Membre</SelectItem>
+                <SelectItem value="admin">Administrateur</SelectItem>
               </SelectContent>
             </Select>
-            <FormMessage className="text-red-400" role="alert" />
+            <FormMessage />
           </FormItem>
         )}
       />
-    </div>
+    </>
   );
 };
+
+export default UserRoleFields;

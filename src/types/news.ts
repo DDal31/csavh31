@@ -5,15 +5,9 @@ export interface Section {
   imageFile?: File;
 }
 
-export interface NewsArticle {
-  id: string;
+export interface ArticleFormData {
   title: string;
-  content: string;
-  image_path: string | null;
-  published_at: string;
-  author: {
-    first_name: string;
-    last_name: string;
-  } | null;
-  sections?: Section[];
+  mainImage?: File;
+  mainImageUrl?: string;
+  sections: Section[];
 }

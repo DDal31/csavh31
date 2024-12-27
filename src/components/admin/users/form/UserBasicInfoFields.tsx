@@ -1,16 +1,16 @@
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { UseFormReturn } from "react-hook-form";
 import { Input } from "@/components/ui/input";
-import type { UseFormReturn } from "react-hook-form";
-import type { UserFormData } from "@/types/auth";
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { UserFormData } from "@/types/auth";
 
 interface UserBasicInfoFieldsProps {
   form: UseFormReturn<UserFormData>;
-  isCreating: boolean;
+  isCreating?: boolean;
 }
 
-export function UserBasicInfoFields({ form, isCreating }: UserBasicInfoFieldsProps) {
+const UserBasicInfoFields = ({ form, isCreating }: UserBasicInfoFieldsProps) => {
   return (
-    <div className="space-y-4">
+    <>
       <FormField
         control={form.control}
         name="first_name"
@@ -18,7 +18,7 @@ export function UserBasicInfoFields({ form, isCreating }: UserBasicInfoFieldsPro
           <FormItem>
             <FormLabel>Prénom</FormLabel>
             <FormControl>
-              <Input {...field} placeholder="Entrez le prénom" />
+              <Input placeholder="Prénom" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -32,7 +32,7 @@ export function UserBasicInfoFields({ form, isCreating }: UserBasicInfoFieldsPro
           <FormItem>
             <FormLabel>Nom</FormLabel>
             <FormControl>
-              <Input {...field} placeholder="Entrez le nom" />
+              <Input placeholder="Nom" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -46,7 +46,7 @@ export function UserBasicInfoFields({ form, isCreating }: UserBasicInfoFieldsPro
           <FormItem>
             <FormLabel>Email</FormLabel>
             <FormControl>
-              <Input {...field} type="email" placeholder="Entrez l'email" />
+              <Input type="email" placeholder="Email" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -61,7 +61,7 @@ export function UserBasicInfoFields({ form, isCreating }: UserBasicInfoFieldsPro
             <FormItem>
               <FormLabel>Mot de passe</FormLabel>
               <FormControl>
-                <Input {...field} type="password" placeholder="Entrez le mot de passe" />
+                <Input type="password" placeholder="Mot de passe" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -76,12 +76,14 @@ export function UserBasicInfoFields({ form, isCreating }: UserBasicInfoFieldsPro
           <FormItem>
             <FormLabel>Téléphone</FormLabel>
             <FormControl>
-              <Input {...field} placeholder="Entrez le numéro de téléphone" />
+              <Input type="tel" placeholder="Téléphone" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
         )}
       />
-    </div>
+    </>
   );
-}
+};
+
+export default UserBasicInfoFields;
