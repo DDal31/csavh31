@@ -31,6 +31,26 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
     }
   });
 
+  const handleSubmit = (data: CreateUserData) => {
+    console.log("Creating user with data:", data);
+    // Transform the data to match the expected format
+    const formattedData = {
+      email: data.email,
+      password: data.password,
+      profile: {
+        first_name: data.first_name,
+        last_name: data.last_name,
+        email: data.email,
+        phone: data.phone,
+        club_role: data.club_role,
+        sport: data.sport,
+        team: data.team,
+        site_role: data.site_role
+      }
+    };
+    onSubmit(formattedData);
+  };
+
   return (
     <div role="main" aria-label="Formulaire de création d'utilisateur">
       <Button 
@@ -45,7 +65,7 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
 
       <Form {...form}>
         <form 
-          onSubmit={form.handleSubmit(onSubmit)} 
+          onSubmit={form.handleSubmit(handleSubmit)} 
           className="space-y-6"
           aria-label="Formulaire de création d'utilisateur"
         >

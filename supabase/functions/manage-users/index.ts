@@ -53,13 +53,24 @@ Deno.serve(async (req) => {
         const { data: newUser, error: createError } = await supabaseClient.auth.admin.createUser({
           email,
           password,
-          email_confirm: true
+          email_confirm: true,
+          user_metadata: {
+            first_name: profile.first_name,
+            last_name: profile.last_name
+          }
         })
         
-        if (createError) throw createError
+        if (createError) {
+          console.error('Error creating user:', createError)
+          throw createError
+        }
 
-        // Profile is automatically created by the handle_new_user trigger
-        // We just need to update it with the provided data
+        console.log('User created successfully:', newUser)
+
+        // Wait a moment for the trigger to create the profile
+        await new Promise(resolve => setTimeout(resolve, 1000))
+
+        // Update the profile with the provided data
         const { error: updateError } = await supabaseClient
           .from('profiles')
           .update({
@@ -73,9 +84,14 @@ Deno.serve(async (req) => {
           })
           .eq('id', newUser.user.id)
 
-        if (updateError) throw updateError
+        if (updateError) {
+          console.error('Error updating profile:', updateError)
+          throw updateError
+        }
 
-        return new Response(JSON.stringify({ success: true }), {
+        console.log('Profile updated successfully')
+
+        return new Response(JSON.stringify({ success: true, user: newUser.user }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
 
