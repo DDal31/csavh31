@@ -1,11 +1,12 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Home from "@/pages/Home";
+import NotFound from "@/pages/NotFound";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminNews from "@/pages/AdminNews";
 import AdminNewsCreate from "@/pages/AdminNewsCreate";
 import AdminNewsEdit from "@/pages/AdminNewsEdit";
 import NewsArticle from "@/pages/NewsArticle";
 import BlogPost from "@/pages/BlogPost";
-import OtherRoutes from "@/pages/OtherRoutes"; // Example for other routes
 
 function App() {
   return (
