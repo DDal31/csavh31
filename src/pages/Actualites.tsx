@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
 
 interface NewsItem {
   id: string;
@@ -18,6 +19,8 @@ interface NewsItem {
 const placeholderImage = "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=800&q=80";
 
 const Actualites = () => {
+  const navigate = useNavigate();
+  
   const { data: news, isLoading } = useQuery({
     queryKey: ["news"],
     queryFn: async () => {
@@ -67,7 +70,7 @@ const Actualites = () => {
               <Card 
                 key={item.id}
                 className="bg-gray-800 border-gray-700 hover:border-primary transition-colors cursor-pointer"
-                onClick={() => window.location.href = `/blog/${item.id}`}
+                onClick={() => navigate(`/blog/${item.id}`)}
                 role="article"
               >
                 <div className="aspect-w-16 aspect-h-9 relative">

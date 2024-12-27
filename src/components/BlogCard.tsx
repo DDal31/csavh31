@@ -22,7 +22,7 @@ const BlogCard = ({
   slug,
 }: BlogCardProps) => {
   return (
-    <Link to={`/actualites/${slug}`}>
+    <Link to={`/blog/${slug}`}>
       <Card className="h-full overflow-hidden hover:shadow-lg transition-shadow duration-300">
         <div className="relative">
           <AspectRatio ratio={16 / 9} className="bg-muted">
