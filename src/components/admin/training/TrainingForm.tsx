@@ -37,10 +37,23 @@ export function TrainingForm({ training, onSuccess, onCancel }: TrainingFormProp
     },
   });
 
+  console.log("Form values:", form.getValues());
+  console.log("Form errors:", form.formState.errors);
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       console.log(`${isEditing ? "Updating" : "Creating"} training with values:`, values);
       
+      if (!values.date) {
+        console.error("Date is required but missing");
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "La date est requise",
+        });
+        return;
+      }
+
       const trainingData = {
         type: values.type as TrainingType,
         other_type_details: values.type === "other" ? values.otherTypeDetails : null,
@@ -48,6 +61,8 @@ export function TrainingForm({ training, onSuccess, onCancel }: TrainingFormProp
         start_time: values.startTime,
         end_time: values.endTime,
       };
+
+      console.log("Submitting training data:", trainingData);
 
       const { error } = isEditing 
         ? await supabase
@@ -58,7 +73,10 @@ export function TrainingForm({ training, onSuccess, onCancel }: TrainingFormProp
             .from("trainings")
             .insert(trainingData);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error submitting training:", error);
+        throw error;
+      }
 
       console.log(`Training ${isEditing ? "updated" : "created"} successfully`);
       toast({
