@@ -15,6 +15,8 @@ interface ProfileEditFormProps {
 }
 
 const ProfileEditForm = ({ profile, onSubmit, isLoading, isAdmin = false }: ProfileEditFormProps) => {
+  console.log("ProfileEditForm received profile:", profile);
+  
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -29,9 +31,14 @@ const ProfileEditForm = ({ profile, onSubmit, isLoading, isAdmin = false }: Prof
     }
   });
 
+  const handleSubmit = (data: ProfileFormData) => {
+    console.log("Form submitted with data:", data);
+    onSubmit(data);
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" aria-label="Formulaire de modification du profil">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6" aria-label="Formulaire de modification du profil">
         <BasicInfoFields form={form} />
         <RoleFields form={form} isAdmin={isAdmin} />
         

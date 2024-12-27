@@ -44,7 +44,10 @@ export function UserActions({
   const modifyButtonLabel = `Modifier ${fullName}`;
 
   const handleSubmit = (data: Profile) => {
-    // Ensure we're updating the correct user's profile by including their ID
+    console.log("Updating profile for user:", user.id);
+    console.log("With data:", data);
+    
+    // Ensure we're updating the correct user's profile
     onUpdateProfile({
       ...data,
       id: user.profile.id
