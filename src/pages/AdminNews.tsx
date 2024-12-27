@@ -35,14 +35,27 @@ const AdminNews = () => {
           return;
         }
 
-        const { data: profile } = await supabase
+        // Vérification du rôle admin dans la table profiles
+        const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("site_role")
           .eq("id", session.user.id)
           .single();
 
-        if (!profile || profile.site_role !== "admin") {
+        if (profileError || !profile) {
+          console.error("Erreur lors de la vérification du profil:", profileError);
+          navigate("/dashboard");
+          return;
+        }
+
+        // Vérification explicite du rôle admin
+        if (profile.site_role !== "admin") {
           console.log("Accès non autorisé : l'utilisateur n'est pas admin");
+          toast({
+            title: "Accès refusé",
+            description: "Vous devez être administrateur pour accéder à cette page",
+            variant: "destructive",
+          });
           navigate("/dashboard");
           return;
         }
@@ -164,7 +177,7 @@ const AdminNews = () => {
                           })}
                         </p>
                         <p>
-                          Par {article.author.first_name} {article.author.last_name}
+                          Par {article.author?.first_name} {article.author?.last_name}
                         </p>
                       </div>
                     </div>
