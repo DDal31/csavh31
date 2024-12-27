@@ -3,26 +3,26 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 interface BlogCardProps {
+  id: string;
   title: string;
   excerpt: string;
   image: string;
   author: string;
   date: string;
   categories: string[];
-  slug: string;
 }
 
 const BlogCard = ({
+  id,
   title,
   excerpt,
   image,
   author,
   date,
   categories,
-  slug,
 }: BlogCardProps) => {
   return (
-    <Link to="/actualites" aria-label={`Voir l'article : ${title}`}>
+    <Link to={`/actualites/${id}`} aria-label={`Voir l'article : ${title}`}>
       <Card className="h-full overflow-hidden hover:shadow-lg transition-shadow duration-300">
         <div className="relative">
           <AspectRatio ratio={16 / 9} className="bg-muted">
