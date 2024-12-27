@@ -84,6 +84,8 @@ export default function AdminNewsCreate() {
     mainImage: File | null;
     sections: Section[];
   }) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    
     if (!session?.user?.id) {
       toast({
         title: "Erreur",
