@@ -43,6 +43,14 @@ export function UserActions({
   const fullName = `${user.profile.first_name} ${user.profile.last_name}`.trim();
   const modifyButtonLabel = `Modifier ${fullName}`;
 
+  const handleSubmit = (data: Profile) => {
+    // Ensure we're updating the correct user's profile by including their ID
+    onUpdateProfile({
+      ...data,
+      id: user.profile.id
+    });
+  };
+
   return (
     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -72,8 +80,9 @@ export function UserActions({
           </DialogHeader>
           <ProfileEditForm
             profile={user.profile}
-            onSubmit={onUpdateProfile}
+            onSubmit={handleSubmit}
             isLoading={false}
+            isAdmin={true}
           />
         </DialogContent>
       </Dialog>

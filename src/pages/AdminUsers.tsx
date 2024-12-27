@@ -123,9 +123,8 @@ const AdminUsers = () => {
   };
 
   const handleUpdateProfile = async (data: Profile) => {
-    if (!selectedUser) return;
-
     try {
+      console.log("Updating profile with data:", data);
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -138,7 +137,7 @@ const AdminUsers = () => {
           team: data.team,
           site_role: data.site_role
         })
-        .eq('id', selectedUser.id);
+        .eq('id', data.id);
 
       if (error) throw error;
 
