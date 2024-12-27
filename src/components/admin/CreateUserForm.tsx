@@ -33,7 +33,6 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
 
   const handleSubmit = (data: CreateUserData) => {
     console.log("Creating user with data:", data);
-    // Transform the data to match the expected format
     const formattedData = {
       email: data.email,
       password: data.password,
@@ -70,7 +69,7 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
           aria-label="Formulaire de création d'utilisateur"
         >
           <div className="space-y-4">
-            <UserBasicInfoFields form={form} />
+            <UserBasicInfoFields form={form} isCreating={true} />
             <UserRoleFields form={form} />
             <UserTeamFields form={form} />
           </div>

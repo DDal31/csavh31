@@ -65,7 +65,7 @@ const AdminNews = () => {
           id,
           title,
           published_at,
-          author:author_id (
+          profiles!news_author_id_fkey (
             first_name,
             last_name
           )
@@ -73,7 +73,18 @@ const AdminNews = () => {
         .order("published_at", { ascending: false });
 
       if (error) throw error;
-      setNews(data || []);
+
+      const formattedNews: NewsArticle[] = data?.map(item => ({
+        id: item.id,
+        title: item.title,
+        published_at: item.published_at,
+        author: {
+          first_name: item.profiles.first_name,
+          last_name: item.profiles.last_name
+        }
+      })) || [];
+
+      setNews(formattedNews);
     } catch (error) {
       console.error("Erreur lors de la récupération des actualités:", error);
       toast({
