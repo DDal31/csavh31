@@ -22,6 +22,15 @@ export default function AdminNewsCreate() {
     mainImage: File | null;
     sections: Section[];
   }) => {
+    if (!session?.user?.id) {
+      toast({
+        title: "Erreur",
+        description: "Vous devez être connecté pour publier un article",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!title || !mainImage || sections.some(s => !s.subtitle || !s.content)) {
       toast({
         title: "Erreur",
@@ -53,7 +62,7 @@ export default function AdminNewsCreate() {
           title,
           content: JSON.stringify(sections),
           image_path: publicUrl,
-          author_id: session?.user?.id,
+          author_id: session.user.id,
           status: 'published'
         });
 
