@@ -65,10 +65,7 @@ const AdminNews = () => {
           id,
           title,
           published_at,
-          profiles!news_author_id_fkey (
-            first_name,
-            last_name
-          )
+          author:profiles(first_name, last_name)
         `)
         .order("published_at", { ascending: false });
 
@@ -78,7 +75,7 @@ const AdminNews = () => {
         id: item.id,
         title: item.title,
         published_at: item.published_at,
-        author: item.profiles || null
+        author: item.author || null
       }));
 
       setNews(formattedNews);
