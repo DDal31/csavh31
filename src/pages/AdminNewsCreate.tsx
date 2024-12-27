@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSession } from "@supabase/auth-helpers-react";
 import { useToast } from "@/hooks/use-toast";
@@ -16,6 +16,38 @@ export default function AdminNewsCreate() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const session = useSession();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      if (!session?.user?.id) {
+        toast({
+          title: "Erreur d'authentification",
+          description: "Vous devez être connecté pour accéder à cette page",
+          variant: "destructive",
+        });
+        navigate("/login");
+        return;
+      }
+
+      // Vérifier si l'utilisateur est admin
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("site_role")
+        .eq("id", session.user.id)
+        .single();
+
+      if (!profile || profile.site_role !== "admin") {
+        toast({
+          title: "Accès refusé",
+          description: "Vous n'avez pas les droits pour publier des articles",
+          variant: "destructive",
+        });
+        navigate("/dashboard");
+      }
+    };
+
+    checkAuth();
+  }, [session, navigate, toast]);
 
   const handleSubmit = async ({ title, mainImage, sections }: {
     title: string;
