@@ -51,6 +51,42 @@ export type Database = {
         }
         Relationships: []
       }
+      news: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+          image_path: string | null
+          published_at: string
+          status: Database["public"]["Enums"]["news_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          id?: string
+          image_path?: string | null
+          published_at?: string
+          status?: Database["public"]["Enums"]["news_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          image_path?: string | null
+          published_at?: string
+          status?: Database["public"]["Enums"]["news_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pages_content: {
         Row: {
           content: string
@@ -240,6 +276,7 @@ export type Database = {
         | "license"
         | "id_card"
         | "photo"
+      news_status: "draft" | "published" | "archived"
       site_role: "member" | "admin"
       sport_type: "goalball" | "torball" | "both"
       team_type: "loisir" | "d1_masculine" | "d1_feminine"
