@@ -65,7 +65,7 @@ const AdminNews = () => {
           id,
           title,
           published_at,
-          profiles!news_author_id_fkey (
+          author:profiles!news_author_id_fkey (
             first_name,
             last_name
           )
@@ -74,13 +74,13 @@ const AdminNews = () => {
 
       if (error) throw error;
 
-      const formattedNews: NewsArticle[] = data?.map(item => ({
+      const formattedNews = data?.map(item => ({
         id: item.id,
         title: item.title,
         published_at: item.published_at,
         author: {
-          first_name: item.profiles.first_name,
-          last_name: item.profiles.last_name
+          first_name: item.author?.first_name || "Unknown",
+          last_name: item.author?.last_name || "Author"
         }
       })) || [];
 

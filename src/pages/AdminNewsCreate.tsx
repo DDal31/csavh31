@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSession } from "@supabase/auth-helpers-react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +8,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Eye, Plus, Send, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@supabase/auth-helpers-react";
 
 interface Section {
   subtitle: string;
@@ -23,7 +23,7 @@ export default function AdminNewsCreate() {
   const [mainImagePreview, setMainImagePreview] = useState<string>("");
   const [sections, setSections] = useState<Section[]>([{ subtitle: "", content: "", imagePath: "" }]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const user = useAuth();
+  const session = useSession();
 
   const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -81,7 +81,6 @@ export default function AdminNewsCreate() {
   };
 
   const handlePreview = () => {
-    // Implementation for preview functionality
     toast({
       title: "Aperçu",
       description: "Fonctionnalité d'aperçu à venir",
@@ -101,7 +100,6 @@ export default function AdminNewsCreate() {
     setIsSubmitting(true);
 
     try {
-      // Upload main image
       const fileExt = mainImage.name.split('.').pop();
       const filePath = `${crypto.randomUUID()}.${fileExt}`;
       
@@ -115,14 +113,13 @@ export default function AdminNewsCreate() {
         .from('club-assets')
         .getPublicUrl(filePath);
 
-      // Create news article
       const { error: insertError } = await supabase
         .from('news')
         .insert({
           title,
           content: JSON.stringify(sections),
           image_path: publicUrl,
-          author_id: user?.id,
+          author_id: session?.user?.id,
           status: 'published'
         });
 

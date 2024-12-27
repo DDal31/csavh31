@@ -5,9 +5,10 @@ import type { CreateUserData, AdminUserEditData } from "@/types/auth";
 
 interface UserBasicInfoFieldsProps {
   form: UseFormReturn<CreateUserData | AdminUserEditData>;
+  isCreating?: boolean;
 }
 
-export const UserBasicInfoFields = ({ form }: UserBasicInfoFieldsProps) => {
+export const UserBasicInfoFields = ({ form, isCreating = false }: UserBasicInfoFieldsProps) => {
   return (
     <>
       <FormField
@@ -31,26 +32,28 @@ export const UserBasicInfoFields = ({ form }: UserBasicInfoFieldsProps) => {
         )}
       />
 
-      <FormField
-        control={form.control}
-        name="password"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel className="text-gray-300" htmlFor="password">Mot de passe</FormLabel>
-            <FormControl>
-              <Input 
-                id="password"
-                type="password" 
-                placeholder="Entrez le mot de passe" 
-                className="bg-gray-700 border-gray-600 text-white" 
-                aria-label="Champ pour le mot de passe"
-                {...field} 
-              />
-            </FormControl>
-            <FormMessage className="text-red-400" role="alert" />
-          </FormItem>
-        )}
-      />
+      {isCreating && (
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-gray-300" htmlFor="password">Mot de passe</FormLabel>
+              <FormControl>
+                <Input 
+                  id="password"
+                  type="password" 
+                  placeholder="Entrez le mot de passe" 
+                  className="bg-gray-700 border-gray-600 text-white" 
+                  aria-label="Champ pour le mot de passe"
+                  {...field} 
+                />
+              </FormControl>
+              <FormMessage className="text-red-400" role="alert" />
+            </FormItem>
+          )}
+        />
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
