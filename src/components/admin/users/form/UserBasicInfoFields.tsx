@@ -4,11 +4,11 @@ import type { UseFormReturn } from "react-hook-form";
 import type { CreateUserData, AdminUserEditData } from "@/types/auth";
 
 interface UserBasicInfoFieldsProps {
-  form: UseFormReturn<CreateUserData | AdminUserEditData>;
-  isCreating?: boolean;
+  form: UseFormReturn<CreateUserData> | UseFormReturn<AdminUserEditData>;
+  isCreating: boolean;
 }
 
-export const UserBasicInfoFields = ({ form, isCreating = false }: UserBasicInfoFieldsProps) => {
+export const UserBasicInfoFields = ({ form, isCreating }: UserBasicInfoFieldsProps) => {
   return (
     <>
       <FormField
@@ -34,7 +34,7 @@ export const UserBasicInfoFields = ({ form, isCreating = false }: UserBasicInfoF
 
       {isCreating && (
         <FormField
-          control={form.control}
+          control={(form as UseFormReturn<CreateUserData>).control}
           name="password"
           render={({ field }) => (
             <FormItem>

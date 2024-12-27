@@ -17,7 +17,7 @@ interface NewsArticle {
   author: {
     first_name: string;
     last_name: string;
-  };
+  } | null;
 }
 
 const AdminNews = () => {
@@ -59,13 +59,13 @@ const AdminNews = () => {
 
   const fetchNews = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: newsData, error } = await supabase
         .from("news")
         .select(`
           id,
           title,
           published_at,
-          author:profiles!news_author_id_fkey (
+          author:author_id (
             first_name,
             last_name
           )
@@ -74,15 +74,15 @@ const AdminNews = () => {
 
       if (error) throw error;
 
-      const formattedNews = data?.map(item => ({
+      const formattedNews = (newsData || []).map(item => ({
         id: item.id,
         title: item.title,
         published_at: item.published_at,
-        author: {
-          first_name: item.author?.first_name || "Unknown",
-          last_name: item.author?.last_name || "Author"
+        author: item.author || {
+          first_name: "Unknown",
+          last_name: "Author"
         }
-      })) || [];
+      }));
 
       setNews(formattedNews);
     } catch (error) {
@@ -145,7 +145,7 @@ const AdminNews = () => {
               Retour aux Paramètres
             </Button>
             <Button
-              onClick={() => navigate("/admin/settings/news/new")}
+              onClick={() => navigate("/admin/settings/news/create")}
               className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
             >
               <Plus className="mr-2 h-4 w-4" />
