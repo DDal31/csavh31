@@ -22,13 +22,13 @@ const BlogCard = ({
   slug,
 }: BlogCardProps) => {
   return (
-    <Link to={`/blog/${slug}`}>
+    <Link to="/actualites" aria-label={`Voir l'article : ${title}`}>
       <Card className="h-full overflow-hidden hover:shadow-lg transition-shadow duration-300">
         <div className="relative">
           <AspectRatio ratio={16 / 9} className="bg-muted">
             <img
               src={image}
-              alt={title}
+              alt={`Image illustrant l'article : ${title}`}
               className="object-cover object-top w-full h-full"
               onError={(e) => {
                 const img = e.target as HTMLImageElement;
