@@ -1,4 +1,4 @@
-import * as z from "zod";  // Add this import to resolve the namespace issue
+import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { format } from "date-fns";
@@ -7,9 +7,9 @@ import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { supabase } from "@/integrations/supabase/client";
-import { TrainingTypeField } from "./form/TrainingTypeField";
-import { TrainingDateField } from "./form/TrainingDateField";
-import { TrainingTimeFields } from "./form/TrainingTimeFields";
+import { AccessibleTrainingTypeField } from "./form/AccessibleTrainingTypeField";
+import { AccessibleTrainingDateField } from "./form/AccessibleTrainingDateField";
+import { AccessibleTrainingTimeFields } from "./form/AccessibleTrainingTimeFields";
 import { formSchema } from "./form/trainingFormSchema";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -87,6 +87,7 @@ export function TrainingForm({ training, onSuccess, onCancel }: TrainingFormProp
           variant="outline" 
           onClick={onCancel}
           className="border-[#9b87f5] text-[#9b87f5] hover:bg-[#9b87f5] hover:text-white flex items-center gap-2"
+          aria-label="Retour à la liste des entraînements"
         >
           <ArrowLeft className="h-4 w-4" />
           Retour
@@ -95,14 +96,19 @@ export function TrainingForm({ training, onSuccess, onCancel }: TrainingFormProp
 
       <div className="bg-white/5 backdrop-blur-lg rounded-xl p-8 shadow-xl">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <TrainingTypeField form={form} />
-            <TrainingDateField form={form} />
-            <TrainingTimeFields form={form} />
+          <form 
+            onSubmit={form.handleSubmit(onSubmit)} 
+            className="space-y-6"
+            aria-label={`Formulaire pour ${isEditing ? "modifier" : "créer"} un entraînement`}
+          >
+            <AccessibleTrainingTypeField form={form} />
+            <AccessibleTrainingDateField form={form} />
+            <AccessibleTrainingTimeFields form={form} />
             
             <Button 
               type="submit" 
               className="w-full bg-[#9b87f5] hover:bg-[#7E69AB] text-white mt-8"
+              aria-label={isEditing ? "Modifier l'entraînement" : "Créer l'entraînement"}
             >
               {isEditing ? "Modifier l'entraînement" : "Créer l'entraînement"}
             </Button>
