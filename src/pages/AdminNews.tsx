@@ -1,116 +1,51 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, ArrowLeft, Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { useToast } from "@/hooks/use-toast";
-
-interface NewsArticle {
-  id: string;
-  title: string;
-  published_at: string;
-  author: {
-    first_name: string;
-    last_name: string;
-  } | null;
-}
 
 const AdminNews = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [news, setNews] = useState<NewsArticle[]>([]);
   const { toast } = useToast();
+  const [articles, setArticles] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const fetchArticles = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          console.log("Pas de session trouvée");
-          navigate("/login");
-          return;
-        }
+        const { data, error } = await supabase
+          .from("news")
+          .select("*")
+          .order("published_at", { ascending: false });
 
-        console.log("Vérification du rôle admin pour l'utilisateur:", session.user.id);
-        
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("site_role")
-          .eq("id", session.user.id)
-          .single();
+        if (error) throw error;
 
-        if (profileError) {
-          console.error("Erreur lors de la vérification du profil:", profileError);
-          toast({
-            title: "Erreur",
-            description: "Impossible de vérifier vos droits d'accès",
-            variant: "destructive",
-          });
-          navigate("/dashboard");
-          return;
-        }
-
-        if (!profile || profile.site_role !== "admin") {
-          console.log("Accès refusé : l'utilisateur n'est pas admin", profile);
-          toast({
-            title: "Accès refusé",
-            description: "Vous devez être administrateur pour accéder à cette page",
-            variant: "destructive",
-          });
-          navigate("/dashboard");
-          return;
-        }
-
-        fetchNews();
+        setArticles(data);
       } catch (error) {
-        console.error("Erreur lors de la vérification des droits admin:", error);
-        navigate("/dashboard");
+        console.error("Error fetching articles:", error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de récupérer les articles",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
       }
     };
 
-    checkAuth();
-  }, [navigate, toast]);
-
-  const fetchNews = async () => {
-    try {
-      const { data: newsData, error } = await supabase
-        .from("news")
-        .select(`
-          id,
-          title,
-          published_at,
-          author:profiles(first_name, last_name)
-        `)
-        .order("published_at", { ascending: false });
-
-      if (error) throw error;
-
-      const formattedNews: NewsArticle[] = (newsData || []).map(item => ({
-        id: item.id,
-        title: item.title,
-        published_at: item.published_at,
-        author: item.author
-      }));
-
-      setNews(formattedNews);
-    } catch (error) {
-      console.error("Erreur lors de la récupération des actualités:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger les actualités",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchArticles();
+  }, [toast]);
 
   const handleDelete = async (id: string) => {
+    const confirmDelete = window.confirm("Êtes-vous sûr de vouloir supprimer cet article ?");
+    if (!confirmDelete) return;
+
     try {
       const { error } = await supabase
         .from("news")
@@ -119,17 +54,16 @@ const AdminNews = () => {
 
       if (error) throw error;
 
+      setArticles(articles.filter(article => article.id !== id));
       toast({
         title: "Succès",
-        description: "L'actualité a été supprimée",
+        description: "L'article a été supprimé avec succès",
       });
-
-      fetchNews();
     } catch (error) {
-      console.error("Erreur lors de la suppression de l'actualité:", error);
+      console.error("Error deleting article:", error);
       toast({
         title: "Erreur",
-        description: "Impossible de supprimer l'actualité",
+        description: "Impossible de supprimer l'article",
         variant: "destructive",
       });
     }
@@ -147,77 +81,51 @@ const AdminNews = () => {
     <div className="min-h-screen bg-gray-900">
       <Navbar />
       <main className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
-            <Button
-              onClick={() => navigate("/admin/settings")}
-              variant="outline"
-              className="w-full sm:w-auto"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Retour aux Paramètres
-            </Button>
-            <Button
-              onClick={() => navigate("/admin/settings/news/create")}
-              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Nouvelle Actualité
-            </Button>
+        <div className="max-w-4xl mx-auto">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold text-white">Gestion des Actualités</h1>
+            <div className="space-x-4">
+              <Button
+                onClick={() => navigate('/admin/news/create')}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Nouvel Article
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-4">
-            {news.map((article) => (
-              <Card key={article.id} className="bg-gray-800 border-gray-700">
-                <CardContent className="p-6">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div className="flex-1">
-                      <h3 className="text-xl font-semibold text-white mb-2">
-                        {article.title}
-                      </h3>
-                      <div className="text-sm text-gray-400">
-                        <p>
-                          Publié le{" "}
-                          {format(new Date(article.published_at), "d MMMM yyyy", {
-                            locale: fr,
-                          })}
-                        </p>
-                        <p>
-                          Par {article.author?.first_name} {article.author?.last_name}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2 w-full sm:w-auto">
-                      <Button
-                        onClick={() =>
-                          navigate(`/admin/settings/news/${article.id}/edit`)
-                        }
-                        variant="outline"
-                        className="flex-1 sm:flex-none"
-                        aria-label={`Modifier l'actualité : ${article.title}`}
-                      >
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Modifier
-                      </Button>
-                      <Button
-                        onClick={() => handleDelete(article.id)}
-                        variant="destructive"
-                        className="flex-1 sm:flex-none"
-                        aria-label={`Supprimer l'actualité : ${article.title}`}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Supprimer
-                      </Button>
-                    </div>
+            {articles.map((article) => (
+              <Card key={article.id} className="p-4 bg-gray-800 border-gray-700">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h2 className="text-lg font-semibold text-white mb-2">{article.title}</h2>
+                    <p className="text-sm text-gray-400">
+                      Publié le {format(new Date(article.published_at), "d MMMM yyyy", { locale: fr })}
+                    </p>
                   </div>
-                </CardContent>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/admin/news/edit/${article.id}`)}
+                      className="text-blue-400 hover:text-blue-300"
+                    >
+                      Modifier
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDelete(article.id)}
+                      className="text-red-400 hover:text-red-300"
+                    >
+                      Supprimer
+                    </Button>
+                  </div>
+                </div>
               </Card>
             ))}
-            {news.length === 0 && (
-              <div className="text-center py-8 text-gray-400">
-                Aucune actualité n'a été publiée pour le moment.
-              </div>
-            )}
           </div>
         </div>
       </main>

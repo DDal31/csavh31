@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Eye, Plus, Send, ArrowLeft } from "lucide-react";
 import { ImageUpload } from "./ImageUpload";
@@ -16,6 +15,11 @@ interface Section {
 }
 
 interface ArticleFormProps {
+  initialData?: {
+    title: string;
+    mainImageUrl?: string;
+    sections: Section[];
+  };
   onSubmit: (data: {
     title: string;
     mainImage: File | null;
@@ -26,11 +30,13 @@ interface ArticleFormProps {
   onBack: () => void;
 }
 
-export const ArticleForm = ({ onSubmit, onPreview, isSubmitting, onBack }: ArticleFormProps) => {
-  const [title, setTitle] = useState("");
+export const ArticleForm = ({ initialData, onSubmit, onPreview, isSubmitting, onBack }: ArticleFormProps) => {
+  const [title, setTitle] = useState(initialData?.title || "");
   const [mainImage, setMainImage] = useState<File | null>(null);
-  const [mainImagePreview, setMainImagePreview] = useState<string>("");
-  const [sections, setSections] = useState<Section[]>([{ subtitle: "", content: "", imagePath: "" }]);
+  const [mainImagePreview, setMainImagePreview] = useState<string>(initialData?.mainImageUrl || "");
+  const [sections, setSections] = useState<Section[]>(
+    initialData?.sections || [{ subtitle: "", content: "", imagePath: "" }]
+  );
 
   const handleMainImageChange = (file: File | null) => {
     if (file) {
@@ -47,9 +53,7 @@ export const ArticleForm = ({ onSubmit, onPreview, isSubmitting, onBack }: Artic
   const updateSection = (index: number, field: keyof Section, value: string | File) => {
     const newSections = [...sections];
     if (field === "imagePath" && value instanceof File) {
-      // Store the file object for later upload
       newSections[index].imageFile = value;
-      // Create a temporary preview URL
       newSections[index].imagePath = URL.createObjectURL(value);
     } else {
       newSections[index][field] = value as string;
@@ -57,51 +61,12 @@ export const ArticleForm = ({ onSubmit, onPreview, isSubmitting, onBack }: Artic
     setSections(newSections);
   };
 
-  const uploadSectionImage = async (file: File): Promise<string> => {
-    const fileExt = file.name.split('.').pop();
-    const filePath = `${crypto.randomUUID()}.${fileExt}`;
-    
-    const { error: uploadError } = await supabase.storage
-      .from('club-assets')
-      .upload(filePath, file);
-
-    if (uploadError) {
-      console.error("Error uploading section image:", uploadError);
-      throw uploadError;
-    }
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('club-assets')
-      .getPublicUrl(filePath);
-
-    return publicUrl;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Process sections to upload images and get permanent URLs
-    const processedSections = await Promise.all(
-      sections.map(async (section) => {
-        const processedSection = { ...section };
-        if (section.imageFile) {
-          try {
-            const publicUrl = await uploadSectionImage(section.imageFile);
-            processedSection.imagePath = publicUrl;
-          } catch (error) {
-            console.error("Failed to upload section image:", error);
-          }
-        }
-        // Remove the temporary imageFile property
-        delete processedSection.imageFile;
-        return processedSection;
-      })
-    );
-
     await onSubmit({ 
       title, 
       mainImage, 
-      sections: processedSections 
+      sections 
     });
   };
 
@@ -111,7 +76,7 @@ export const ArticleForm = ({ onSubmit, onPreview, isSubmitting, onBack }: Artic
         type="button"
         variant="ghost"
         onClick={onBack}
-        className="mb-6"
+        className="mb-6 text-white hover:text-gray-300"
         aria-label="Retour à la liste des actualités"
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
@@ -155,7 +120,7 @@ export const ArticleForm = ({ onSubmit, onPreview, isSubmitting, onBack }: Artic
       <Button
         type="button"
         onClick={addSection}
-        className="w-full bg-gray-700 hover:bg-gray-600"
+        className="w-full bg-gray-700 hover:bg-gray-600 text-white"
         aria-label="Ajouter un sous-titre, une photo et du texte"
       >
         <Plus className="h-4 w-4 mr-2" />
@@ -167,7 +132,7 @@ export const ArticleForm = ({ onSubmit, onPreview, isSubmitting, onBack }: Artic
           type="button"
           onClick={onPreview}
           variant="outline"
-          className="bg-gray-700 hover:bg-gray-600"
+          className="bg-gray-700 hover:bg-gray-600 text-white"
           aria-label="Prévisualiser l'article"
         >
           <Eye className="h-4 w-4 mr-2" />
@@ -176,11 +141,11 @@ export const ArticleForm = ({ onSubmit, onPreview, isSubmitting, onBack }: Artic
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="bg-blue-600 hover:bg-blue-700"
-          aria-label="Publier l'article"
+          className="bg-blue-600 hover:bg-blue-700 text-white"
+          aria-label={isSubmitting ? "Enregistrement en cours..." : "Enregistrer les modifications"}
         >
           <Send className="h-4 w-4 mr-2" />
-          {isSubmitting ? "Publication..." : "Publier"}
+          {isSubmitting ? "Enregistrement..." : "Enregistrer"}
         </Button>
       </div>
     </form>
