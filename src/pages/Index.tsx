@@ -1,44 +1,12 @@
-import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Mail, Podcast, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
-import BlogCard from "@/components/BlogCard";
+import { NavigationTiles } from "@/components/home/NavigationTiles";
+import { NewsCarousel } from "@/components/home/NewsCarousel";
 
 const Index = () => {
-  const navigate = useNavigate();
-
-  // Récupération des actualités
-  const { data: news, isLoading: isLoadingNews } = useQuery({
-    queryKey: ["news"],
-    queryFn: async () => {
-      console.log("Fetching news...");
-      const { data, error } = await supabase
-        .from("news")
-        .select("*")
-        .eq("status", "published")
-        .order("published_at", { ascending: false })
-        .limit(5);
-
-      if (error) {
-        console.error("Error fetching news:", error);
-        throw error;
-      }
-
-      console.log("Fetched news:", data);
-      return data;
-    },
-  });
-
   // Récupération du contenu de présentation
   const { data: presentationContent, isLoading: isLoadingPresentation } = useQuery({
     queryKey: ["presentation-content"],
@@ -64,30 +32,6 @@ const Index = () => {
     },
   });
 
-  const tiles = [
-    {
-      title: "Espace Membre",
-      icon: User,
-      route: "/login",
-      bgColor: "bg-blue-600 hover:bg-blue-700",
-      ariaLabel: "Accéder à l'espace membre",
-    },
-    {
-      title: "Contact",
-      icon: Mail,
-      route: "/contact",
-      bgColor: "bg-purple-600 hover:bg-purple-700",
-      ariaLabel: "Nous contacter",
-    },
-    {
-      title: "Podcast",
-      icon: Podcast,
-      route: "/podcast",
-      bgColor: "bg-orange-600 hover:bg-orange-700",
-      ariaLabel: "Écouter nos podcasts",
-    },
-  ];
-
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100">
       <Navbar />
@@ -95,29 +39,10 @@ const Index = () => {
       <main className="container mx-auto px-4 py-12 space-y-16" role="main">
         {/* Section 1: Tuiles de Navigation */}
         <section 
-          className="grid grid-cols-1 md:grid-cols-3 gap-4" 
+          className="w-full" 
           aria-label="Navigation principale"
         >
-          {tiles.map((tile) => (
-            <Card
-              key={tile.title}
-              className={`${tile.bgColor} border-none cursor-pointer transform transition-all duration-300 hover:scale-105 focus-within:ring-2 focus-within:ring-white`}
-              onClick={() => navigate(tile.route)}
-              role="button"
-              aria-label={tile.ariaLabel}
-              tabIndex={0}
-            >
-              <CardHeader className="text-center p-6">
-                <tile.icon
-                  className="w-12 h-12 mx-auto mb-4 text-white"
-                  aria-hidden="true"
-                />
-                <CardTitle className="text-lg font-bold text-white">
-                  {tile.title}
-                </CardTitle>
-              </CardHeader>
-            </Card>
-          ))}
+          <NavigationTiles />
         </section>
 
         {/* Section 2: Actualités Défilantes */}
@@ -125,46 +50,7 @@ const Index = () => {
           className="w-full" 
           aria-label="Actualités récentes"
         >
-          {isLoadingNews ? (
-            <div 
-              className="flex justify-center items-center h-24" 
-              role="status" 
-              aria-label="Chargement des actualités"
-            >
-              <Loader2 className="h-8 w-8 animate-spin" aria-hidden="true" />
-              <span className="sr-only">Chargement des actualités en cours...</span>
-            </div>
-          ) : news && news.length > 0 ? (
-            <Carousel
-              opts={{
-                align: "start",
-                loop: true,
-              }}
-              className="w-full"
-            >
-              <CarouselContent>
-                {news.map((article) => (
-                  <CarouselItem key={article.id} className="md:basis-1/2 lg:basis-1/3">
-                    <BlogCard
-                      title={article.title}
-                      excerpt={article.content.substring(0, 150) + "..."}
-                      image={article.image_path || "/placeholder.svg"}
-                      author="CSAVH31"
-                      date={new Date(article.published_at).toLocaleDateString()}
-                      categories={["Actualité"]}
-                      slug={article.id}
-                    />
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious aria-label="Voir l'actualité précédente" />
-              <CarouselNext aria-label="Voir l'actualité suivante" />
-            </Carousel>
-          ) : (
-            <p className="text-center text-gray-400">
-              Aucune actualité disponible pour le moment.
-            </p>
-          )}
+          <NewsCarousel />
         </section>
 
         {/* Section 3: Présentation */}
