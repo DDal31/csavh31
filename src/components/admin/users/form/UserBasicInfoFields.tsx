@@ -1,16 +1,16 @@
-import { UseFormReturn } from "react-hook-form";
-import { Input } from "@/components/ui/input";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import type { UseFormReturn } from "react-hook-form";
 import type { UserFormData } from "@/types/auth";
 
 interface UserBasicInfoFieldsProps {
   form: UseFormReturn<UserFormData>;
-  isCreating?: boolean;
+  isCreating: boolean;
 }
 
-const UserBasicInfoFields = ({ form, isCreating }: UserBasicInfoFieldsProps) => {
+export function UserBasicInfoFields({ form, isCreating }: UserBasicInfoFieldsProps) {
   return (
-    <>
+    <div className="space-y-4">
       <FormField
         control={form.control}
         name="first_name"
@@ -18,7 +18,7 @@ const UserBasicInfoFields = ({ form, isCreating }: UserBasicInfoFieldsProps) => 
           <FormItem>
             <FormLabel>Prénom</FormLabel>
             <FormControl>
-              <Input placeholder="Prénom" {...field} />
+              <Input {...field} placeholder="Entrez le prénom" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -32,7 +32,7 @@ const UserBasicInfoFields = ({ form, isCreating }: UserBasicInfoFieldsProps) => 
           <FormItem>
             <FormLabel>Nom</FormLabel>
             <FormControl>
-              <Input placeholder="Nom" {...field} />
+              <Input {...field} placeholder="Entrez le nom" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -46,7 +46,7 @@ const UserBasicInfoFields = ({ form, isCreating }: UserBasicInfoFieldsProps) => 
           <FormItem>
             <FormLabel>Email</FormLabel>
             <FormControl>
-              <Input type="email" placeholder="Email" {...field} />
+              <Input {...field} type="email" placeholder="Entrez l'email" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -61,7 +61,7 @@ const UserBasicInfoFields = ({ form, isCreating }: UserBasicInfoFieldsProps) => 
             <FormItem>
               <FormLabel>Mot de passe</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="Mot de passe" {...field} />
+                <Input {...field} type="password" placeholder="Entrez le mot de passe" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -76,14 +76,12 @@ const UserBasicInfoFields = ({ form, isCreating }: UserBasicInfoFieldsProps) => 
           <FormItem>
             <FormLabel>Téléphone</FormLabel>
             <FormControl>
-              <Input type="tel" placeholder="Téléphone" {...field} />
+              <Input {...field} placeholder="Entrez le numéro de téléphone" />
             </FormControl>
             <FormMessage />
           </FormItem>
         )}
       />
-    </>
+    </div>
   );
-};
-
-export default UserBasicInfoFields;
+}
