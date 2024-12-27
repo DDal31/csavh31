@@ -3,8 +3,10 @@ import { Input } from "@/components/ui/input";
 import type { UseFormReturn } from "react-hook-form";
 import type { CreateUserData, AdminUserEditData } from "@/types/auth";
 
+type FormType = CreateUserData | AdminUserEditData;
+
 interface UserBasicInfoFieldsProps {
-  form: UseFormReturn<CreateUserData> | UseFormReturn<AdminUserEditData>;
+  form: UseFormReturn<FormType>;
   isCreating: boolean;
 }
 
