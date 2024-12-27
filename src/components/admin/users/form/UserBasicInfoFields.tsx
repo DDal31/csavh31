@@ -1,9 +1,7 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import type { UseFormReturn } from "react-hook-form";
-import type { CreateUserData, AdminUserEditData } from "@/types/auth";
-
-type FormType = CreateUserData | AdminUserEditData;
+import type { FormType } from "@/types/auth";
 
 interface UserBasicInfoFieldsProps {
   form: UseFormReturn<FormType>;
@@ -57,7 +55,7 @@ export function UserBasicInfoFields({ form, isCreating }: UserBasicInfoFieldsPro
 
       {isCreating && (
         <FormField
-          control={(form as UseFormReturn<CreateUserData>).control}
+          control={form.control as UseFormReturn<CreateUserData>['control']}
           name="password"
           render={({ field }) => (
             <FormItem>
