@@ -1,10 +1,10 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import type { UseFormReturn } from "react-hook-form";
-import type { FormType } from "@/types/auth";
+import type { CreateUserData, AdminUserEditData } from "@/types/auth";
 
 interface UserBasicInfoFieldsProps {
-  form: UseFormReturn<FormType>;
+  form: UseFormReturn<CreateUserData | AdminUserEditData>;
   isCreating: boolean;
 }
 
