@@ -1,10 +1,10 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { UseFormReturn } from "react-hook-form";
-import type { UserFormData } from "@/types/auth";
+import type { CreateUserData, AdminUserEditData } from "@/types/auth";
 
 interface UserRoleFieldsProps {
-  form: UseFormReturn<UserFormData>;
+  form: UseFormReturn<CreateUserData | AdminUserEditData>;
 }
 
 export const UserRoleFields = ({ form }: UserRoleFieldsProps) => {
@@ -52,7 +52,7 @@ export const UserRoleFields = ({ form }: UserRoleFieldsProps) => {
                 <SelectTrigger 
                   id="sport"
                   className="bg-gray-700 border-gray-600 text-white"
-                  aria-label="Sélectionnez le sport pratiqué"
+                  aria-label="Sélectionnez le sport"
                 >
                   <SelectValue placeholder="Sélectionnez un sport" />
                 </SelectTrigger>
