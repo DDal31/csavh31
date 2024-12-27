@@ -3,18 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Loader2, UserPlus, ArrowLeft } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import CreateUserForm from "@/components/admin/CreateUserForm";
-import UsersList from "@/components/admin/users/UsersList";
+import { UsersTable } from "@/components/admin/users/UsersTable";
+import { AdminUsersHeader } from "@/components/admin/users/AdminUsersHeader";
 import type { Profile } from "@/types/profile";
 import type { CreateUserData } from "@/types/auth";
 
@@ -87,19 +86,7 @@ const AdminUsers = () => {
       const { error } = await supabase.functions.invoke('manage-users', {
         body: {
           method: 'CREATE_USER',
-          userData: {
-            email: data.email,
-            password: data.password,
-            profile: {
-              first_name: data.first_name,
-              last_name: data.last_name,
-              phone: data.phone,
-              club_role: data.club_role,
-              sport: data.sport,
-              team: data.team,
-              site_role: data.site_role
-            }
-          }
+          userData: data
         }
       });
 
@@ -198,50 +185,30 @@ const AdminUsers = () => {
       <Navbar />
       <main className="container mx-auto px-4 py-24">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col gap-8">
-            <Button 
-              variant="ghost" 
-              className="text-white w-fit flex items-center gap-2 hover:text-gray-300"
-              onClick={() => navigate('/dashboard')}
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Retour au tableau de bord
-            </Button>
+          <AdminUsersHeader onNewUser={() => setIsCreateDialogOpen(true)} />
 
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <h1 className="text-4xl font-bold text-white">
-                Gestion des Utilisateurs
-              </h1>
-              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 w-full sm:w-auto">
-                    <UserPlus className="w-4 h-4" />
-                    Nouvel Utilisateur
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="bg-gray-800 border-gray-700">
-                  <DialogHeader>
-                    <DialogTitle className="text-white">Créer un nouvel utilisateur</DialogTitle>
-                  </DialogHeader>
-                  <CreateUserForm
-                    onSubmit={handleCreateUser}
-                    isLoading={false}
-                    onBack={() => setIsCreateDialogOpen(false)}
-                  />
-                </DialogContent>
-              </Dialog>
-            </div>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogContent className="bg-gray-800 border-gray-700">
+              <DialogHeader>
+                <DialogTitle className="text-white">Créer un nouvel utilisateur</DialogTitle>
+              </DialogHeader>
+              <CreateUserForm
+                onSubmit={handleCreateUser}
+                isLoading={false}
+                onBack={() => setIsCreateDialogOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
 
-            <UsersList
-              users={users}
-              onUpdateProfile={handleUpdateProfile}
-              onDeleteUser={handleDeleteUser}
-              selectedUser={selectedUser}
-              setSelectedUser={setSelectedUser}
-              isEditDialogOpen={isEditDialogOpen}
-              setIsEditDialogOpen={setIsEditDialogOpen}
-            />
-          </div>
+          <UsersTable
+            users={users}
+            onUpdateProfile={handleUpdateProfile}
+            onDeleteUser={handleDeleteUser}
+            selectedUser={selectedUser}
+            setSelectedUser={setSelectedUser}
+            isEditDialogOpen={isEditDialogOpen}
+            setIsEditDialogOpen={setIsEditDialogOpen}
+          />
         </div>
       </main>
       <Footer />
