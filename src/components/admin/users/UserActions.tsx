@@ -45,9 +45,10 @@ export function UserActions({
 
   const handleSubmit = (data: Profile) => {
     console.log("Updating profile for user:", user.id);
+    console.log("Profile ID being updated:", user.profile.id);
     console.log("With data:", data);
     
-    // Ensure we're updating the correct user's profile
+    // Assurons-nous que nous utilisons le bon ID
     onUpdateProfile({
       ...data,
       id: user.profile.id

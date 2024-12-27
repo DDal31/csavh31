@@ -16,10 +16,12 @@ interface ProfileEditFormProps {
 
 const ProfileEditForm = ({ profile, onSubmit, isLoading, isAdmin = false }: ProfileEditFormProps) => {
   console.log("ProfileEditForm received profile:", profile);
+  console.log("Profile ID:", profile.id);
   
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
+      id: profile.id, // Assurons-nous que l'ID est inclus
       first_name: profile.first_name,
       last_name: profile.last_name,
       email: profile.email,
@@ -33,7 +35,11 @@ const ProfileEditForm = ({ profile, onSubmit, isLoading, isAdmin = false }: Prof
 
   const handleSubmit = (data: ProfileFormData) => {
     console.log("Form submitted with data:", data);
-    onSubmit(data);
+    // Assurons-nous que l'ID est inclus dans les données soumises
+    onSubmit({
+      ...data,
+      id: profile.id
+    });
   };
 
   return (
