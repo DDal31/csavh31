@@ -20,5 +20,5 @@ export interface CreateUserData extends BaseUserData {
 // Type for editing users (no password required)
 export type AdminUserEditData = BaseUserData;
 
-// Union type for form handling
+// Form type that can handle both create and edit cases
 export type FormType = CreateUserData | AdminUserEditData;
