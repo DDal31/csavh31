@@ -11,7 +11,7 @@ import { TrainingTypeField } from "./form/TrainingTypeField";
 import { TrainingDateField } from "./form/TrainingDateField";
 import { TrainingTimeFields } from "./form/TrainingTimeFields";
 import { formSchema } from "./form/trainingFormSchema";
-import type { z } from "zod";
+import * as z from "zod";
 
 type TrainingType = Database["public"]["Enums"]["training_type"];
 
