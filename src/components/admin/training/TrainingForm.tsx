@@ -14,7 +14,6 @@ import { formSchema } from "./form/trainingFormSchema";
 import type { Database } from "@/integrations/supabase/types";
 
 type Training = Database["public"]["Tables"]["trainings"]["Row"];
-type TrainingType = Database["public"]["Enums"]["training_type"];
 
 type TrainingFormProps = {
   training?: Training | null;
@@ -29,7 +28,7 @@ export function TrainingForm({ training, onSuccess, onCancel }: TrainingFormProp
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      type: (training?.type as TrainingType) || "goalball",
+      type: training?.type || "goalball",
       otherTypeDetails: training?.other_type_details || "",
       date: training ? new Date(training.date) : undefined,
       startTime: training?.start_time.slice(0, 5) || "09:00",
@@ -55,8 +54,8 @@ export function TrainingForm({ training, onSuccess, onCancel }: TrainingFormProp
       }
 
       const trainingData = {
-        type: values.type as TrainingType,
-        other_type_details: values.type === "other" ? values.otherTypeDetails : null,
+        type: values.type,
+        other_type_details: values.otherTypeDetails || null,
         date: format(values.date, "yyyy-MM-dd"),
         start_time: values.startTime,
         end_time: values.endTime,
