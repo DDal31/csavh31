@@ -17,8 +17,8 @@ export const UserSportsTeamsFields = ({ form, showTeams = true }: UserSportsTeam
   const { sports, teams, isLoadingSports, isLoadingTeams } = useSportsAndTeams(selectedSports);
 
   const currentSport = form.watch("sport");
-  const currentTeams = form.watch("team")?.split(", ") || [];
 
+  // Initialize selected sports based on current sport value
   useEffect(() => {
     if (sports?.length && currentSport) {
       const sport = sports.find(s => s.name.toLowerCase() === currentSport.toLowerCase());
@@ -28,11 +28,29 @@ export const UserSportsTeamsFields = ({ form, showTeams = true }: UserSportsTeam
     }
   }, [sports, currentSport]);
 
+  // Initialize selected teams based on current teams value
   useEffect(() => {
-    if (currentTeams.length > 0) {
-      setSelectedTeams(currentTeams);
+    const currentTeams = form.watch("team");
+    if (currentTeams) {
+      // Split and clean the teams string
+      const teamsArray = currentTeams.split(",")
+        .map(team => team.trim())
+        .filter(team => team !== "");
+      
+      // Only set teams that exist in our available teams
+      if (teams?.length) {
+        const validTeams = teamsArray.filter(teamName => 
+          teams.some(t => t.name.toLowerCase() === teamName.toLowerCase())
+        );
+        setSelectedTeams(validTeams);
+        
+        // Update form with cleaned teams value
+        if (validTeams.length !== teamsArray.length) {
+          form.setValue("team", validTeams.join(", "));
+        }
+      }
     }
-  }, []);
+  }, [teams, form]);
 
   const handleSportChange = (sportId: string, checked: boolean) => {
     const newSelectedSports = checked
@@ -40,11 +58,11 @@ export const UserSportsTeamsFields = ({ form, showTeams = true }: UserSportsTeam
       : selectedSports.filter(id => id !== sportId);
     
     setSelectedSports(newSelectedSports);
+    setSelectedTeams([]); // Reset teams when sports change
+    form.setValue("team", ""); // Clear team field when sports change
 
     if (newSelectedSports.length === 0) {
       form.setValue("sport", "");
-      form.setValue("team", "");
-      setSelectedTeams([]);
     } else if (newSelectedSports.length === 1) {
       const sport = sports?.find(s => s.id === newSelectedSports[0]);
       form.setValue("sport", sport?.name || "");
@@ -109,7 +127,7 @@ export const UserSportsTeamsFields = ({ form, showTeams = true }: UserSportsTeam
         <FormField
           control={form.control}
           name="team"
-          render={({ field }) => (
+          render={() => (
             <FormItem>
               <FormLabel className="text-gray-300">Équipes</FormLabel>
               {isLoadingTeams ? (
