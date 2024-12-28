@@ -13,9 +13,11 @@ interface UserSportsTeamsFieldsProps {
 
 export const UserSportsTeamsFields = ({ form, showTeams = true }: UserSportsTeamsFieldsProps) => {
   const [selectedSports, setSelectedSports] = useState<string[]>([]);
+  const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const { sports, teams, isLoadingSports, isLoadingTeams } = useSportsAndTeams(selectedSports);
 
   const currentSport = form.watch("sport");
+  const currentTeams = form.watch("team")?.split(", ") || [];
 
   useEffect(() => {
     if (sports?.length && currentSport) {
@@ -26,6 +28,12 @@ export const UserSportsTeamsFields = ({ form, showTeams = true }: UserSportsTeam
     }
   }, [sports, currentSport]);
 
+  useEffect(() => {
+    if (currentTeams.length > 0) {
+      setSelectedTeams(currentTeams);
+    }
+  }, []);
+
   const handleSportChange = (sportId: string, checked: boolean) => {
     const newSelectedSports = checked
       ? [...selectedSports, sportId]
@@ -35,6 +43,8 @@ export const UserSportsTeamsFields = ({ form, showTeams = true }: UserSportsTeam
 
     if (newSelectedSports.length === 0) {
       form.setValue("sport", "");
+      form.setValue("team", "");
+      setSelectedTeams([]);
     } else if (newSelectedSports.length === 1) {
       const sport = sports?.find(s => s.id === newSelectedSports[0]);
       form.setValue("sport", sport?.name || "");
@@ -45,6 +55,15 @@ export const UserSportsTeamsFields = ({ form, showTeams = true }: UserSportsTeam
         .join(", ");
       form.setValue("sport", sportNames);
     }
+  };
+
+  const handleTeamChange = (teamName: string, checked: boolean) => {
+    const newSelectedTeams = checked
+      ? [...selectedTeams, teamName]
+      : selectedTeams.filter(name => name !== teamName);
+    
+    setSelectedTeams(newSelectedTeams);
+    form.setValue("team", newSelectedTeams.join(", "));
   };
 
   if (isLoadingSports) {
@@ -103,12 +122,8 @@ export const UserSportsTeamsFields = ({ form, showTeams = true }: UserSportsTeam
                     <div key={team.id} className="flex items-center space-x-2">
                       <Checkbox
                         id={`team-${team.id}`}
-                        checked={field.value === team.name}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            form.setValue("team", team.name);
-                          }
-                        }}
+                        checked={selectedTeams.includes(team.name)}
+                        onCheckedChange={(checked) => handleTeamChange(team.name, checked as boolean)}
                         className="border-gray-600 data-[state=checked]:bg-primary"
                       />
                       <label
