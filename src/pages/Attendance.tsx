@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AttendanceCard } from "@/components/attendance/AttendanceCard";
+import { AttendanceHeader } from "@/components/attendance/AttendanceHeader";
 import { Loader2 } from "lucide-react";
 import type { Training } from "@/types/training";
 
@@ -91,6 +92,7 @@ const Attendance = () => {
   if (trainings.length === 0) {
     return (
       <div className="min-h-screen bg-gray-900 p-6">
+        <AttendanceHeader />
         <div className="max-w-3xl mx-auto text-center text-white">
           Aucun entraînement à venir pour vos sports ({userSports.join(", ")})
         </div>
@@ -100,10 +102,13 @@ const Attendance = () => {
 
   return (
     <div className="min-h-screen bg-gray-900 p-6">
-      <div className="max-w-3xl mx-auto space-y-6">
-        {trainings.map((training) => (
-          <AttendanceCard key={training.id} training={training} />
-        ))}
+      <div className="max-w-3xl mx-auto">
+        <AttendanceHeader />
+        <div className="space-y-6">
+          {trainings.map((training) => (
+            <AttendanceCard key={training.id} training={training} />
+          ))}
+        </div>
       </div>
     </div>
   );
