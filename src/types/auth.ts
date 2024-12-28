@@ -23,4 +23,4 @@ export interface CreateUserData extends BaseUserData {
 export type AdminUserEditData = BaseUserData;
 
 // Form type that can handle both create and edit cases
-export type UserFormData = CreateUserData | BaseUserData;
+export type UserFormData = CreateUserData | AdminUserEditData;

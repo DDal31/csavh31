@@ -55,26 +55,6 @@ export const ArticleForm = ({ initialData, onSubmit, onPreview, isSubmitting, on
     setSections(newSections);
   };
 
-  const uploadSectionImage = async (file: File): Promise<string> => {
-    const fileExt = file.name.split('.').pop();
-    const filePath = `${crypto.randomUUID()}.${fileExt}`;
-    
-    const { error: uploadError } = await supabase.storage
-      .from('club-assets')
-      .upload(filePath, file);
-
-    if (uploadError) {
-      console.error("Error uploading section image:", uploadError);
-      throw uploadError;
-    }
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('club-assets')
-      .getPublicUrl(filePath);
-
-    return publicUrl;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -83,7 +63,22 @@ export const ArticleForm = ({ initialData, onSubmit, onPreview, isSubmitting, on
         const processedSection = { ...section };
         if (section.imageFile) {
           try {
-            const publicUrl = await uploadSectionImage(section.imageFile);
+            const fileExt = section.imageFile.name.split('.').pop();
+            const filePath = `${crypto.randomUUID()}.${fileExt}`;
+            
+            const { error: uploadError } = await supabase.storage
+              .from('club-assets')
+              .upload(filePath, section.imageFile);
+
+            if (uploadError) {
+              console.error("Error uploading section image:", uploadError);
+              throw uploadError;
+            }
+
+            const { data: { publicUrl } } = supabase.storage
+              .from('club-assets')
+              .getPublicUrl(filePath);
+
             processedSection.imagePath = publicUrl;
           } catch (error) {
             console.error("Failed to upload section image:", error);
