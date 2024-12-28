@@ -23,4 +23,4 @@ export interface CreateUserData extends BaseUserData {
 export type AdminUserEditData = BaseUserData;
 
 // Type générique pour les formulaires
-export type UserFormData = BaseUserData | CreateUserData;
+export type UserFormData = CreateUserData;
