@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import { useSportsAndTeams } from "@/hooks/useSportsAndTeams";
 import type { UseFormReturn } from "react-hook-form";
 import type { UserFormData } from "@/types/auth";
+import type { SportType, TeamType } from "@/types/profile";
 
 interface UserSportsTeamsFieldsProps {
   form: UseFormReturn<UserFormData>;
@@ -33,15 +34,31 @@ export const UserSportsTeamsFields = ({ form, showTeams = true }: UserSportsTeam
     
     setSelectedSports(newSelectedSports);
 
+    // Convert sport name to SportType
+    const getSportType = (sportName: string): SportType => {
+      const name = sportName.toLowerCase();
+      if (name === "goalball") return "goalball";
+      if (name === "torball") return "torball";
+      return "both";
+    };
+
     // Update form value based on selected sports
     if (newSelectedSports.length === 0) {
       form.setValue("sport", "goalball");
     } else if (newSelectedSports.length === 1) {
       const sport = sports?.find(s => s.id === newSelectedSports[0]);
-      form.setValue("sport", sport?.name.toLowerCase() || "goalball");
+      form.setValue("sport", getSportType(sport?.name || "goalball"));
     } else {
       form.setValue("sport", "both");
     }
+  };
+
+  // Convert team name to TeamType
+  const getTeamType = (teamName: string): TeamType => {
+    const name = teamName.toLowerCase().replace(/ /g, "_");
+    if (name === "loisir") return "loisir";
+    if (name === "d1_masculine") return "d1_masculine";
+    return "d1_feminine";
   };
 
   if (isLoadingSports) {
@@ -100,10 +117,10 @@ export const UserSportsTeamsFields = ({ form, showTeams = true }: UserSportsTeam
                     <div key={team.id} className="flex items-center space-x-2">
                       <Checkbox
                         id={`team-${team.id}`}
-                        checked={field.value === team.name.toLowerCase().replace(/ /g, "_")}
+                        checked={field.value === getTeamType(team.name)}
                         onCheckedChange={(checked) => {
                           if (checked) {
-                            form.setValue("team", team.name.toLowerCase().replace(/ /g, "_"));
+                            form.setValue("team", getTeamType(team.name));
                           }
                         }}
                         className="border-gray-600 data-[state=checked]:bg-primary"
