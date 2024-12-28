@@ -28,7 +28,7 @@ export function TrainingForm({ training, onSuccess, onCancel }: TrainingFormProp
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      type: training?.type || "goalball",
+      type: training?.type || "",
       otherTypeDetails: training?.other_type_details || "",
       date: training ? new Date(training.date) : undefined,
       startTime: training?.start_time.slice(0, 5) || "09:00",
@@ -54,7 +54,7 @@ export function TrainingForm({ training, onSuccess, onCancel }: TrainingFormProp
       }
 
       const trainingData = {
-        type: values.type,
+        type: values.type as Database["public"]["Enums"]["training_type"],
         other_type_details: values.otherTypeDetails || null,
         date: format(values.date, "yyyy-MM-dd"),
         start_time: values.startTime,
