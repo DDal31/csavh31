@@ -7,7 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import { UserBasicInfoFields } from "./users/form/UserBasicInfoFields";
 import { UserRoleFields } from "./users/form/UserRoleFields";
 import { UserTeamFields } from "./users/form/UserTeamFields";
-import type { CreateUserData } from "@/types/auth";
+import type { CreateUserData, UserFormData } from "@/types/auth";
 
 interface CreateUserFormProps {
   onSubmit: (data: CreateUserData) => void;
@@ -16,7 +16,7 @@ interface CreateUserFormProps {
 }
 
 const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) => {
-  const form = useForm<CreateUserData>({
+  const form = useForm<UserFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       first_name: "",
@@ -45,7 +45,7 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
 
       <Form {...form}>
         <form 
-          onSubmit={form.handleSubmit(onSubmit)} 
+          onSubmit={form.handleSubmit(data => onSubmit(data as CreateUserData))} 
           className="space-y-6"
           aria-label="Formulaire de création d'utilisateur"
         >

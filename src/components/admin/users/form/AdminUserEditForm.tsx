@@ -7,7 +7,7 @@ import { UserRoleFields } from "./UserRoleFields";
 import { UserTeamFields } from "./UserTeamFields";
 import { profileSchema } from "@/schemas/profileSchema";
 import type { Profile } from "@/types/profile";
-import type { AdminUserEditData } from "@/types/auth";
+import type { AdminUserEditData, UserFormData } from "@/types/auth";
 
 interface AdminUserEditFormProps {
   profile: Profile;
@@ -16,7 +16,7 @@ interface AdminUserEditFormProps {
 }
 
 export function AdminUserEditForm({ profile, onSubmit, isLoading }: AdminUserEditFormProps) {
-  const form = useForm<AdminUserEditData>({
+  const form = useForm<UserFormData>({
     resolver: zodResolver(profileSchema.omit({ id: true, password: true })),
     defaultValues: {
       first_name: profile.first_name,
