@@ -34,11 +34,11 @@ export const ArticleHeader = ({ title, imagePath, publishedAt, author }: Article
       </div>
 
       {imagePath && (
-        <div className="relative aspect-video w-full max-w-4xl mx-auto">
+        <div className="relative w-full max-w-4xl mx-auto">
           <img
             src={imagePath}
             alt={`Image principale illustrant l'article : ${title}`}
-            className="w-full h-full object-cover rounded-lg shadow-xl"
+            className="w-full h-auto max-h-[600px] object-contain rounded-lg shadow-xl"
           />
         </div>
       )}
