@@ -66,6 +66,33 @@ const NewsArticle = () => {
     enabled: !!id && id !== 'undefined',
   });
 
+  // Fonction pour récupérer toutes les images de l'article
+  const getAllImages = () => {
+    if (!article) return [];
+    
+    const images: { url: string; title: string }[] = [];
+    
+    // Ajouter l'image principale si elle existe
+    if (article.image_path) {
+      images.push({
+        url: article.image_path,
+        title: "Image principale"
+      });
+    }
+    
+    // Ajouter les images des sections
+    article.sections?.forEach((section, index) => {
+      if (section.imagePath && !section.imagePath.startsWith('blob:')) {
+        images.push({
+          url: section.imagePath,
+          title: section.subtitle || `Section ${index + 1}`
+        });
+      }
+    });
+    
+    return images;
+  };
+
   if (!id || id === 'undefined') {
     return null;
   }
@@ -94,6 +121,8 @@ const NewsArticle = () => {
       </div>
     );
   }
+
+  const allImages = getAllImages();
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -155,6 +184,25 @@ const NewsArticle = () => {
               </div>
             )}
           </div>
+
+          {/* Nouvelle section pour afficher toutes les images */}
+          {allImages.length > 0 && (
+            <div className="mt-12">
+              <h2 className="text-2xl font-bold mb-6">Galerie d'images</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {allImages.map((image, index) => (
+                  <div key={index} className="bg-gray-800 rounded-lg border border-gray-700 p-4">
+                    <img
+                      src={image.url}
+                      alt={image.title}
+                      className="w-full h-48 object-cover rounded-lg mb-2"
+                    />
+                    <p className="text-sm text-gray-400 text-center">{image.title}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </main>
 
