@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -49,8 +49,8 @@ export const ArticleForm = ({ initialData, onSubmit, onPreview, isSubmitting, on
     if (field === "imagePath" && value instanceof File) {
       newSections[index].imageFile = value;
       newSections[index].imagePath = URL.createObjectURL(value);
-    } else {
-      newSections[index][field] = value as string;
+    } else if (typeof value === "string") {
+      newSections[index][field] = value;
     }
     setSections(newSections);
   };
