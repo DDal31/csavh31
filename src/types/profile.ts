@@ -1,6 +1,4 @@
 export type ClubRole = "joueur" | "entraineur" | "arbitre" | "joueur-entraineur" | "joueur-arbitre" | "entraineur-arbitre" | "les-trois";
-export type SportType = "goalball" | "torball" | "both";
-export type TeamType = "loisir" | "d1_masculine" | "d1_feminine";
 export type SiteRole = "member" | "admin";
 
 export interface Profile {
@@ -10,8 +8,8 @@ export interface Profile {
   email: string;
   phone: string | null;
   club_role: ClubRole;
-  sport: SportType;
-  team: TeamType;
+  sport: string;
+  team: string;
   site_role: SiteRole;
   created_at: string;
   updated_at: string;

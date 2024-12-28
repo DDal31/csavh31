@@ -132,8 +132,8 @@ export type Database = {
           last_name: string
           phone: string | null
           site_role: Database["public"]["Enums"]["site_role"]
-          sport: Database["public"]["Enums"]["sport_type"]
-          team: Database["public"]["Enums"]["team_type"]
+          sport: string
+          team: string
           updated_at: string
         }
         Insert: {
@@ -145,8 +145,8 @@ export type Database = {
           last_name: string
           phone?: string | null
           site_role?: Database["public"]["Enums"]["site_role"]
-          sport: Database["public"]["Enums"]["sport_type"]
-          team: Database["public"]["Enums"]["team_type"]
+          sport: string
+          team: string
           updated_at?: string
         }
         Update: {
@@ -158,8 +158,8 @@ export type Database = {
           last_name?: string
           phone?: string | null
           site_role?: Database["public"]["Enums"]["site_role"]
-          sport?: Database["public"]["Enums"]["sport_type"]
-          team?: Database["public"]["Enums"]["team_type"]
+          sport?: string
+          team?: string
           updated_at?: string
         }
         Relationships: []
