@@ -49,60 +49,6 @@ export interface Database {
           status?: Database["public"]["Enums"]["contact_status"] | null
           updated_at?: string
         }
-        Relationships: []
-      }
-      sports: {
-        Row: {
-          id: string
-          name: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      teams: {
-        Row: {
-          id: string
-          name: string
-          sport_id: string
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          sport_id: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          sport_id?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "teams_sport_id_fkey"
-            columns: ["sport_id"]
-            isOneToOne: false
-            referencedRelation: "sports"
-            referencedColumns: ["id"]
-          }
-        ]
       }
       news: {
         Row: {
@@ -138,15 +84,6 @@ export interface Database {
           title?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "news_author_id_fkey"
-            columns: ["author_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       pages_content: {
         Row: {
@@ -173,7 +110,6 @@ export interface Database {
           section?: string
           title?: string | null
         }
-        Relationships: []
       }
       profiles: {
         Row: {
@@ -215,7 +151,6 @@ export interface Database {
           team?: Database["public"]["Enums"]["team_type"]
           updated_at?: string
         }
-        Relationships: []
       }
       registrations: {
         Row: {
@@ -236,22 +171,49 @@ export interface Database {
           training_id?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "fk_registrations_profiles"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "registrations_training_id_fkey"
-            columns: ["training_id"]
-            isOneToOne: false
-            referencedRelation: "trainings"
-            referencedColumns: ["id"]
-          },
-        ]
+      }
+      sports: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+      }
+      teams: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          sport_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          sport_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          sport_id?: string
+          updated_at?: string
+        }
       }
       trainings: {
         Row: {
@@ -281,7 +243,6 @@ export interface Database {
           start_time?: string
           type?: Database["public"]["Enums"]["training_type"]
         }
-        Relationships: []
       }
       user_documents: {
         Row: {
@@ -311,7 +272,6 @@ export interface Database {
           uploaded_by?: string
           user_id?: string
         }
-        Relationships: []
       }
     }
     Views: {
@@ -321,22 +281,9 @@ export interface Database {
       [_ in never]: never
     }
     Enums: {
-      club_role:
-        | "joueur"
-        | "entraineur"
-        | "arbitre"
-        | "joueur-entraineur"
-        | "joueur-arbitre"
-        | "entraineur-arbitre"
-        | "les-trois"
+      club_role: "joueur" | "entraineur" | "arbitre" | "joueur-entraineur" | "joueur-arbitre" | "entraineur-arbitre" | "les-trois"
       contact_status: "active" | "archived"
-      document_type:
-        | "medical_certificate"
-        | "ophthalmological_certificate"
-        | "ffh_license"
-        | "license"
-        | "id_card"
-        | "photo"
+      document_type: "medical_certificate" | "ophthalmological_certificate" | "ffh_license" | "license" | "id_card" | "photo"
       news_status: "draft" | "published" | "archived"
       site_role: "member" | "admin"
       sport_type: "goalball" | "torball" | "both"
