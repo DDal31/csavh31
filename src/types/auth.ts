@@ -22,5 +22,5 @@ export interface CreateUserData extends BaseUserData {
 // Type pour l'édition d'utilisateurs (pas de mot de passe requis)
 export type AdminUserEditData = BaseUserData;
 
-// Type de formulaire qui peut gérer les deux cas
+// Type générique pour les formulaires
 export type UserFormData = CreateUserData | AdminUserEditData;
