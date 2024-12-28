@@ -12,7 +12,7 @@ import type { AdminUserEditData, UserFormData } from "@/types/auth";
 interface AdminUserEditFormProps {
   profile: Profile;
   onSubmit: (data: AdminUserEditData) => void;
-  isLoading: boolean;
+  isLoading: boolean;  // Explicitly define isLoading as boolean
 }
 
 export function AdminUserEditForm({ profile, onSubmit, isLoading }: AdminUserEditFormProps) {
