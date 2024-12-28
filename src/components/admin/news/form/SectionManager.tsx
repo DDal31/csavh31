@@ -16,15 +16,7 @@ export const SectionManager = ({ sections, onChange }: SectionManagerProps) => {
 
   const updateSection = (index: number, field: keyof Section, value: string | File) => {
     const newSections = [...sections];
-    if (field === "imagePath") {
-      if (value instanceof File) {
-        newSections[index].imageFile = value;
-        newSections[index].imagePath = URL.createObjectURL(value);
-      } else {
-        newSections[index].imagePath = value;
-        newSections[index].imageFile = undefined;
-      }
-    } else if (typeof value === "string") {
+    if (typeof value === "string") {
       newSections[index][field] = value;
     }
     onChange(newSections);

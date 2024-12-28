@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUpload } from "./ImageUpload";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Section {
   subtitle: string;
@@ -17,6 +18,35 @@ interface ArticleSectionProps {
 }
 
 export const ArticleSection = ({ section, onChange, index }: ArticleSectionProps) => {
+  const handleImageChange = async (file: File | null) => {
+    if (file) {
+      console.log("Handling image change for section", index);
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${crypto.randomUUID()}.${fileExt}`;
+
+      try {
+        console.log("Uploading file to Supabase Storage:", filePath);
+        const { error: uploadError } = await supabase.storage
+          .from('club-assets')
+          .upload(filePath, file);
+
+        if (uploadError) {
+          console.error("Error uploading file:", uploadError);
+          throw uploadError;
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('club-assets')
+          .getPublicUrl(filePath);
+
+        console.log("File uploaded successfully, public URL:", publicUrl);
+        onChange("imagePath", publicUrl);
+      } catch (error) {
+        console.error("Error in handleImageChange:", error);
+      }
+    }
+  };
+
   return (
     <Card className="p-6 bg-gray-800 border-gray-700">
       <div className="space-y-4">
@@ -56,11 +86,7 @@ export const ArticleSection = ({ section, onChange, index }: ArticleSectionProps
 
         <ImageUpload
           label="Image de section"
-          onChange={(file) => {
-            if (file) {
-              onChange("imagePath", file);
-            }
-          }}
+          onChange={handleImageChange}
           preview={section.imagePath}
         />
       </div>
