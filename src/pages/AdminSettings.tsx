@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, FileText, Mail, Newspaper, Palette, Users } from "lucide-react";
+import { Loader2, FileText, Mail, Newspaper, Palette, Users, ListCollapse } from "lucide-react";
 
 const AdminSettings = () => {
   const navigate = useNavigate();
@@ -69,6 +69,13 @@ const AdminSettings = () => {
       route: "/admin/settings/template",
       bgColor: "bg-orange-600 hover:bg-orange-700",
       ariaLabel: "Modifier le template du site"
+    },
+    {
+      title: "Gestion des Sports et Équipes",
+      icon: ListCollapse,
+      route: "/admin/settings/sports-teams",
+      bgColor: "bg-indigo-600 hover:bg-indigo-700",
+      ariaLabel: "Gérer les sports et les équipes"
     }
   ];
 

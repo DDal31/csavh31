@@ -22,6 +22,9 @@ import AdminContacts from "./pages/AdminContacts";
 import AdminNews from "./pages/AdminNews";
 import AdminNewsCreate from "./pages/AdminNewsCreate";
 import AdminNewsEdit from "./pages/AdminNewsEdit";
+import AdminSportsTeams from "./pages/AdminSportsTeams";
+import AdminSportCreate from "./pages/AdminSportCreate";
+import AdminTeamCreate from "./pages/AdminTeamCreate";
 import ProfilePage from "./pages/Profile";
 import ProfileEdit from "./pages/ProfileEdit";
 import TrainingRegistration from "./pages/Training";
@@ -65,6 +68,9 @@ const App = () => (
           <Route path="/admin/settings/news" element={<AdminNews />} />
           <Route path="/admin/settings/news/create" element={<AdminNewsCreate />} />
           <Route path="/admin/settings/news/:id/edit" element={<AdminNewsEdit />} />
+          <Route path="/admin/settings/sports-teams" element={<AdminSportsTeams />} />
+          <Route path="/admin/settings/sports-teams/add-sport" element={<AdminSportCreate />} />
+          <Route path="/admin/settings/sports-teams/add-team" element={<AdminTeamCreate />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/profile/edit" element={<ProfileEdit />} />
         </Routes>
