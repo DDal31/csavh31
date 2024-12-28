@@ -38,7 +38,7 @@ export function AdminUserEditForm({ profile, onSubmit, isLoading }: AdminUserEdi
         aria-label={`Formulaire de modification pour ${profile.first_name} ${profile.last_name}`}
       >
         <div className="space-y-4">
-          <UserBasicInfoFields form={form as any} isCreating={false} />
+          <UserBasicInfoFields form={form} isCreating={false} />
           <UserRoleFields form={form} />
           <UserTeamFields form={form} />
         </div>
