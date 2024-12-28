@@ -341,7 +341,7 @@ export type Database = {
       site_role: "member" | "admin"
       sport_type: "goalball" | "torball" | "both"
       team_type: "loisir" | "d1_masculine" | "d1_feminine"
-      training_type: "goalball" | "torball" | "other"
+      training_type: "goalball" | "torball" | "other" | "showdown"
     }
     CompositeTypes: {
       [_ in never]: never
