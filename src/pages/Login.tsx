@@ -1,7 +1,7 @@
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -10,7 +10,6 @@ const Login = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Vérifier si l'utilisateur est déjà connecté
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
@@ -20,7 +19,6 @@ const Login = () => {
     
     checkUser();
 
-    // Écouter les changements d'état d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session) {
         navigate("/dashboard");
@@ -93,6 +91,15 @@ const Login = () => {
             view="sign_in"
             showLinks={false}
           />
+          <div className="mt-4 text-center">
+            <Link 
+              to="/reset-password"
+              className="text-blue-400 hover:text-blue-300 transition-colors"
+              aria-label="Mot de passe oublié ? Cliquez ici pour le réinitialiser"
+            >
+              Mot de passe oublié ?
+            </Link>
+          </div>
         </div>
       </div>
       <Footer />

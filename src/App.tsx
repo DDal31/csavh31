@@ -27,6 +27,9 @@ import ProfileEdit from "./pages/ProfileEdit";
 import TrainingRegistration from "./pages/Training";
 import Attendance from "./pages/Attendance";
 import Documents from "./pages/Documents";
+import ChangePassword from "./pages/ChangePassword";
+import ResetPassword from "./pages/ResetPassword";
+import UpdatePassword from "./pages/UpdatePassword";
 
 const queryClient = new QueryClient();
 
@@ -44,7 +47,10 @@ const App = () => (
           <Route path="/actualites/:id" element={<NewsArticle />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/update-password" element={<UpdatePassword />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/change-password" element={<ChangePassword />} />
           <Route path="/training" element={<TrainingRegistration />} />
           <Route path="/attendance" element={<Attendance />} />
           <Route path="/documents" element={<Documents />} />
