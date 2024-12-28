@@ -7,11 +7,37 @@ import type { Training } from "@/types/training";
 const Attendance = () => {
   const [trainings, setTrainings] = useState<Training[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [userSports, setUserSports] = useState<string[]>([]);
 
   useEffect(() => {
-    const fetchTrainings = async () => {
+    const fetchUserSportsAndTrainings = async () => {
       try {
-        const { data, error } = await supabase
+        // Get current user
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user?.id) {
+          throw new Error("No user session found");
+        }
+
+        // Get user's sports from profile
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("sport")
+          .eq("id", session.user.id)
+          .single();
+
+        if (profileError) throw profileError;
+
+        // Handle multiple sports in the sport field
+        const sports = profileData.sport
+          .split(",")
+          .map((sport: string) => sport.trim().toLowerCase());
+        
+        console.log("User sports:", sports);
+        setUserSports(sports);
+
+        // Get trainings for user's sports
+        const today = new Date().toISOString().split('T')[0];
+        const { data: trainingsData, error: trainingsError } = await supabase
           .from("trainings")
           .select(`
             *,
@@ -27,21 +53,31 @@ const Attendance = () => {
               )
             )
           `)
-          .order('date', { ascending: false })
-          .limit(10);
+          .gte("date", today)
+          .order('date', { ascending: true })
+          .order('start_time', { ascending: true });
 
-        if (error) throw error;
+        if (trainingsError) throw trainingsError;
 
-        console.log("Fetched trainings:", data);
-        setTrainings(data as Training[]);
+        // Filter trainings based on user's sports
+        const filteredTrainings = trainingsData.filter((training) => {
+          const trainingType = training.type.toLowerCase();
+          return sports.some(sport => 
+            sport === trainingType || 
+            (sport === "both" && (trainingType === "goalball" || trainingType === "torball"))
+          );
+        });
+
+        console.log("Filtered trainings:", filteredTrainings);
+        setTrainings(filteredTrainings);
       } catch (error) {
-        console.error("Error fetching trainings:", error);
+        console.error("Error fetching data:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchTrainings();
+    fetchUserSportsAndTrainings();
   }, []);
 
   if (isLoading) {
@@ -56,7 +92,7 @@ const Attendance = () => {
     return (
       <div className="min-h-screen bg-gray-900 p-6">
         <div className="max-w-3xl mx-auto text-center text-white">
-          Aucun entraînement trouvé
+          Aucun entraînement à venir pour vos sports ({userSports.join(", ")})
         </div>
       </div>
     );
