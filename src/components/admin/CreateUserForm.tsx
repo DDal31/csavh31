@@ -6,7 +6,7 @@ import { Form } from "@/components/ui/form";
 import { ArrowLeft } from "lucide-react";
 import { UserBasicInfoFields } from "./users/form/UserBasicInfoFields";
 import { UserRoleFields } from "./users/form/UserRoleFields";
-import { UserTeamFields } from "./users/form/UserTeamFields";
+import { UserSportsTeamsFields } from "./users/form/UserSportsTeamsFields";
 import type { CreateUserData, UserFormData } from "@/types/auth";
 
 interface CreateUserFormProps {
@@ -52,7 +52,7 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
           <div className="space-y-4">
             <UserBasicInfoFields form={form} isCreating={true} />
             <UserRoleFields form={form} />
-            <UserTeamFields form={form} />
+            <UserSportsTeamsFields form={form} />
           </div>
 
           <Button 

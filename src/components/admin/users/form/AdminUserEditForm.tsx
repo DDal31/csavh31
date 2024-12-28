@@ -4,7 +4,7 @@ import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { UserBasicInfoFields } from "./UserBasicInfoFields";
 import { UserRoleFields } from "./UserRoleFields";
-import { UserTeamFields } from "./UserTeamFields";
+import { UserSportsTeamsFields } from "./UserSportsTeamsFields";
 import { profileSchema } from "@/schemas/profileSchema";
 import type { Profile } from "@/types/profile";
 import type { AdminUserEditData } from "@/types/auth";
@@ -40,7 +40,7 @@ export function AdminUserEditForm({ profile, onSubmit, isLoading }: AdminUserEdi
         <div className="space-y-4">
           <UserBasicInfoFields form={form} isCreating={false} />
           <UserRoleFields form={form} />
-          <UserTeamFields form={form} />
+          <UserSportsTeamsFields form={form} />
         </div>
 
         <Button 

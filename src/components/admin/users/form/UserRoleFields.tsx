@@ -43,24 +43,23 @@ export const UserRoleFields = ({ form }: UserRoleFieldsProps) => {
 
       <FormField
         control={form.control}
-        name="sport"
+        name="site_role"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-gray-300" htmlFor="sport">Sport</FormLabel>
+            <FormLabel className="text-gray-300" htmlFor="site_role">Rôle sur le site</FormLabel>
             <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl>
                 <SelectTrigger 
-                  id="sport"
+                  id="site_role"
                   className="bg-gray-700 border-gray-600 text-white"
-                  aria-label="Sélectionnez le sport"
+                  aria-label="Sélectionnez le rôle sur le site"
                 >
-                  <SelectValue placeholder="Sélectionnez un sport" />
+                  <SelectValue placeholder="Sélectionnez un rôle" />
                 </SelectTrigger>
               </FormControl>
               <SelectContent className="bg-gray-700 border-gray-600">
-                <SelectItem value="goalball" className="text-white">Goalball</SelectItem>
-                <SelectItem value="torball" className="text-white">Torball</SelectItem>
-                <SelectItem value="both" className="text-white">Les deux</SelectItem>
+                <SelectItem value="member" className="text-white">Membre</SelectItem>
+                <SelectItem value="admin" className="text-white">Administrateur</SelectItem>
               </SelectContent>
             </Select>
             <FormMessage className="text-red-400" role="alert" />
