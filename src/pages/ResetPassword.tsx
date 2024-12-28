@@ -33,12 +33,14 @@ const ResetPassword = () => {
   const onSubmit = async (data: ResetForm) => {
     setIsLoading(true);
     try {
+      console.log("Envoi de la demande de réinitialisation pour:", data.email);
       const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
         redirectTo: `${window.location.origin}/update-password`,
       });
 
       if (error) throw error;
 
+      console.log("Email de réinitialisation envoyé avec succès");
       toast({
         title: "Email envoyé",
         description: "Vérifiez votre boîte mail pour réinitialiser votre mot de passe",
