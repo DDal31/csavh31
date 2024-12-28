@@ -14,6 +14,7 @@ import { formSchema } from "./form/trainingFormSchema";
 import type { Database } from "@/integrations/supabase/types";
 
 type Training = Database["public"]["Tables"]["trainings"]["Row"];
+type TrainingType = Database["public"]["Enums"]["training_type"];
 
 type TrainingFormProps = {
   training?: Training | null;
@@ -54,7 +55,7 @@ export function TrainingForm({ training, onSuccess, onCancel }: TrainingFormProp
       }
 
       const trainingData = {
-        type: values.type as Database["public"]["Enums"]["training_type"],
+        type: values.type as TrainingType,
         other_type_details: values.otherTypeDetails || null,
         date: format(values.date, "yyyy-MM-dd"),
         start_time: values.startTime,
