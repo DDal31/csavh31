@@ -1,7 +1,7 @@
 export type Training = {
   id: string;
-  type: string;
-  other_type_details?: string | null;
+  type: "goalball" | "torball" | "other";
+  other_type_details: string | null;
   date: string;
   start_time: string;
   end_time: string;
@@ -14,7 +14,7 @@ export type Training = {
     profiles: {
       first_name: string;
       last_name: string;
-      club_role: string;
+      club_role: "joueur" | "entraineur" | "arbitre" | "joueur-entraineur" | "joueur-arbitre" | "entraineur-arbitre" | "les-trois";
     };
   }[];
 };

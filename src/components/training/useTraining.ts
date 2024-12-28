@@ -21,6 +21,10 @@ export function useTraining(trainingId: string | undefined) {
           .select(`
             *,
             registrations (
+              id,
+              user_id,
+              created_at,
+              training_id,
               profiles (
                 first_name,
                 last_name,
@@ -34,7 +38,7 @@ export function useTraining(trainingId: string | undefined) {
         if (error) throw error;
 
         console.log("Fetched training:", data);
-        setTraining(data);
+        setTraining(data as Training);
       } catch (error) {
         console.error("Error fetching training:", error);
         toast({
