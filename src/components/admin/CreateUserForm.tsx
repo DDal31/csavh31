@@ -25,8 +25,8 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
       phone: "",
       password: "",
       club_role: "joueur",
-      sport: "goalball",
-      team: "loisir",
+      sport: "Goalball",
+      team: "Loisir",
       site_role: "member"
     }
   });

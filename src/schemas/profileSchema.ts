@@ -8,8 +8,8 @@ export const profileSchema = z.object({
   phone: z.string().optional(),
   password: z.string().optional(),
   club_role: z.enum(["joueur", "entraineur", "arbitre", "joueur-entraineur", "joueur-arbitre", "entraineur-arbitre", "les-trois"]),
-  sport: z.enum(["goalball", "torball", "both"]),
-  team: z.enum(["loisir", "d1_masculine", "d1_feminine"]),
+  sport: z.string(),
+  team: z.string(),
   site_role: z.enum(["member", "admin"]),
   created_at: z.string().optional(),
   updated_at: z.string().optional()

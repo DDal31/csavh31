@@ -9,8 +9,8 @@ export interface BaseUserData {
   email: string;
   phone?: string;
   club_role: Profile["club_role"];
-  sport: Profile["sport"];
-  team: Profile["team"];
+  sport: string;
+  team: string;
   site_role: Profile["site_role"];
 }
 
