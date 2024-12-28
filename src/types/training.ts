@@ -1,6 +1,6 @@
 export type Training = {
   id: string;
-  type: "goalball" | "torball" | "other";
+  type: "goalball" | "torball" | "other" | "showdown";
   other_type_details: string | null;
   date: string;
   start_time: string;
