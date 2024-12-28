@@ -17,3 +17,10 @@ export interface NewsArticle {
   } | null;
   sections?: Section[];
 }
+
+export interface ArticleFormData {
+  title: string;
+  mainImage: File | null;
+  mainImageUrl?: string;
+  sections: Section[];
+}

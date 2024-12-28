@@ -31,11 +31,6 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
     }
   });
 
-  const handleSubmit = (data: CreateUserData) => {
-    console.log("Creating user with data:", data);
-    onSubmit(data);
-  };
-
   return (
     <div role="main" aria-label="Formulaire de création d'utilisateur">
       <Button 
@@ -50,7 +45,7 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
 
       <Form {...form}>
         <form 
-          onSubmit={form.handleSubmit(handleSubmit)} 
+          onSubmit={form.handleSubmit(onSubmit)} 
           className="space-y-6"
           aria-label="Formulaire de création d'utilisateur"
         >

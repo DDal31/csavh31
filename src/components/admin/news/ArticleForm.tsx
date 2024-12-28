@@ -2,11 +2,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Eye, Plus, Send, ArrowLeft } from "lucide-react";
+import { Eye, Send, ArrowLeft } from "lucide-react";
 import { ImageUpload } from "./ImageUpload";
-import { ArticleSection } from "./ArticleSection";
+import { SectionManager } from "./form/SectionManager";
 import { supabase } from "@/integrations/supabase/client";
-import type { Section } from "@/types/news";
+import type { Section, ArticleFormData } from "@/types/news";
 
 interface ArticleFormProps {
   initialData?: {
@@ -14,11 +14,7 @@ interface ArticleFormProps {
     mainImageUrl?: string | null;
     sections: Section[];
   };
-  onSubmit: (data: {
-    title: string;
-    mainImage: File | null;
-    sections: Section[];
-  }) => Promise<void>;
+  onSubmit: (data: ArticleFormData) => Promise<void>;
   onPreview: () => void;
   isSubmitting: boolean;
   onBack: () => void;
@@ -40,59 +36,13 @@ export const ArticleForm = ({ initialData, onSubmit, onPreview, isSubmitting, on
     }
   };
 
-  const addSection = () => {
-    setSections([...sections, { subtitle: "", content: "", imagePath: "" }]);
-  };
-
-  const updateSection = (index: number, field: keyof Section, value: string | File) => {
-    const newSections = [...sections];
-    if (field === "imagePath" && value instanceof File) {
-      newSections[index].imageFile = value;
-      newSections[index].imagePath = URL.createObjectURL(value);
-    } else if (typeof value === "string") {
-      newSections[index][field] = value;
-    }
-    setSections(newSections);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const processedSections = await Promise.all(
-      sections.map(async (section) => {
-        const processedSection = { ...section };
-        if (section.imageFile) {
-          try {
-            const fileExt = section.imageFile.name.split('.').pop();
-            const filePath = `${crypto.randomUUID()}.${fileExt}`;
-            
-            const { error: uploadError } = await supabase.storage
-              .from('club-assets')
-              .upload(filePath, section.imageFile);
-
-            if (uploadError) {
-              console.error("Error uploading section image:", uploadError);
-              throw uploadError;
-            }
-
-            const { data: { publicUrl } } = supabase.storage
-              .from('club-assets')
-              .getPublicUrl(filePath);
-
-            processedSection.imagePath = publicUrl;
-          } catch (error) {
-            console.error("Failed to upload section image:", error);
-          }
-        }
-        delete processedSection.imageFile;
-        return processedSection;
-      })
-    );
-
     await onSubmit({ 
       title, 
       mainImage, 
-      sections: processedSections 
+      mainImageUrl: mainImagePreview,
+      sections 
     });
   };
 
@@ -134,24 +84,7 @@ export const ArticleForm = ({ initialData, onSubmit, onPreview, isSubmitting, on
         </div>
       </Card>
 
-      {sections.map((section, index) => (
-        <ArticleSection
-          key={index}
-          section={section}
-          onChange={(field, value) => updateSection(index, field, value)}
-          index={index}
-        />
-      ))}
-
-      <Button
-        type="button"
-        onClick={addSection}
-        className="w-full bg-gray-700 hover:bg-gray-600 text-white"
-        aria-label="Ajouter un sous-titre, une photo et du texte"
-      >
-        <Plus className="h-4 w-4 mr-2" />
-        Ajouter une section
-      </Button>
+      <SectionManager sections={sections} onChange={setSections} />
 
       <div className="flex gap-4 justify-end mt-6">
         <Button

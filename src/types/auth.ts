@@ -2,7 +2,7 @@ import { Database } from "@/integrations/supabase/types";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
-// Base user data without password
+// Type de base pour les données utilisateur sans mot de passe
 export interface BaseUserData {
   first_name: string;
   last_name: string;
@@ -14,13 +14,13 @@ export interface BaseUserData {
   site_role: Profile["site_role"];
 }
 
-// Type for creating new users (requires password)
+// Type pour la création d'utilisateurs (nécessite un mot de passe)
 export interface CreateUserData extends BaseUserData {
   password: string;
 }
 
-// Type for editing users (no password required)
+// Type pour l'édition d'utilisateurs (pas de mot de passe requis)
 export type AdminUserEditData = BaseUserData;
 
-// Form type that can handle both create and edit cases
+// Type de formulaire qui peut gérer les deux cas
 export type UserFormData = CreateUserData | AdminUserEditData;
