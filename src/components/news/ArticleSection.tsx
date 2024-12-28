@@ -22,7 +22,7 @@ export const ArticleSection = ({ section, index }: ArticleSectionProps) => {
             <img
               src={section.imagePath}
               alt={`Image illustrant la section : ${section.subtitle}`}
-              className="rounded-lg object-cover w-full max-h-[600px] shadow-lg"
+              className="rounded-lg object-contain w-full max-h-[600px] shadow-lg"
             />
           </div>
         )}

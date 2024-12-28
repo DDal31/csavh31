@@ -6,7 +6,9 @@ interface ImageGalleryProps {
 }
 
 export const ImageGallery = ({ images }: ImageGalleryProps) => {
-  if (images.length === 0) return null;
+  const validImages = images.filter(img => !img.url.startsWith('blob:'));
+  
+  if (validImages.length === 0) return null;
 
   return (
     <section className="mt-16" aria-labelledby="gallery-heading">
@@ -14,12 +16,12 @@ export const ImageGallery = ({ images }: ImageGalleryProps) => {
         Galerie d'images
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {images.map((image, index) => (
+        {validImages.map((image, index) => (
           <figure key={index} className="bg-gray-800 rounded-lg border border-gray-700 p-4">
             <img
               src={image.url}
               alt={`${image.title}`}
-              className="w-full h-48 object-cover rounded-lg mb-2"
+              className="w-full h-48 object-contain rounded-lg mb-2"
             />
             <figcaption className="text-sm text-gray-400 text-center">
               {image.title}

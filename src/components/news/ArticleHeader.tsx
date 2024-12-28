@@ -33,7 +33,7 @@ export const ArticleHeader = ({ title, imagePath, publishedAt, author }: Article
         </time>
       </div>
 
-      {imagePath && (
+      {imagePath && !imagePath.startsWith('blob:') && (
         <div className="relative w-full max-w-4xl mx-auto">
           <img
             src={imagePath}
