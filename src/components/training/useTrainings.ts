@@ -35,13 +35,18 @@ export function useTrainings() {
           throw new Error("Profile not found");
         }
 
-        // Build the type filter based on user's sport preference
-        let typeFilter = "";
-        if (profile.sport === "both") {
-          typeFilter = "type.in.(goalball,torball,other)";
-        } else {
-          typeFilter = `type.in.(${profile.sport},other)`;
-        }
+        // Parse user sports from profile
+        const userSports = profile.sport.split(",").map((s: string) => s.trim().toLowerCase());
+        console.log("User sports array:", userSports);
+
+        // Build the type filter based on user's sports
+        const typeConditions = userSports.map(sport => {
+          if (sport === 'both') {
+            return 'type.in.(goalball,torball,other)';
+          }
+          return `type.eq.${sport}`;
+        });
+        const typeFilter = typeConditions.join(',');
 
         // Fetch trainings with registrations and profiles
         const { data: trainingsData, error: trainingsError } = await supabase
@@ -61,8 +66,8 @@ export function useTrainings() {
             )
           `)
           .gte("date", new Date().toISOString().split("T")[0])
-          .order("date", { ascending: true })
-          .or(typeFilter);
+          .or(typeFilter)
+          .order("date", { ascending: true });
 
         if (trainingsError) throw trainingsError;
 
