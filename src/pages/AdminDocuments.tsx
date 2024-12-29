@@ -65,13 +65,17 @@ const AdminDocuments = () => {
         ...user,
         documents: documents.filter(doc => doc.user_id === user.id),
         profile: {
+          id: user.id,
           first_name: user.first_name,
           last_name: user.last_name,
           email: user.email,
+          phone: user.phone,
           club_role: user.club_role,
           sport: user.sport,
           team: user.team,
-          site_role: user.site_role
+          site_role: user.site_role,
+          created_at: user.created_at,
+          updated_at: user.updated_at
         }
       }));
 
@@ -131,10 +135,10 @@ const AdminDocuments = () => {
                 key={user.id}
                 className="bg-gray-800 rounded-lg p-6"
                 role="region"
-                aria-label={`Documents de ${user.first_name} ${user.last_name}`}
+                aria-label={`Documents de ${user.profile.first_name} ${user.profile.last_name}`}
               >
                 <h2 className="text-xl font-semibold text-white mb-4">
-                  {user.first_name} {user.last_name}
+                  {user.profile.first_name} {user.profile.last_name}
                 </h2>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {documentTypes?.map((type) => {
