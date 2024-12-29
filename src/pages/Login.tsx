@@ -39,7 +39,10 @@ const Login = () => {
         email,
         password,
         options: {
-          persistSession: rememberMe // Utilise la valeur de rememberMe pour la persistance
+          // Set session expiry to 30 days if rememberMe is true, otherwise use default (1 hour)
+          data: {
+            session_expires_in: rememberMe ? 60 * 60 * 24 * 30 : undefined
+          }
         }
       });
 
