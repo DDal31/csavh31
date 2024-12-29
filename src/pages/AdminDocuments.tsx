@@ -48,7 +48,7 @@ const AdminDocuments = () => {
 
   const fetchUsers = async () => {
     try {
-      const { data: users, error: usersError } = await supabase
+      const { data: usersData, error: usersError } = await supabase
         .from("profiles")
         .select("*");
 
@@ -61,9 +61,18 @@ const AdminDocuments = () => {
 
       if (documentsError) throw documentsError;
 
-      const usersWithDocuments = users.map(user => ({
+      const usersWithDocuments: UserWithDocuments[] = usersData.map(user => ({
         ...user,
-        documents: documents.filter(doc => doc.user_id === user.id)
+        documents: documents.filter(doc => doc.user_id === user.id),
+        profile: {
+          first_name: user.first_name,
+          last_name: user.last_name,
+          email: user.email,
+          club_role: user.club_role,
+          sport: user.sport,
+          team: user.team,
+          site_role: user.site_role
+        }
       }));
 
       setUsers(usersWithDocuments);

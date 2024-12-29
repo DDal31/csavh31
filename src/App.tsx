@@ -25,6 +25,7 @@ import AdminSportsTeams from "./pages/AdminSportsTeams";
 import AdminSportCreate from "./pages/AdminSportCreate";
 import AdminTeamCreate from "./pages/AdminTeamCreate";
 import AdminDocumentTypes from "./pages/AdminDocumentTypes";
+import AdminDocuments from "./pages/AdminDocuments";
 import ProfilePage from "./pages/Profile";
 import ProfileEdit from "./pages/ProfileEdit";
 import TrainingRegistration from "./pages/Training";
