@@ -18,6 +18,16 @@ export const BiometricButton = ({ onSuccess, className = "" }: BiometricButtonPr
       console.log("Starting biometric authentication...");
       console.log("Device is iOS:", isIOS);
       
+      // Vérifier si l'authentification biométrique est disponible
+      if (!window.PublicKeyCredential) {
+        throw new Error("L'authentification biométrique n'est pas supportée sur ce navigateur.");
+      }
+
+      const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+      if (!available) {
+        throw new Error("Aucun authentificateur biométrique n'est disponible sur cet appareil.");
+      }
+
       // Get authentication options from server
       const { data: optionsResponse, error: optionsError } = await supabase.functions.invoke(
         'get-auth-options',
@@ -66,11 +76,13 @@ export const BiometricButton = ({ onSuccess, className = "" }: BiometricButtonPr
       if (error instanceof Error) {
         if (isIOS) {
           if (error.name === "NotAllowedError") {
-            errorMessage = "Face ID n'est pas disponible. Vérifiez que Face ID est activé dans les paramètres de Safari.";
+            errorMessage = "Face ID n'est pas disponible. Vérifiez que Face ID est activé dans les paramètres de Safari et que vous avez autorisé son utilisation pour ce site.";
           } else if (error.name === "NotSupportedError") {
             errorMessage = "Face ID n'est pas configuré sur cet appareil. Vérifiez vos paramètres iOS.";
           } else if (error.name === "SecurityError") {
             errorMessage = "La connexion n'est pas sécurisée. Assurez-vous d'utiliser HTTPS.";
+          } else if (error.name === "AbortError") {
+            errorMessage = "L'authentification a été annulée. Veuillez réessayer.";
           }
         }
       }

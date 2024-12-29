@@ -17,6 +17,9 @@ serve(async (req) => {
     console.log("User agent:", userAgent);
     console.log("Is iOS device:", isIOS);
 
+    const origin = req.headers.get("origin") || "";
+    console.log("Origin:", origin);
+
     // Générer un challenge aléatoire
     const challenge = new Uint8Array(32);
     crypto.getRandomValues(challenge);
@@ -26,14 +29,13 @@ serve(async (req) => {
       challenge,
       timeout: 60000,
       userVerification: "preferred",
-      rpId: new URL(req.headers.get("origin") || "").hostname,
+      rpId: new URL(origin).hostname,
       allowCredentials: [], // Permettre toutes les credentials
-      authenticatorAttachment: isIOS ? "platform" : undefined, // Spécifique pour Touch ID/Face ID sur iOS
-      extensions: isIOS ? {
-        largeBlob: {
-          read: true,
-        },
-      } : undefined,
+      authenticatorAttachment: isIOS ? "platform" : undefined,
+      attestation: isIOS ? "direct" : "none",
+      extensions: {
+        uvm: true,
+      },
     };
 
     console.log("Generated options:", options);
