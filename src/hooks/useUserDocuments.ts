@@ -59,6 +59,7 @@ export const useUserDocuments = () => {
       }
       setUserProfile(profileData);
 
+      // Fetch documents with their types
       const { data: documentsData, error: documentsError } = await supabase
         .from('user_documents')
         .select(`
