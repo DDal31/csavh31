@@ -51,6 +51,30 @@ export type Database = {
         }
         Relationships: []
       }
+      document_types: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          status: Database["public"]["Enums"]["document_type_status"] | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          status?: Database["public"]["Enums"]["document_type_status"] | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          status?: Database["public"]["Enums"]["document_type_status"] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       news: {
         Row: {
           author_id: string
@@ -286,32 +310,46 @@ export type Database = {
       user_documents: {
         Row: {
           document_type: Database["public"]["Enums"]["document_type"]
+          document_type_id: string
           file_name: string
           file_path: string
           id: string
+          status: Database["public"]["Enums"]["document_type_status"] | null
           uploaded_at: string
           uploaded_by: string
           user_id: string
         }
         Insert: {
           document_type: Database["public"]["Enums"]["document_type"]
+          document_type_id: string
           file_name: string
           file_path: string
           id?: string
+          status?: Database["public"]["Enums"]["document_type_status"] | null
           uploaded_at?: string
           uploaded_by: string
           user_id: string
         }
         Update: {
           document_type?: Database["public"]["Enums"]["document_type"]
+          document_type_id?: string
           file_name?: string
           file_path?: string
           id?: string
+          status?: Database["public"]["Enums"]["document_type_status"] | null
           uploaded_at?: string
           uploaded_by?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_documents_document_type_id_fkey"
+            columns: ["document_type_id"]
+            isOneToOne: false
+            referencedRelation: "document_types"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -337,6 +375,7 @@ export type Database = {
         | "license"
         | "id_card"
         | "photo"
+      document_type_status: "active" | "archived"
       news_status: "draft" | "published" | "archived"
       site_role: "member" | "admin"
       sport_type: "goalball" | "torball" | "both"

@@ -25,6 +25,7 @@ import AdminNewsEdit from "./pages/AdminNewsEdit";
 import AdminSportsTeams from "./pages/AdminSportsTeams";
 import AdminSportCreate from "./pages/AdminSportCreate";
 import AdminTeamCreate from "./pages/AdminTeamCreate";
+import AdminDocumentTypes from "./pages/AdminDocumentTypes";
 import ProfilePage from "./pages/Profile";
 import ProfileEdit from "./pages/ProfileEdit";
 import TrainingRegistration from "./pages/Training";
@@ -71,6 +72,7 @@ const App = () => (
           <Route path="/admin/settings/sports-teams" element={<AdminSportsTeams />} />
           <Route path="/admin/settings/sports-teams/add-sport" element={<AdminSportCreate />} />
           <Route path="/admin/settings/sports-teams/add-team" element={<AdminTeamCreate />} />
+          <Route path="/admin/settings/document-types" element={<AdminDocumentTypes />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/profile/edit" element={<ProfileEdit />} />
         </Routes>
