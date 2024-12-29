@@ -24,6 +24,7 @@ export const useDocumentManagement = () => {
       throw new Error("Impossible de récupérer le type de document");
     }
 
+    console.log("useDocumentManagement: Found document type ID:", data.id);
     return data.id;
   };
 
