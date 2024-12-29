@@ -15,6 +15,8 @@ export const useDocumentManagement = () => {
       .eq('name', 
         documentType === 'medical_certificate' ? 'Certificat médical' :
         documentType === 'ophthalmological_certificate' ? 'Certificat ophtalmologique' :
+        documentType === 'ffh_license' ? 'Licence FFH' :
+        documentType === 'id_card' ? 'Carte d\'identité' :
         'Licence FFH'
       )
       .single();
