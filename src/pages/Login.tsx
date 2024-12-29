@@ -5,13 +5,14 @@ import { useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { BiometricButton } from "@/components/auth/BiometricButton";
 import { useToast } from "@/hooks/use-toast";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [biometricSupported, setBiometricSupported] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -29,38 +30,26 @@ const Login = () => {
       }
     });
 
-    // Vérification du support de WebAuthn
-    const checkWebAuthnSupport = async () => {
-      try {
-        if (window.PublicKeyCredential) {
-          const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-          console.log("WebAuthn supported:", available);
-          setBiometricSupported(available);
-        }
-      } catch (error) {
-        console.error("Error checking WebAuthn support:", error);
-        setBiometricSupported(false);
-      }
-    };
-
-    checkWebAuthnSupport();
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const handleBiometricSuccess = async (email: string, password: string) => {
+  const handleSignIn = async (email: string, password: string) => {
     try {
-      const { data: { session }, error: signInError } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
+        options: {
+          persistSession: rememberMe // Utilise la valeur de rememberMe pour la persistance
+        }
       });
 
-      if (signInError) throw signInError;
+      if (error) throw error;
 
-      if (session) {
+      if (data.session) {
         navigate("/dashboard");
       }
     } catch (error) {
-      console.error("Sign in error:", error);
+      console.error("Erreur de connexion:", error);
       toast({
         title: "Erreur de connexion",
         description: "Une erreur est survenue lors de la connexion. Veuillez réessayer.",
@@ -77,20 +66,6 @@ const Login = () => {
           <h2 className="text-3xl font-bold text-center text-white mb-8">
             Espace Membre CSAVH
           </h2>
-
-          {biometricSupported && (
-            <div className="mb-6">
-              <BiometricButton onSuccess={handleBiometricSuccess} />
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-gray-600" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-gray-900 px-2 text-gray-400">Ou</span>
-                </div>
-              </div>
-            </div>
-          )}
 
           <Auth
             supabaseClient={supabase}
@@ -134,6 +109,23 @@ const Login = () => {
             view="sign_in"
             showLinks={false}
           />
+
+          <div className="mt-4 flex items-center space-x-2">
+            <Checkbox
+              id="rememberMe"
+              checked={rememberMe}
+              onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+              aria-label="Case à cocher pour rester connecté"
+              className="data-[state=checked]:bg-primary"
+            />
+            <Label
+              htmlFor="rememberMe"
+              className="text-sm text-gray-300 cursor-pointer select-none"
+            >
+              Se souvenir de moi
+            </Label>
+          </div>
+
           <div className="mt-4 text-center">
             <Link 
               to="/reset-password"
