@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Fingerprint } from "lucide-react";
 import { startAuthentication } from "@simplewebauthn/browser";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client"; // Added import for supabase client
 
 interface BiometricButtonProps {
   onSuccess: (email: string, password: string) => Promise<void>;
