@@ -24,7 +24,7 @@ export const useUserDocuments = () => {
       console.log("Documents: Fetching active document types");
       const { data, error } = await supabase
         .from('document_types')
-        .select('name')
+        .select('*')
         .eq('status', 'active');
       
       if (error) {
@@ -32,7 +32,7 @@ export const useUserDocuments = () => {
         throw error;
       }
       console.log("Documents: Active document types fetched:", data);
-      return data.map(dt => dt.name);
+      return data;
     }
   });
 
@@ -65,8 +65,7 @@ export const useUserDocuments = () => {
         .select(`
           *,
           document_types (
-            name,
-            status
+            *
           )
         `)
         .eq('user_id', session.user.id);
@@ -75,7 +74,7 @@ export const useUserDocuments = () => {
         console.error("Documents: Error fetching documents:", documentsError);
         throw documentsError;
       }
-      
+
       // Filter out documents with inactive types
       const activeDocuments = documentsData?.filter(doc => doc.document_types?.status === 'active') || [];
       console.log("Documents: Documents fetched successfully:", activeDocuments.length, "documents found");

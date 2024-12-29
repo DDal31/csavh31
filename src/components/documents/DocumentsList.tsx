@@ -11,7 +11,7 @@ interface DocumentsListProps {
     id: string;
     club_role: string;
   } | null;
-  activeDocumentTypes: string[] | undefined;
+  activeDocumentTypes: any[] | undefined;
   onUpload: (type: RequiredDocumentType, file: File) => Promise<void>;
   onDownload: (document: UserDocument) => Promise<void>;
   onDelete: (document: UserDocument) => Promise<void>;
@@ -35,8 +35,10 @@ export const DocumentsList = ({
 
   // Filter required documents based on active types
   const filteredDocumentTypes = getRequiredDocuments().filter(type => {
-    const label = REQUIRED_DOCUMENT_LABELS[type];
-    return activeDocumentTypes?.includes(label);
+    return activeDocumentTypes?.some(docType => 
+      docType.status === 'active' && 
+      docType.name === REQUIRED_DOCUMENT_LABELS[type]
+    );
   });
 
   return (

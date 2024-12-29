@@ -21,11 +21,11 @@ export function UserDocumentCard({ user, uploading, onUpload, onDownload, onDele
     queryFn: async () => {
       const { data, error } = await supabase
         .from('document_types')
-        .select('name')
+        .select('*')
         .eq('status', 'active');
       
       if (error) throw error;
-      return data.map(dt => dt.name);
+      return data;
     }
   });
 
@@ -64,7 +64,10 @@ export function UserDocumentCard({ user, uploading, onUpload, onDownload, onDele
 
   const documentTypes = getRequiredDocuments().filter(type => {
     const label = getDocumentLabel(type);
-    return activeDocumentTypes?.includes(label);
+    return activeDocumentTypes?.some(docType => 
+      docType.status === 'active' && 
+      docType.name === label
+    );
   });
 
   return (
