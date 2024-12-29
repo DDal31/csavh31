@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,13 +11,23 @@ serve(async (req) => {
   }
 
   try {
-    // Generate authentication options
+    console.log("Generating authentication options...");
+
+    // Générer un challenge aléatoire
+    const challenge = new Uint8Array(32);
+    crypto.getRandomValues(challenge);
+
+    // Configuration spécifique pour iOS
     const options = {
-      challenge: new Uint8Array(32),
+      challenge,
       timeout: 60000,
       userVerification: "preferred",
       rpId: new URL(req.headers.get("origin") || "").hostname,
+      allowCredentials: [], // Permettre toutes les credentials
+      authenticatorAttachment: "platform", // Spécifique pour Touch ID/Face ID
     };
+
+    console.log("Generated options:", options);
 
     return new Response(
       JSON.stringify(options),
@@ -30,6 +39,7 @@ serve(async (req) => {
       },
     )
   } catch (error) {
+    console.error("Error generating auth options:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 

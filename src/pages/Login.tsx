@@ -5,9 +5,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Button } from "@/components/ui/button";
-import { Fingerprint } from "lucide-react";
-import { startAuthentication } from "@simplewebauthn/browser";
+import { BiometricButton } from "@/components/auth/BiometricButton";
 import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
@@ -16,14 +14,14 @@ const Login = () => {
   const [biometricSupported, setBiometricSupported] = useState(false);
 
   useEffect(() => {
-    const checkUser = async () => {
+    const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         navigate("/dashboard");
       }
     };
     
-    checkUser();
+    checkAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session) {
@@ -31,7 +29,7 @@ const Login = () => {
       }
     });
 
-    // Check if WebAuthn is supported
+    // Vérification du support de WebAuthn
     const checkWebAuthnSupport = async () => {
       try {
         if (window.PublicKeyCredential) {
@@ -41,6 +39,7 @@ const Login = () => {
         }
       } catch (error) {
         console.error("Error checking WebAuthn support:", error);
+        setBiometricSupported(false);
       }
     };
 
@@ -48,51 +47,23 @@ const Login = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const handleBiometricLogin = async () => {
+  const handleBiometricSuccess = async (email: string, password: string) => {
     try {
-      // Get authentication options from your server
-      const { data: optionsResponse, error: optionsError } = await supabase.functions.invoke(
-        'get-auth-options',
-        {
-          method: 'POST',
-          body: {}
-        }
-      );
+      const { data: { session }, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
-      if (optionsError) throw optionsError;
+      if (signInError) throw signInError;
 
-      // Start the authentication process
-      const asseResp = await startAuthentication(optionsResponse);
-      
-      // Verify with your server
-      const { data: verificationResponse, error: verificationError } = await supabase.functions.invoke(
-        'verify-auth',
-        {
-          method: 'POST',
-          body: { credential: asseResp }
-        }
-      );
-
-      if (verificationError) throw verificationError;
-
-      // Handle successful authentication
-      if (verificationResponse.verified) {
-        const { data: { session }, error: signInError } = await supabase.auth.signInWithPassword({
-          email: verificationResponse.email,
-          password: verificationResponse.password
-        });
-
-        if (signInError) throw signInError;
-
-        if (session) {
-          navigate("/dashboard");
-        }
+      if (session) {
+        navigate("/dashboard");
       }
     } catch (error) {
-      console.error("Biometric authentication error:", error);
+      console.error("Sign in error:", error);
       toast({
-        title: "Erreur d'authentification biométrique",
-        description: "Veuillez utiliser votre email et mot de passe pour vous connecter.",
+        title: "Erreur de connexion",
+        description: "Une erreur est survenue lors de la connexion. Veuillez réessayer.",
         variant: "destructive"
       });
     }
@@ -109,14 +80,7 @@ const Login = () => {
 
           {biometricSupported && (
             <div className="mb-6">
-              <Button
-                onClick={handleBiometricLogin}
-                className="w-full bg-primary hover:bg-primary/90 text-white flex items-center justify-center gap-2"
-                aria-label="Se connecter avec l'authentification biométrique"
-              >
-                <Fingerprint className="h-5 w-5" />
-                <span>Se connecter avec biométrie</span>
-              </Button>
+              <BiometricButton onSuccess={handleBiometricSuccess} />
               <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t border-gray-600" />
@@ -144,19 +108,6 @@ const Login = () => {
                     inputBorder: '#ffffff40',
                     inputBorderHover: '#ffffff60',
                     inputBorderFocus: '#ffffff80',
-                  },
-                  space: {
-                    buttonPadding: '12px 16px',
-                    inputPadding: '12px 16px',
-                  },
-                  borderWidths: {
-                    buttonBorderWidth: '1px',
-                    inputBorderWidth: '1px',
-                  },
-                  radii: {
-                    borderRadiusButton: '8px',
-                    buttonBorderRadius: '8px',
-                    inputBorderRadius: '8px',
                   },
                 },
               },
