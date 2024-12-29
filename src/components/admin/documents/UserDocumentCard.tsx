@@ -26,9 +26,9 @@ export function UserDocumentCard({ user, uploading, onUpload, onDownload }: User
   const getRequiredDocuments = (): DocumentType[] => {
     const role = user.profile.club_role;
     if (role === 'joueur' || role === 'joueur-entraineur') {
-      return ['ophthalmological_certificate', 'medical_certificate', 'ffh_license'];
+      return ['ophthalmological_certificate', 'medical_certificate', 'ffh_license', 'id_card'];
     }
-    return ['ffh_license'];
+    return ['ffh_license', 'id_card'];
   };
 
   const getDocumentLabel = (type: DocumentType): string => {
@@ -39,6 +39,8 @@ export function UserDocumentCard({ user, uploading, onUpload, onDownload }: User
         return 'Certificat ophtalmologique';
       case 'ffh_license':
         return 'Licence FFH';
+      case 'id_card':
+        return 'Carte d\'identité';
       default:
         return type;
     }

@@ -2,7 +2,7 @@ import type { Profile } from "./profile";
 
 export type DocumentType = 'medical_certificate' | 'ophthalmological_certificate' | 'ffh_license' | 'license' | 'id_card' | 'photo';
 
-export type RequiredDocumentType = 'medical_certificate' | 'ophthalmological_certificate' | 'ffh_license';
+export type RequiredDocumentType = 'medical_certificate' | 'ophthalmological_certificate' | 'ffh_license' | 'id_card';
 
 export interface UserDocument {
   id: string;
@@ -36,5 +36,6 @@ export const DOCUMENT_LABELS: Record<DocumentType, string> = {
 export const REQUIRED_DOCUMENT_LABELS: Record<RequiredDocumentType, string> = {
   medical_certificate: 'Certificat Médical',
   ophthalmological_certificate: 'Certificat Ophtalmologique',
-  ffh_license: 'Licence FFH'
+  ffh_license: 'Licence FFH',
+  id_card: 'Carte d\'identité'
 };
