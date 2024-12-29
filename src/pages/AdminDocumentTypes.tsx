@@ -114,9 +114,48 @@ const AdminDocumentTypes = () => {
     }
   };
 
+  const deleteAssociatedDocuments = async (documentTypeId: string) => {
+    try {
+      // First, get all documents of this type
+      const { data: documents, error: fetchError } = await supabase
+        .from('user_documents')
+        .select('*')
+        .eq('document_type_id', documentTypeId);
+
+      if (fetchError) throw fetchError;
+
+      // Delete files from storage
+      for (const doc of documents || []) {
+        const { error: storageError } = await supabase.storage
+          .from('user-documents')
+          .remove([doc.file_path]);
+
+        if (storageError) {
+          console.error("Error deleting file from storage:", storageError);
+        }
+      }
+
+      // Delete document records from database
+      const { error: deleteError } = await supabase
+        .from('user_documents')
+        .delete()
+        .eq('document_type_id', documentTypeId);
+
+      if (deleteError) throw deleteError;
+
+    } catch (error) {
+      console.error("Error deleting associated documents:", error);
+      throw error;
+    }
+  };
+
   const handleDeleteType = async (id: string) => {
     setIsDeleting(id);
     try {
+      // First delete all associated documents
+      await deleteAssociatedDocuments(id);
+
+      // Then archive the document type
       const { error } = await supabase
         .from("document_types")
         .update({ status: 'archived' })
@@ -126,7 +165,7 @@ const AdminDocumentTypes = () => {
 
       toast({
         title: "Succès",
-        description: "Type de document supprimé avec succès"
+        description: "Type de document et documents associés supprimés avec succès"
       });
 
       fetchDocumentTypes();
