@@ -115,9 +115,53 @@ export const useDocumentManagement = () => {
     }
   };
 
+  const handleDelete = async (userDocument: UserDocument) => {
+    try {
+      console.log("useDocumentManagement: Starting deletion for document:", userDocument.file_path);
+      
+      // Delete the file from storage
+      const { error: storageError } = await supabase.storage
+        .from('user-documents')
+        .remove([userDocument.file_path]);
+
+      if (storageError) {
+        console.error("useDocumentManagement: Storage deletion error:", storageError);
+        throw new Error("Erreur lors de la suppression du fichier");
+      }
+
+      // Delete the database record
+      const { error: dbError } = await supabase
+        .from('user_documents')
+        .delete()
+        .eq('id', userDocument.id);
+
+      if (dbError) {
+        console.error("useDocumentManagement: Database deletion error:", dbError);
+        throw new Error("Erreur lors de la suppression de l'enregistrement");
+      }
+
+      console.log("useDocumentManagement: Deletion completed successfully");
+      toast({
+        title: "Succès",
+        description: "Le document a été supprimé avec succès",
+      });
+      
+      return true;
+    } catch (error) {
+      console.error("useDocumentManagement: Error in deletion process:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer le document",
+        variant: "destructive"
+      });
+      throw error;
+    }
+  };
+
   return {
     uploading,
     handleFileUpload,
-    handleDownload
+    handleDownload,
+    handleDelete
   };
 };

@@ -10,6 +10,7 @@ import type { UserDocument, RequiredDocumentType } from "@/types/documents";
 import { REQUIRED_DOCUMENT_LABELS } from "@/types/documents";
 import { DocumentUploader } from "@/components/documents/DocumentUploader";
 import { useDocumentManagement } from "@/hooks/useDocumentManagement";
+import { DocumentDownloader } from "@/components/documents/DocumentDownloader";
 
 const Documents = () => {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ const Documents = () => {
   const [documents, setDocuments] = useState<UserDocument[]>([]);
   const [userProfile, setUserProfile] = useState<{ first_name: string; last_name: string; id: string } | null>(null);
   const [loading, setLoading] = useState(true);
-  const { handleFileUpload, handleDownload } = useDocumentManagement();
+  const { handleFileUpload, handleDownload, handleDelete } = useDocumentManagement();
 
   useEffect(() => {
     console.log("Documents: Component mounted");
@@ -95,8 +96,13 @@ const Documents = () => {
     }
   };
 
-  const getDocumentByType = (type: RequiredDocumentType) => {
-    return documents.find(doc => doc.document_type === type);
+  const handleDocumentDelete = async (document: UserDocument) => {
+    try {
+      await handleDelete(document);
+      await fetchDocuments(); // Refresh documents after deletion
+    } catch (error) {
+      console.error("Documents: Error in handleDocumentDelete:", error);
+    }
   };
 
   if (loading) {
@@ -127,7 +133,7 @@ const Documents = () => {
 
           <div className="grid gap-6">
             {(Object.entries(REQUIRED_DOCUMENT_LABELS) as [RequiredDocumentType, string][]).map(([type, label]) => {
-              const document = getDocumentByType(type);
+              const document = documents.find(doc => doc.document_type === type);
               const userName = userProfile ? `${userProfile.first_name} ${userProfile.last_name}` : '';
               const documentTypeName = document?.document_types?.name || label;
               
@@ -146,14 +152,13 @@ const Documents = () => {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {document && (
-                      <Button
-                        variant="outline"
-                        className="bg-blue-600 hover:bg-blue-700 text-white border-none"
-                        onClick={() => handleDownload(document)}
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        Télécharger
-                      </Button>
+                      <DocumentDownloader
+                        document={document}
+                        onDownload={handleDownload}
+                        onDelete={handleDocumentDelete}
+                        userName={userName}
+                        documentType={documentTypeName}
+                      />
                     )}
                     <DocumentUploader
                       type={type}

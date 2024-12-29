@@ -8,9 +8,10 @@ interface UserDocumentCardProps {
   uploading: { userId: string; type: DocumentType } | null;
   onUpload: (userId: string, type: DocumentType, file: File) => Promise<void>;
   onDownload: (document: any) => Promise<void>;
+  onDelete?: (document: any) => Promise<void>;
 }
 
-export function UserDocumentCard({ user, uploading, onUpload, onDownload }: UserDocumentCardProps) {
+export function UserDocumentCard({ user, uploading, onUpload, onDownload, onDelete }: UserDocumentCardProps) {
   console.log("UserDocumentCard: Rendering for user:", user.email);
 
   const handleUpload = async (type: DocumentType, file: File) => {
@@ -72,6 +73,7 @@ export function UserDocumentCard({ user, uploading, onUpload, onDownload }: User
                     <DocumentDownloader
                       document={document}
                       onDownload={onDownload}
+                      onDelete={onDelete}
                       userName={`${user.profile.first_name} ${user.profile.last_name}`}
                       documentType={documentLabel}
                     />

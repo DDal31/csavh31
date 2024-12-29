@@ -15,7 +15,7 @@ const AdminDocuments = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<UserWithDocuments[]>([]);
-  const { uploading, handleFileUpload, handleDownload } = useDocumentManagement();
+  const { uploading, handleFileUpload, handleDownload, handleDelete } = useDocumentManagement();
 
   useEffect(() => {
     console.log("AdminDocuments: Component mounted");
@@ -65,7 +65,12 @@ const AdminDocuments = () => {
 
       const { data: documentsData, error: documentsError } = await supabase
         .from('user_documents')
-        .select('*');
+        .select(`
+          *,
+          document_types (
+            name
+          )
+        `);
 
       if (documentsError) {
         console.error("AdminDocuments: Error fetching documents:", documentsError);
@@ -97,12 +102,20 @@ const AdminDocuments = () => {
 
   const handleUploadSuccess = async (userId: string, type: DocumentType, file: File) => {
     console.log("AdminDocuments: Handling upload for user:", userId, "type:", type, "file:", file.name);
-    const success = await handleFileUpload(userId, type, file);
-    if (success) {
-      console.log("AdminDocuments: Upload successful, refreshing data");
-      await fetchUsersAndDocuments();
-    } else {
-      console.error("AdminDocuments: Upload failed");
+    try {
+      await handleFileUpload(userId, type, file);
+      await fetchUsersAndDocuments(); // Refresh data after upload
+    } catch (error) {
+      console.error("AdminDocuments: Upload failed:", error);
+    }
+  };
+
+  const handleDocumentDelete = async (document: any) => {
+    try {
+      await handleDelete(document);
+      await fetchUsersAndDocuments(); // Refresh data after deletion
+    } catch (error) {
+      console.error("AdminDocuments: Delete failed:", error);
     }
   };
 
@@ -140,6 +153,7 @@ const AdminDocuments = () => {
                 user={user}
                 uploading={uploading}
                 onDownload={handleDownload}
+                onDelete={handleDocumentDelete}
                 onUpload={handleUploadSuccess}
               />
             ))}
@@ -149,6 +163,6 @@ const AdminDocuments = () => {
       <Footer />
     </div>
   );
-};
+}
 
 export default AdminDocuments;

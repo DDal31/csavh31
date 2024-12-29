@@ -1,61 +1,77 @@
-import { useToast } from "@/hooks/use-toast";
-import type { UserDocument } from "@/types/documents";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Download, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface DocumentDownloaderProps {
-  document: UserDocument;
-  onDownload?: (document: UserDocument) => Promise<void>;
+  document: any;
+  onDownload: (document: any) => Promise<void>;
+  onDelete?: (document: any) => Promise<void>;
   userName: string;
   documentType: string;
 }
 
-export const DocumentDownloader = ({ document, onDownload, userName, documentType }: DocumentDownloaderProps) => {
-  const { toast } = useToast();
-
-  const handleDownload = async () => {
-    try {
-      if (onDownload) {
-        await onDownload(document);
-        return;
-      }
-
-      const { data, error } = await supabase.storage
-        .from('user-documents')
-        .download(document.file_path);
-
-      if (error) throw error;
-
-      const url = URL.createObjectURL(data);
-      const link = window.document.createElement('a');
-      link.href = url;
-      link.download = document.file_name;
-      window.document.body.appendChild(link);
-      link.click();
-      window.document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Error downloading document:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de télécharger le document",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const buttonLabel = `Télécharger le ${documentType.toLowerCase()} de ${userName}`;
-
+export function DocumentDownloader({
+  document,
+  onDownload,
+  onDelete,
+  userName,
+  documentType
+}: DocumentDownloaderProps) {
   return (
-    <Button
-      variant="outline"
-      className="bg-blue-600 hover:bg-blue-700 text-white border-none w-full sm:w-auto"
-      onClick={handleDownload}
-      aria-label={buttonLabel}
-    >
-      <Download className="h-4 w-4 mr-2" aria-hidden="true" />
-      Télécharger
-    </Button>
+    <div className="flex gap-2">
+      <Button
+        variant="outline"
+        className="bg-blue-600 hover:bg-blue-700 text-white border-none"
+        onClick={() => onDownload(document)}
+        aria-label={`Télécharger ${documentType} de ${userName}`}
+      >
+        <Download className="h-4 w-4 mr-2" />
+        Télécharger
+      </Button>
+
+      {onDelete && (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="destructive"
+              className="hover:bg-red-700"
+              aria-label={`Supprimer ${documentType} de ${userName}`}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Supprimer
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent className="bg-gray-800 border-gray-700">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-white">Confirmer la suppression</AlertDialogTitle>
+              <AlertDialogDescription className="text-gray-400">
+                Êtes-vous sûr de vouloir supprimer {documentType} ? Cette action est irréversible.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="bg-gray-700 text-white hover:bg-gray-600 border-gray-600">
+                Annuler
+              </AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-red-600 hover:bg-red-700 text-white border-none"
+                onClick={() => onDelete(document)}
+              >
+                Supprimer
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+    </div>
   );
-};
+}
