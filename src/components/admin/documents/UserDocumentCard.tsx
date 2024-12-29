@@ -31,6 +31,19 @@ export function UserDocumentCard({ user, uploading, onUpload, onDownload }: User
     return ['ffh_license'];
   };
 
+  const getDocumentLabel = (type: DocumentType): string => {
+    switch (type) {
+      case 'medical_certificate':
+        return 'Certificat médical';
+      case 'ophthalmological_certificate':
+        return 'Certificat ophtalmologique';
+      case 'ffh_license':
+        return 'Licence FFH';
+      default:
+        return type;
+    }
+  };
+
   const documentTypes = getRequiredDocuments();
 
   return (
@@ -45,9 +58,7 @@ export function UserDocumentCard({ user, uploading, onUpload, onDownload }: User
         <div className="grid grid-cols-1 gap-4">
           {documentTypes.map((type) => {
             const document = getDocumentByType(type);
-            const documentLabel = type === 'medical_certificate' ? 'Certificat médical' :
-                                type === 'ophthalmological_certificate' ? 'Certificat ophtalmologique' :
-                                'Licence FFH';
+            const documentLabel = getDocumentLabel(type);
             
             return (
               <div key={type} className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-gray-700 rounded-lg">

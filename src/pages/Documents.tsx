@@ -14,9 +14,9 @@ import { useDocumentManagement } from "@/hooks/useDocumentManagement";
 const Documents = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
   const [documents, setDocuments] = useState<UserDocument[]>([]);
   const [userProfile, setUserProfile] = useState<{ first_name: string; last_name: string; id: string } | null>(null);
+  const [loading, setLoading] = useState(true);
   const { handleFileUpload, handleDownload } = useDocumentManagement();
 
   useEffect(() => {
@@ -37,7 +37,7 @@ const Documents = () => {
       // Fetch user profile first
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('first_name, last_name, id')
+        .select('first_name, last_name, id, club_role')
         .eq('id', session.user.id)
         .single();
 
@@ -47,18 +47,23 @@ const Documents = () => {
       }
       setUserProfile(profileData);
 
-      const { data, error } = await supabase
+      const { data: documentsData, error: documentsError } = await supabase
         .from('user_documents')
-        .select('*')
+        .select(`
+          *,
+          document_types (
+            name
+          )
+        `)
         .eq('user_id', session.user.id);
 
-      if (error) {
-        console.error("Documents: Error fetching documents:", error);
-        throw error;
+      if (documentsError) {
+        console.error("Documents: Error fetching documents:", documentsError);
+        throw documentsError;
       }
       
-      console.log("Documents: Documents fetched successfully:", data?.length || 0, "documents found");
-      setDocuments(data || []);
+      console.log("Documents: Documents fetched successfully:", documentsData?.length || 0, "documents found");
+      setDocuments(documentsData || []);
       setLoading(false);
     } catch (error) {
       console.error("Documents: Error in fetchDocuments:", error);
@@ -96,14 +101,14 @@ const Documents = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-white" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
       <Navbar />
       <main className="container mx-auto px-4 py-24">
         <div className="max-w-4xl mx-auto">
@@ -124,6 +129,7 @@ const Documents = () => {
             {(Object.entries(REQUIRED_DOCUMENT_LABELS) as [RequiredDocumentType, string][]).map(([type, label]) => {
               const document = getDocumentByType(type);
               const userName = userProfile ? `${userProfile.first_name} ${userProfile.last_name}` : '';
+              const documentTypeName = document?.document_types?.name || label;
               
               return (
                 <div 
@@ -131,7 +137,7 @@ const Documents = () => {
                   className="bg-gray-800 p-6 rounded-lg border border-gray-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
                 >
                   <div>
-                    <h2 className="text-xl font-semibold text-white mb-2">{label}</h2>
+                    <h2 className="text-xl font-semibold text-white mb-2">{documentTypeName}</h2>
                     {document && (
                       <p className="text-gray-400 text-sm">
                         Importé le {new Date(document.uploaded_at).toLocaleDateString()}
@@ -154,7 +160,7 @@ const Documents = () => {
                       existingDocument={!!document}
                       onUploadSuccess={(file) => handleUpload(type, file)}
                       userName={userName}
-                      documentType={label}
+                      documentType={documentTypeName}
                     />
                   </div>
                 </div>
