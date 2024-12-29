@@ -2,6 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DocumentUploader } from "@/components/documents/DocumentUploader";
 import { DocumentDownloader } from "@/components/documents/DocumentDownloader";
 import type { UserWithDocuments, DocumentType } from "@/types/documents";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UserDocumentCardProps {
   user: UserWithDocuments;
@@ -13,6 +15,19 @@ interface UserDocumentCardProps {
 
 export function UserDocumentCard({ user, uploading, onUpload, onDownload, onDelete }: UserDocumentCardProps) {
   console.log("UserDocumentCard: Rendering for user:", user.email);
+
+  const { data: activeDocumentTypes } = useQuery({
+    queryKey: ['activeDocumentTypes'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('document_types')
+        .select('name')
+        .eq('status', 'active');
+      
+      if (error) throw error;
+      return data.map(dt => dt.name);
+    }
+  });
 
   const handleUpload = async (type: DocumentType, file: File) => {
     console.log("UserDocumentCard: Upload requested for type:", type, "file:", file.name);
@@ -47,7 +62,10 @@ export function UserDocumentCard({ user, uploading, onUpload, onDownload, onDele
     }
   };
 
-  const documentTypes = getRequiredDocuments();
+  const documentTypes = getRequiredDocuments().filter(type => {
+    const label = getDocumentLabel(type);
+    return activeDocumentTypes?.includes(label);
+  });
 
   return (
     <Card className="bg-gray-800 border-gray-700 mb-6">

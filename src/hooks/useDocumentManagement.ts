@@ -19,11 +19,12 @@ export const useDocumentManagement = () => {
         documentType === 'id_card' ? 'Carte d\'identité' :
         'Licence FFH'
       )
+      .eq('status', 'active')
       .single();
 
     if (error) {
       console.error("useDocumentManagement: Error fetching document type:", error);
-      throw new Error("Impossible de récupérer le type de document");
+      throw new Error("Impossible de récupérer le type de document ou type de document inactif");
     }
 
     console.log("useDocumentManagement: Found document type ID:", data.id);
