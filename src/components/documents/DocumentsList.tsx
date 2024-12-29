@@ -35,9 +35,10 @@ export const DocumentsList = ({
 
   // Filter required documents based on active types
   const filteredDocumentTypes = getRequiredDocuments().filter(type => {
+    const label = REQUIRED_DOCUMENT_LABELS[type];
     return activeDocumentTypes?.some(docType => 
       docType.status === 'active' && 
-      docType.name === REQUIRED_DOCUMENT_LABELS[type]
+      docType.name === label
     );
   });
 

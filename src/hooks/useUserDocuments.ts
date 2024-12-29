@@ -76,7 +76,11 @@ export const useUserDocuments = () => {
       }
 
       // Filter out documents with inactive types
-      const activeDocuments = documentsData?.filter(doc => doc.document_types?.status === 'active') || [];
+      const activeDocuments = documentsData?.filter(doc => 
+        doc.document_types?.status === 'active' && 
+        activeDocumentTypes?.some(type => type.id === doc.document_type_id)
+      ) || [];
+      
       console.log("Documents: Documents fetched successfully:", activeDocuments.length, "documents found");
       setDocuments(activeDocuments);
       setLoading(false);
@@ -94,7 +98,7 @@ export const useUserDocuments = () => {
   useEffect(() => {
     console.log("Documents: Component mounted");
     fetchDocuments();
-  }, []);
+  }, [activeDocumentTypes]);
 
   return {
     documents,
