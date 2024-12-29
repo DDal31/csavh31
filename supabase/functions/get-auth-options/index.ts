@@ -12,6 +12,10 @@ serve(async (req) => {
 
   try {
     console.log("Generating authentication options...");
+    const userAgent = req.headers.get('user-agent') || '';
+    const isIOS = /iPhone|iPad|iPod/.test(userAgent);
+    console.log("User agent:", userAgent);
+    console.log("Is iOS device:", isIOS);
 
     // Générer un challenge aléatoire
     const challenge = new Uint8Array(32);
@@ -24,7 +28,12 @@ serve(async (req) => {
       userVerification: "preferred",
       rpId: new URL(req.headers.get("origin") || "").hostname,
       allowCredentials: [], // Permettre toutes les credentials
-      authenticatorAttachment: "platform", // Spécifique pour Touch ID/Face ID
+      authenticatorAttachment: isIOS ? "platform" : undefined, // Spécifique pour Touch ID/Face ID sur iOS
+      extensions: isIOS ? {
+        largeBlob: {
+          read: true,
+        },
+      } : undefined,
     };
 
     console.log("Generated options:", options);
