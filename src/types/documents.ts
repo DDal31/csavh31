@@ -12,6 +12,9 @@ export interface UserDocument {
   file_name: string;
   uploaded_at: string;
   uploaded_by: string;
+  document_types?: {
+    name: string;
+  };
 }
 
 export interface UserWithDocuments {
