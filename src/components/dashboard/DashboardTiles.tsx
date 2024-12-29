@@ -1,5 +1,5 @@
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Activity, Calendar, Shield, FileText, Key } from "lucide-react";
+import { User, Activity, Calendar, Shield, Key } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface DashboardTilesProps {
@@ -30,13 +30,6 @@ export function DashboardTiles({ isAdmin }: DashboardTilesProps) {
       route: "/attendance",
       bgColor: "bg-orange-600 hover:bg-orange-700",
       ariaLabel: "Consulter les présences aux entraînements"
-    },
-    {
-      title: "Documents",
-      icon: FileText,
-      route: "/documents",
-      bgColor: "bg-purple-600 hover:bg-purple-700",
-      ariaLabel: "Gérer vos documents personnels"
     },
     {
       title: "Changer le mot de passe",

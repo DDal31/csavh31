@@ -15,7 +15,6 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminUserEdit from "./pages/AdminUserEdit";
 import AdminTrainings from "./pages/AdminTrainings";
-import AdminDocuments from "./pages/AdminDocuments";
 import AdminSettings from "./pages/AdminSettings";
 import AdminPresentation from "./pages/AdminPresentation";
 import AdminContacts from "./pages/AdminContacts";
@@ -30,7 +29,6 @@ import ProfilePage from "./pages/Profile";
 import ProfileEdit from "./pages/ProfileEdit";
 import TrainingRegistration from "./pages/Training";
 import Attendance from "./pages/Attendance";
-import Documents from "./pages/Documents";
 import ChangePassword from "./pages/ChangePassword";
 import ResetPassword from "./pages/ResetPassword";
 import UpdatePassword from "./pages/UpdatePassword";
@@ -57,12 +55,10 @@ const App = () => (
           <Route path="/change-password" element={<ChangePassword />} />
           <Route path="/training" element={<TrainingRegistration />} />
           <Route path="/attendance" element={<Attendance />} />
-          <Route path="/documents" element={<Documents />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/users/:userId/edit" element={<AdminUserEdit />} />
           <Route path="/admin/trainings" element={<AdminTrainings />} />
-          <Route path="/admin/documents" element={<AdminDocuments />} />
           <Route path="/admin/settings" element={<AdminSettings />} />
           <Route path="/admin/settings/presentation" element={<AdminPresentation />} />
           <Route path="/admin/settings/contacts" element={<AdminContacts />} />
