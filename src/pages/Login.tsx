@@ -2,12 +2,18 @@ import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, Link } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { Button } from "@/components/ui/button";
+import { Fingerprint } from "lucide-react";
+import { startAuthentication } from "@simplewebauthn/browser";
+import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [biometricSupported, setBiometricSupported] = useState(false);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -25,8 +31,72 @@ const Login = () => {
       }
     });
 
+    // Check if WebAuthn is supported
+    const checkWebAuthnSupport = async () => {
+      try {
+        if (window.PublicKeyCredential) {
+          const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+          console.log("WebAuthn supported:", available);
+          setBiometricSupported(available);
+        }
+      } catch (error) {
+        console.error("Error checking WebAuthn support:", error);
+      }
+    };
+
+    checkWebAuthnSupport();
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const handleBiometricLogin = async () => {
+    try {
+      // Get authentication options from your server
+      const { data: optionsResponse, error: optionsError } = await supabase.functions.invoke(
+        'get-auth-options',
+        {
+          method: 'POST',
+          body: {}
+        }
+      );
+
+      if (optionsError) throw optionsError;
+
+      // Start the authentication process
+      const asseResp = await startAuthentication(optionsResponse);
+      
+      // Verify with your server
+      const { data: verificationResponse, error: verificationError } = await supabase.functions.invoke(
+        'verify-auth',
+        {
+          method: 'POST',
+          body: { credential: asseResp }
+        }
+      );
+
+      if (verificationError) throw verificationError;
+
+      // Handle successful authentication
+      if (verificationResponse.verified) {
+        const { data: { session }, error: signInError } = await supabase.auth.signInWithPassword({
+          email: verificationResponse.email,
+          password: verificationResponse.password
+        });
+
+        if (signInError) throw signInError;
+
+        if (session) {
+          navigate("/dashboard");
+        }
+      }
+    } catch (error) {
+      console.error("Biometric authentication error:", error);
+      toast({
+        title: "Erreur d'authentification biométrique",
+        description: "Veuillez utiliser votre email et mot de passe pour vous connecter.",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-900">
@@ -36,6 +106,28 @@ const Login = () => {
           <h2 className="text-3xl font-bold text-center text-white mb-8">
             Espace Membre CSAVH
           </h2>
+
+          {biometricSupported && (
+            <div className="mb-6">
+              <Button
+                onClick={handleBiometricLogin}
+                className="w-full bg-primary hover:bg-primary/90 text-white flex items-center justify-center gap-2"
+                aria-label="Se connecter avec l'authentification biométrique"
+              >
+                <Fingerprint className="h-5 w-5" />
+                <span>Se connecter avec biométrie</span>
+              </Button>
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-gray-600" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-gray-900 px-2 text-gray-400">Ou</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           <Auth
             supabaseClient={supabase}
             appearance={{
