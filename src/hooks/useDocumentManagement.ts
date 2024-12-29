@@ -7,6 +7,26 @@ export const useDocumentManagement = () => {
   const { toast } = useToast();
   const [uploading, setUploading] = useState<{ userId: string; type: DocumentType } | null>(null);
 
+  const getDocumentTypeId = async (documentType: DocumentType): Promise<string> => {
+    console.log("useDocumentManagement: Fetching document type ID for:", documentType);
+    const { data, error } = await supabase
+      .from('document_types')
+      .select('id')
+      .eq('name', 
+        documentType === 'medical_certificate' ? 'Certificat médical' :
+        documentType === 'ophthalmological_certificate' ? 'Certificat ophtalmologique' :
+        'Licence FFH'
+      )
+      .single();
+
+    if (error) {
+      console.error("useDocumentManagement: Error fetching document type:", error);
+      throw new Error("Impossible de récupérer le type de document");
+    }
+
+    return data.id;
+  };
+
   const handleFileUpload = async (userId: string, type: DocumentType, file: File) => {
     try {
       console.log("useDocumentManagement: Starting file upload for user:", userId, "type:", type);
@@ -28,12 +48,16 @@ export const useDocumentManagement = () => {
         throw new Error("Erreur lors de l'upload du fichier");
       }
 
+      const documentTypeId = await getDocumentTypeId(type);
+      console.log("useDocumentManagement: Got document type ID:", documentTypeId);
+
       console.log("useDocumentManagement: Updating database record");
       const { error: dbError } = await supabase
         .from('user_documents')
         .upsert({
           user_id: userId,
           document_type: type,
+          document_type_id: documentTypeId,
           file_path: filePath,
           file_name: file.name,
           uploaded_by: session.user.id
