@@ -4,21 +4,41 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { UserDocument, RequiredDocumentType } from "@/types/documents";
 import { REQUIRED_DOCUMENT_LABELS } from "@/types/documents";
 import { DocumentUploader } from "@/components/documents/DocumentUploader";
 import { useDocumentManagement } from "@/hooks/useDocumentManagement";
 import { DocumentDownloader } from "@/components/documents/DocumentDownloader";
+import { useQuery } from "@tanstack/react-query";
 
 const Documents = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [documents, setDocuments] = useState<UserDocument[]>([]);
-  const [userProfile, setUserProfile] = useState<{ first_name: string; last_name: string; id: string } | null>(null);
+  const [userProfile, setUserProfile] = useState<{ first_name: string; last_name: string; id: string; club_role: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const { handleFileUpload, handleDownload, handleDelete } = useDocumentManagement();
+
+  // Query active document types
+  const { data: activeDocumentTypes } = useQuery({
+    queryKey: ['activeDocumentTypes'],
+    queryFn: async () => {
+      console.log("Documents: Fetching active document types");
+      const { data, error } = await supabase
+        .from('document_types')
+        .select('name')
+        .eq('status', 'active');
+      
+      if (error) {
+        console.error("Documents: Error fetching active document types:", error);
+        throw error;
+      }
+      console.log("Documents: Active document types fetched:", data);
+      return data.map(dt => dt.name);
+    }
+  });
 
   useEffect(() => {
     console.log("Documents: Component mounted");
@@ -53,7 +73,8 @@ const Documents = () => {
         .select(`
           *,
           document_types (
-            name
+            name,
+            status
           )
         `)
         .eq('user_id', session.user.id);
@@ -63,8 +84,10 @@ const Documents = () => {
         throw documentsError;
       }
       
-      console.log("Documents: Documents fetched successfully:", documentsData?.length || 0, "documents found");
-      setDocuments(documentsData || []);
+      // Filter out documents with inactive types
+      const activeDocuments = documentsData?.filter(doc => doc.document_types?.status === 'active') || [];
+      console.log("Documents: Documents fetched successfully:", activeDocuments.length, "documents found");
+      setDocuments(activeDocuments);
       setLoading(false);
     } catch (error) {
       console.error("Documents: Error in fetchDocuments:", error);
@@ -105,6 +128,20 @@ const Documents = () => {
     }
   };
 
+  const getRequiredDocuments = (): RequiredDocumentType[] => {
+    if (!userProfile) return [];
+    if (userProfile.club_role === 'joueur' || userProfile.club_role === 'joueur-entraineur') {
+      return ['ophthalmological_certificate', 'medical_certificate', 'ffh_license', 'id_card'];
+    }
+    return ['ffh_license', 'id_card'];
+  };
+
+  // Filter required documents based on active types
+  const filteredDocumentTypes = getRequiredDocuments().filter(type => {
+    const label = REQUIRED_DOCUMENT_LABELS[type];
+    return activeDocumentTypes?.includes(label);
+  });
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center">
@@ -132,10 +169,10 @@ const Documents = () => {
           </h1>
 
           <div className="grid gap-6">
-            {(Object.entries(REQUIRED_DOCUMENT_LABELS) as [RequiredDocumentType, string][]).map(([type, label]) => {
+            {filteredDocumentTypes.map((type) => {
               const document = documents.find(doc => doc.document_type === type);
+              const documentLabel = REQUIRED_DOCUMENT_LABELS[type];
               const userName = userProfile ? `${userProfile.first_name} ${userProfile.last_name}` : '';
-              const documentTypeName = document?.document_types?.name || label;
               
               return (
                 <div 
@@ -143,7 +180,7 @@ const Documents = () => {
                   className="bg-gray-800 p-6 rounded-lg border border-gray-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
                 >
                   <div>
-                    <h2 className="text-xl font-semibold text-white mb-2">{documentTypeName}</h2>
+                    <h2 className="text-xl font-semibold text-white mb-2">{documentLabel}</h2>
                     {document && (
                       <p className="text-gray-400 text-sm">
                         Importé le {new Date(document.uploaded_at).toLocaleDateString()}
@@ -157,7 +194,7 @@ const Documents = () => {
                         onDownload={handleDownload}
                         onDelete={handleDocumentDelete}
                         userName={userName}
-                        documentType={documentTypeName}
+                        documentType={documentLabel}
                       />
                     )}
                     <DocumentUploader
@@ -165,7 +202,7 @@ const Documents = () => {
                       existingDocument={!!document}
                       onUploadSuccess={(file) => handleUpload(type, file)}
                       userName={userName}
-                      documentType={documentTypeName}
+                      documentType={documentLabel}
                     />
                   </div>
                 </div>
