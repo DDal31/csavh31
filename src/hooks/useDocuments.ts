@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { DocumentType } from "@/types/documents";
 
 export const useDocuments = (userId?: string) => {
   const { toast } = useToast();
@@ -39,6 +40,26 @@ export const useDocuments = (userId?: string) => {
     enabled: !!userId,
   });
 
+  const mapDocumentTypeToEnum = (name: string): DocumentType => {
+    const normalizedName = name.toLowerCase().replace(/ /g, '_');
+    switch (normalizedName) {
+      case 'certificat_medical':
+        return 'medical_certificate';
+      case 'certificat_ophtalmologique':
+        return 'ophthalmological_certificate';
+      case 'licence_ffh':
+        return 'ffh_license';
+      case 'licence':
+        return 'license';
+      case 'carte_identite':
+        return 'id_card';
+      case 'photo':
+        return 'photo';
+      default:
+        throw new Error(`Invalid document type: ${name}`);
+    }
+  };
+
   // Upload document
   const uploadDocument = async (file: File, documentTypeId: string, currentUserId: string) => {
     setUploading(true);
@@ -56,12 +77,14 @@ export const useDocuments = (userId?: string) => {
       const documentType = documentTypes?.find(type => type.id === documentTypeId);
       if (!documentType) throw new Error('Document type not found');
 
+      const mappedDocumentType = mapDocumentTypeToEnum(documentType.name);
+
       const { error: dbError } = await supabase
         .from('user_documents')
         .insert({
           user_id: currentUserId,
           document_type_id: documentTypeId,
-          document_type: documentType.name.toLowerCase().replace(/ /g, '_'),
+          document_type: mappedDocumentType,
           file_path: filePath,
           file_name: file.name,
           uploaded_by: currentUserId,
