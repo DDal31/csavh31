@@ -29,7 +29,7 @@ export const useDocuments = (userId?: string) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('user_documents')
-        .select('*')
+        .select('*, document_types(name)')
         .eq('user_id', userId)
         .eq('status', 'active');
 
@@ -52,11 +52,16 @@ export const useDocuments = (userId?: string) => {
 
       if (uploadError) throw uploadError;
 
+      // Get the document type from documentTypes
+      const documentType = documentTypes?.find(type => type.id === documentTypeId);
+      if (!documentType) throw new Error('Document type not found');
+
       const { error: dbError } = await supabase
         .from('user_documents')
         .insert({
           user_id: currentUserId,
           document_type_id: documentTypeId,
+          document_type: documentType.name.toLowerCase().replace(/ /g, '_'),
           file_path: filePath,
           file_name: file.name,
           uploaded_by: currentUserId,
