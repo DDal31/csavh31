@@ -75,10 +75,7 @@ export const useDocuments = (userId?: string) => {
         status: 'active' as const
       };
 
-      await updateDocumentRecord(
-        documentData,
-        existingDocs?.[0]?.id
-      );
+      await updateDocumentRecord(documentData);
 
       toast({
         title: "Document téléversé",
