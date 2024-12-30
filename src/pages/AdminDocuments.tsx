@@ -164,6 +164,19 @@ const AdminDocuments = () => {
     }
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, typeId: string, userId: string) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      await uploadDocument(file, typeId, userId);
+      fetchUsers(); // Refresh the users list to show the new document
+    }
+  };
+
+  const handleDeleteDocument = async (documentId: string, filePath: string) => {
+    await deleteDocument(documentId, filePath);
+    fetchUsers(); // Refresh the users list to remove the deleted document
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
