@@ -48,8 +48,13 @@ serve(async (req) => {
     const { data: documents, error: documentsError } = await supabase
       .from('user_documents')
       .select(`
-        *,
-        document_types (
+        id,
+        user_id,
+        file_path,
+        file_name,
+        document_type_id,
+        document_types!user_documents_document_type_id_fkey (
+          id,
           name
         )
       `)
