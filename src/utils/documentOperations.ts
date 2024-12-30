@@ -39,15 +39,32 @@ export const updateDocumentRecord = async (
     file_name: string;
     uploaded_by: string;
     status: 'active' | 'archived';
-  },
-  existingDocId?: string
+  }
 ) => {
-  if (existingDocId) {
+  // First check if a document of this type already exists for the user
+  console.log('Checking for existing document...');
+  const { data: existingDoc, error: fetchError } = await supabase
+    .from('user_documents')
+    .select('*')
+    .eq('user_id', documentData.user_id)
+    .eq('document_type', documentData.document_type)
+    .eq('status', 'active')
+    .maybeSingle();
+
+  if (fetchError) throw fetchError;
+
+  if (existingDoc) {
     console.log('Updating existing document record...');
     const { error: updateError } = await supabase
       .from('user_documents')
-      .update(documentData)
-      .eq('id', existingDocId);
+      .update({
+        file_path: documentData.file_path,
+        file_name: documentData.file_name,
+        uploaded_by: documentData.uploaded_by,
+        document_type_id: documentData.document_type_id,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', existingDoc.id);
 
     if (updateError) throw updateError;
   } else {
