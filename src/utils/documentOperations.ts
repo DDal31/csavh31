@@ -55,9 +55,10 @@ export const updateDocumentRecord = async (
 
   if (existingDoc) {
     console.log('Updating existing document record...');
-    // Delete the old file from storage
+    // Delete the old file from storage before updating
     await deleteExistingDocument(existingDoc);
     
+    // Update the existing record with new file information
     const { error: updateError } = await supabase
       .from('user_documents')
       .update({
@@ -67,14 +68,18 @@ export const updateDocumentRecord = async (
         document_type_id: documentData.document_type_id,
         updated_at: new Date().toISOString()
       })
-      .eq('id', existingDoc.id);
+      .eq('id', existingDoc.id)
+      .eq('status', 'active');
 
     if (updateError) throw updateError;
   } else {
     console.log('Inserting new document record...');
     const { error: insertError } = await supabase
       .from('user_documents')
-      .insert([documentData]);
+      .insert([{
+        ...documentData,
+        status: 'active'
+      }]);
 
     if (insertError) throw insertError;
   }
