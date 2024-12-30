@@ -8,22 +8,38 @@ interface AttendanceData {
   total: number;
 }
 
+interface PlayerData {
+  id: string;
+  name: string;
+  sports: string[];
+}
+
 export const generateWorksheet = (
   sportName: string,
   dates: string[],
   attendanceMap: Map<string, AttendanceData>,
   monthDisplay: string,
-  allPlayers: { id: string; name: string }[]
+  allPlayers: PlayerData[]
 ) => {
-  // Créer l'en-tête avec le titre
-  const title = [`Feuille de présence de ${monthDisplay} - ${sportName}`];
+  console.log(`Generating worksheet for ${sportName} with ${allPlayers.length} players`);
+  
+  // Créer l'en-tête avec le titre du sport
+  const title = [`Feuille de présence de ${monthDisplay}`];
+  const sportTitle = [`Sport : ${sportName}`];
   const empty = [''];
   
-  // Créer un Map avec tous les joueurs, initialisé avec des présences à 0
+  // Filtrer les joueurs pour ce sport
+  const sportPlayers = allPlayers.filter(player => 
+    player.sports.some(sport => sport.toLowerCase() === sportName.toLowerCase())
+  );
+  
+  console.log(`Found ${sportPlayers.length} players for ${sportName}`);
+  
+  // Créer un Map avec tous les joueurs du sport, initialisé avec des présences à 0
   const fullAttendanceMap = new Map<string, AttendanceData>();
   
   // Initialiser tous les joueurs avec des présences à 0
-  allPlayers.forEach(player => {
+  sportPlayers.forEach(player => {
     fullAttendanceMap.set(player.id, {
       name: player.name,
       attendance: new Array(dates.length).fill(0),
@@ -42,6 +58,8 @@ export const generateWorksheet = (
   const wsData = [
     title,
     empty,
+    sportTitle,
+    empty,
     ['Joueur', ...dates.map(d => format(parseISO(d), 'dd/MM/yyyy')), 'Total'],
     ...Array.from(fullAttendanceMap.values()).map(user => [
       user.name,
@@ -53,8 +71,11 @@ export const generateWorksheet = (
   // Créer et formater le worksheet
   const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-  // Fusionner les cellules pour le titre
-  ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: dates.length + 1 } }];
+  // Fusionner les cellules pour le titre principal
+  ws['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: dates.length + 1 } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: dates.length + 1 } }
+  ];
 
   // Définir la largeur des colonnes
   const colWidths = [
@@ -73,10 +94,19 @@ export const generateWorksheet = (
     };
   }
 
+  // Style pour le titre du sport
+  const sportTitleCell = ws.A3;
+  if (sportTitleCell) {
+    sportTitleCell.s = {
+      font: { bold: true, sz: 12 },
+      alignment: { horizontal: 'center' }
+    };
+  }
+
   // Ajouter des styles pour l'en-tête du tableau
-  const headerRow = wsData[2];
+  const headerRow = wsData[4];
   headerRow.forEach((_, index) => {
-    const cellRef = XLSX.utils.encode_cell({ r: 2, c: index });
+    const cellRef = XLSX.utils.encode_cell({ r: 4, c: index });
     if (ws[cellRef]) {
       ws[cellRef].s = {
         font: { bold: true },

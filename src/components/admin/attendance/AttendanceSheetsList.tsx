@@ -34,27 +34,29 @@ export function AttendanceSheetsList() {
 
       if (sportsError) throw sportsError;
 
+      // Récupérer tous les joueurs
+      const { data: players, error: playersError } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, sport')
+        .neq('club_role', 'entraineur')
+        .neq('club_role', 'arbitre');
+
+      if (playersError) throw playersError;
+
       // Créer un nouveau workbook
       const wb = XLSX.utils.book_new();
 
       for (const sport of sports) {
         console.log(`Generating sheet for sport: ${sport.name}`);
 
-        // Récupérer tous les joueurs pour ce sport
-        const { data: players, error: playersError } = await supabase
-          .from('profiles')
-          .select('id, first_name, last_name, sport')
-          .eq('sport', sport.name.toLowerCase())
-          .order('last_name');
-
-        if (playersError) throw playersError;
-
+        // Préparer les données des joueurs pour ce sport
         const allPlayers = players.map(player => ({
           id: player.id,
-          name: `${player.last_name} ${player.first_name}`
+          name: `${player.last_name} ${player.first_name}`,
+          sports: player.sport.toLowerCase().split(',').map(s => s.trim())
         }));
 
-        console.log(`Found ${allPlayers.length} players for ${sport.name}`);
+        console.log(`Processing ${allPlayers.length} total players`);
 
         // Récupérer les entraînements pour ce sport et ce mois
         const { data: trainings, error: trainingsError } = await supabase
@@ -77,38 +79,34 @@ export function AttendanceSheetsList() {
 
         if (trainingsError) throw trainingsError;
 
-        if (trainings.length > 0 || allPlayers.length > 0) {
-          console.log(`Processing ${trainings.length} trainings for ${sport.name}`);
-          
-          // Créer la carte de présence
-          const attendanceMap = new Map();
-          const dates = trainings.map(t => t.date);
+        // Créer la carte de présence
+        const attendanceMap = new Map();
+        const dates = trainings.map(t => t.date);
 
-          trainings.forEach(training => {
-            training.registrations.forEach(reg => {
-              const userId = reg.user_id;
-              const userName = `${reg.profiles.last_name} ${reg.profiles.first_name}`;
-              
-              if (!attendanceMap.has(userId)) {
-                attendanceMap.set(userId, {
-                  name: userName,
-                  attendance: new Array(dates.length).fill(0),
-                  total: 0
-                });
-              }
+        trainings.forEach(training => {
+          training.registrations.forEach(reg => {
+            const userId = reg.user_id;
+            const userName = `${reg.profiles.last_name} ${reg.profiles.first_name}`;
+            
+            if (!attendanceMap.has(userId)) {
+              attendanceMap.set(userId, {
+                name: userName,
+                attendance: new Array(dates.length).fill(0),
+                total: 0
+              });
+            }
 
-              const userIndex = Array.from(attendanceMap.keys()).indexOf(userId);
-              const dateIndex = trainings.findIndex(t => t.id === training.id);
-              
-              attendanceMap.get(userId).attendance[dateIndex] = 1;
-              attendanceMap.get(userId).total += 1;
-            });
+            const userIndex = Array.from(attendanceMap.keys()).indexOf(userId);
+            const dateIndex = trainings.findIndex(t => t.id === training.id);
+            
+            attendanceMap.get(userId).attendance[dateIndex] = 1;
+            attendanceMap.get(userId).total += 1;
           });
+        });
 
-          // Générer le worksheet pour ce sport
-          const ws = generateWorksheet(sport.name, dates, attendanceMap, monthDisplay, allPlayers);
-          XLSX.utils.book_append_sheet(wb, ws, sport.name);
-        }
+        // Générer le worksheet pour ce sport
+        const ws = generateWorksheet(sport.name, dates, attendanceMap, monthDisplay, allPlayers);
+        XLSX.utils.book_append_sheet(wb, ws, sport.name);
       }
 
       // Générer et télécharger le fichier
