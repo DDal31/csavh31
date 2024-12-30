@@ -21,26 +21,11 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Get users from the team with their documents and document types
-    console.log('Fetching users and documents from team:', teamName)
+    // First get users from the team
+    console.log('Fetching users from team:', teamName)
     const { data: users, error: usersError } = await supabase
       .from('profiles')
-      .select(`
-        id,
-        first_name,
-        last_name,
-        team,
-        sport,
-        user_documents!inner (
-          id,
-          file_path,
-          file_name,
-          document_type_id,
-          document_types!inner (
-            name
-          )
-        )
-      `)
+      .select('id, first_name, last_name, team')
       .or(teamName.split(',').map(team => `team.ilike.%${team.trim()}%`).join(','))
 
     if (usersError) {
@@ -57,61 +42,80 @@ serve(async (req) => {
     }
 
     console.log(`Found ${users.length} users in team ${teamName}:`, 
-      users.map(u => `${u.first_name} ${u.last_name} (${u.team})`))
+      users.map(u => `${u.first_name} ${u.last_name}`))
+
+    // Then get documents for these users
+    const { data: documents, error: documentsError } = await supabase
+      .from('user_documents')
+      .select(`
+        *,
+        document_types (
+          name
+        )
+      `)
+      .in('user_id', users.map(u => u.id))
+      .eq('status', 'active')
+
+    if (documentsError) {
+      console.error('Error fetching documents:', documentsError)
+      throw new Error(`Error fetching documents: ${documentsError.message}`)
+    }
+
+    if (!documents || documents.length === 0) {
+      console.log('No documents found for users in team:', teamName)
+      return new Response(
+        JSON.stringify({ error: 'Aucun document disponible pour cette équipe' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
+      )
+    }
+
+    console.log(`Found ${documents.length} documents for team ${teamName}`)
 
     // Create zip file
     const zip = new JSZip()
     let hasDocuments = false
 
-    // Process each user's documents
-    for (const user of users) {
-      if (!user.user_documents || user.user_documents.length === 0) {
-        console.log(`No documents found for user ${user.first_name} ${user.last_name}`)
-        continue
-      }
-
-      console.log(`Processing ${user.user_documents.length} documents for user: ${user.first_name} ${user.last_name}`)
-
-      for (const doc of user.user_documents) {
-        try {
-          if (!doc.document_types || !doc.document_types.name) {
-            console.log(`Skipping document ${doc.file_name} - invalid document type`)
-            continue
-          }
-
-          console.log(`Downloading file from storage: ${doc.file_path}`)
-          const { data: fileData, error: fileError } = await supabase
-            .storage
-            .from('user-documents')
-            .download(doc.file_path)
-
-          if (fileError) {
-            console.error(`Error downloading file ${doc.file_path}:`, fileError)
-            continue
-          }
-
-          if (!fileData) {
-            console.error(`No data received for file ${doc.file_path}`)
-            continue
-          }
-
-          const folderPath = `${doc.document_types.name}/${user.last_name}_${user.first_name}`
-          console.log(`Adding file to zip: ${folderPath}/${doc.file_name}`)
-          
-          const arrayBuffer = await fileData.arrayBuffer()
-          zip.file(`${folderPath}/${doc.file_name}`, arrayBuffer)
-          hasDocuments = true
-          
-          console.log(`Successfully added file: ${folderPath}/${doc.file_name}`)
-        } catch (error) {
-          console.error(`Error processing document ${doc.file_name}:`, error)
+    // Process documents
+    for (const doc of documents) {
+      try {
+        const user = users.find(u => u.id === doc.user_id)
+        if (!user || !doc.document_types?.name) {
+          console.log(`Skipping document ${doc.file_name} - invalid user or document type`)
           continue
         }
+
+        console.log(`Downloading file from storage: ${doc.file_path}`)
+        const { data: fileData, error: fileError } = await supabase
+          .storage
+          .from('user-documents')
+          .download(doc.file_path)
+
+        if (fileError) {
+          console.error(`Error downloading file ${doc.file_path}:`, fileError)
+          continue
+        }
+
+        if (!fileData) {
+          console.error(`No data received for file ${doc.file_path}`)
+          continue
+        }
+
+        const folderPath = `${doc.document_types.name}/${user.last_name}_${user.first_name}`
+        console.log(`Adding file to zip: ${folderPath}/${doc.file_name}`)
+        
+        const arrayBuffer = await fileData.arrayBuffer()
+        zip.file(`${folderPath}/${doc.file_name}`, arrayBuffer)
+        hasDocuments = true
+        
+        console.log(`Successfully added file: ${folderPath}/${doc.file_name}`)
+      } catch (error) {
+        console.error(`Error processing document ${doc.file_name}:`, error)
+        continue
       }
     }
 
     if (!hasDocuments) {
-      console.log('No documents found for any user in team')
+      console.log('No documents successfully processed')
       return new Response(
         JSON.stringify({ error: 'Aucun document disponible pour cette équipe' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
