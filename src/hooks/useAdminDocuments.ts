@@ -2,6 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { UserWithDocuments } from "@/types/documents";
+import { SUPABASE_URL } from "@/config/supabase";
 
 export const useAdminDocuments = () => {
   const { toast } = useToast();
@@ -90,8 +91,9 @@ export const useAdminDocuments = () => {
   const handleDownloadTeamDocuments = async (teamName: string) => {
     try {
       setDownloading(teamName);
+      console.log("Downloading documents for team:", teamName);
       
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/download-team-documents`, {
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/download-team-documents`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
