@@ -28,7 +28,16 @@ export const useDocuments = (userId?: string) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('user_documents')
-        .select('*, document_types(name)')
+        .select(`
+          *,
+          document_types!user_documents_document_type_id_fkey (
+            id,
+            name,
+            status,
+            created_at,
+            updated_at
+          )
+        `)
         .eq('user_id', userId)
         .eq('status', 'active');
 
@@ -48,7 +57,7 @@ export const useDocuments = (userId?: string) => {
       const documentData = {
         user_id: currentUserId,
         document_type_id: documentTypeId,
-        document_type: documentTypeId, // Now using the same ID
+        document_type: documentTypeId,
         file_path: filePath,
         file_name: file.name,
         uploaded_by: currentUserId,

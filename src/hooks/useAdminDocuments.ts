@@ -39,12 +39,11 @@ export const useAdminDocuments = () => {
 
       if (usersError) throw usersError;
 
-      // Use document_type_id to join with document_types
       const { data: documents, error: documentsError } = await supabase
         .from("user_documents")
         .select(`
           *,
-          document_types!document_type_id (
+          document_types!user_documents_document_type_id_fkey (
             id,
             name,
             status,
