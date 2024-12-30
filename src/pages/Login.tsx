@@ -39,10 +39,10 @@ const Login = () => {
         email,
         password,
         options: {
-          // Set session expiry to 30 days if rememberMe is true, otherwise use default (1 hour)
-          data: {
-            session_expires_in: rememberMe ? 60 * 60 * 24 * 30 : undefined
-          }
+          emailRedirectTo: window.location.origin,
+          // If rememberMe is true, session will persist for 30 days
+          // If false, it will use the default session duration
+          autoRefreshToken: rememberMe
         }
       });
 
