@@ -309,7 +309,7 @@ export type Database = {
       }
       user_documents: {
         Row: {
-          document_type: Database["public"]["Enums"]["document_type"]
+          document_type: string
           document_type_id: string
           file_name: string
           file_path: string
@@ -320,7 +320,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          document_type: Database["public"]["Enums"]["document_type"]
+          document_type: string
           document_type_id: string
           file_name: string
           file_path: string
@@ -331,7 +331,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          document_type?: Database["public"]["Enums"]["document_type"]
+          document_type?: string
           document_type_id?: string
           file_name?: string
           file_path?: string
@@ -345,6 +345,13 @@ export type Database = {
           {
             foreignKeyName: "user_documents_document_type_id_fkey"
             columns: ["document_type_id"]
+            isOneToOne: false
+            referencedRelation: "document_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_documents_temp_document_type_id_fkey"
+            columns: ["document_type"]
             isOneToOne: false
             referencedRelation: "document_types"
             referencedColumns: ["id"]

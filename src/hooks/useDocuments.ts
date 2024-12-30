@@ -2,9 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { mapDocumentTypeToEnum } from "@/utils/documentTypeMapping";
 import { deleteExistingDocument, uploadNewDocument, updateDocumentRecord } from "@/utils/documentOperations";
-import type { DocumentType } from "@/types/documents";
 
 export const useDocuments = (userId?: string) => {
   const { toast } = useToast();
@@ -45,30 +43,12 @@ export const useDocuments = (userId?: string) => {
     try {
       console.log('Starting document upload process...');
       
-      const documentType = documentTypes?.find(type => type.id === documentTypeId);
-      if (!documentType) throw new Error('Document type not found');
-
-      const mappedDocumentType = mapDocumentTypeToEnum(documentType.name);
-
-      const { data: existingDocs, error: fetchError } = await supabase
-        .from('user_documents')
-        .select('*')
-        .eq('user_id', currentUserId)
-        .eq('document_type', mappedDocumentType)
-        .eq('status', 'active');
-
-      if (fetchError) throw fetchError;
-
-      if (existingDocs && existingDocs.length > 0) {
-        await deleteExistingDocument(existingDocs[0]);
-      }
-
       const filePath = await uploadNewDocument(file, currentUserId, documentTypeId);
 
       const documentData = {
         user_id: currentUserId,
         document_type_id: documentTypeId,
-        document_type: mappedDocumentType,
+        document_type: documentTypeId, // Now using the same ID
         file_path: filePath,
         file_name: file.name,
         uploaded_by: currentUserId,

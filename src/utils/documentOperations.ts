@@ -1,5 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { DocumentType } from "@/types/documents";
 
 export const deleteExistingDocument = async (existingDoc: { file_path: string }) => {
   console.log('Deleting old file from storage...');
@@ -34,14 +33,13 @@ export const updateDocumentRecord = async (
   documentData: {
     user_id: string;
     document_type_id: string;
-    document_type: DocumentType;
+    document_type: string;
     file_path: string;
     file_name: string;
     uploaded_by: string;
     status: 'active' | 'archived';
   }
 ) => {
-  // First check if a document of this type already exists for the user
   console.log('Checking for existing document...');
   const { data: existingDoc, error: fetchError } = await supabase
     .from('user_documents')
@@ -55,10 +53,8 @@ export const updateDocumentRecord = async (
 
   if (existingDoc) {
     console.log('Updating existing document record...');
-    // Delete the old file from storage before updating
     await deleteExistingDocument(existingDoc);
     
-    // Update the existing record with new file information
     const { error: updateError } = await supabase
       .from('user_documents')
       .update({
