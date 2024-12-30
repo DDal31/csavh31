@@ -1,4 +1,7 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import Contact from "@/pages/Contact";
@@ -31,10 +34,53 @@ import ResetPassword from "@/pages/ResetPassword";
 import UpdatePassword from "@/pages/UpdatePassword";
 import ChangePassword from "@/pages/ChangePassword";
 import BlogPost from "@/pages/BlogPost";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Create a client
 const queryClient = new QueryClient();
+
+// Protected Route Component
+const ProtectedRoute = ({ children, requiredRole = "member" }) => {
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          setIsAuthorized(false);
+          setIsLoading(false);
+          return;
+        }
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("site_role")
+          .eq("id", session.user.id)
+          .single();
+
+        if (requiredRole === "admin") {
+          setIsAuthorized(profile?.site_role === "admin");
+        } else {
+          setIsAuthorized(!!profile);
+        }
+      } catch (error) {
+        console.error("Error checking authorization:", error);
+        setIsAuthorized(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, [requiredRole]);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  return isAuthorized ? children : <Navigate to="/login" />;
+};
 
 function App() {
   return (
@@ -53,31 +99,128 @@ function App() {
           <Route path="/update-password" element={<UpdatePassword />} />
 
           {/* Member routes */}
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/profile/edit" element={<ProfileEdit />} />
-          <Route path="/training" element={<Training />} />
-          <Route path="/attendance" element={<Attendance />} />
-          <Route path="/documents" element={<Documents />} />
-          <Route path="/change-password" element={<ChangePassword />} />
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile/edit" element={
+            <ProtectedRoute>
+              <ProfileEdit />
+            </ProtectedRoute>
+          } />
+          <Route path="/training" element={
+            <ProtectedRoute>
+              <Training />
+            </ProtectedRoute>
+          } />
+          <Route path="/attendance" element={
+            <ProtectedRoute>
+              <Attendance />
+            </ProtectedRoute>
+          } />
+          <Route path="/documents" element={
+            <ProtectedRoute>
+              <Documents />
+            </ProtectedRoute>
+          } />
+          <Route path="/change-password" element={
+            <ProtectedRoute>
+              <ChangePassword />
+            </ProtectedRoute>
+          } />
 
           {/* Admin routes */}
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/users" element={<AdminUsers />} />
-          <Route path="/admin/users/:id" element={<AdminUserEdit />} />
-          <Route path="/admin/news" element={<AdminNews />} />
-          <Route path="/admin/news/create" element={<AdminNewsCreate />} />
-          <Route path="/admin/news/:id" element={<AdminNewsEdit />} />
-          <Route path="/admin/trainings" element={<AdminTrainings />} />
-          <Route path="/admin/documents" element={<AdminDocuments />} />
-          <Route path="/admin/document-types" element={<AdminDocumentTypes />} />
-          <Route path="/admin/attendance-sheets" element={<AdminAttendanceSheets />} />
-          <Route path="/admin/contacts" element={<AdminContacts />} />
-          <Route path="/admin/presentation" element={<AdminPresentation />} />
-          <Route path="/admin/settings" element={<AdminSettings />} />
-          <Route path="/admin/settings/sports-teams" element={<AdminSportsTeams />} />
-          <Route path="/admin/settings/sports-teams/add-sport" element={<AdminSportCreate />} />
-          <Route path="/admin/settings/sports-teams/add-team" element={<AdminTeamCreate />} />
+          <Route path="/admin" element={
+            <ProtectedRoute requiredRole="admin">
+              <Navigate to="/admin/dashboard" replace />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/dashboard" element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/users" element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminUsers />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/users/:id" element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminUserEdit />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/news" element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminNews />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/news/create" element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminNewsCreate />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/news/:id" element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminNewsEdit />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/trainings" element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminTrainings />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/documents" element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminDocuments />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/document-types" element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminDocumentTypes />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/attendance-sheets" element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminAttendanceSheets />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/contacts" element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminContacts />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/presentation" element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminPresentation />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/settings" element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminSettings />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/settings/sports-teams" element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminSportsTeams />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/settings/sports-teams/add-sport" element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminSportCreate />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/settings/sports-teams/add-team" element={
+            <ProtectedRoute requiredRole="admin">
+              <AdminTeamCreate />
+            </ProtectedRoute>
+          } />
         </Routes>
       </Router>
     </QueryClientProvider>
