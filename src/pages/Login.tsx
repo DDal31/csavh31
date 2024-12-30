@@ -38,16 +38,15 @@ const Login = () => {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
-        options: {
-          // If rememberMe is true, session will persist for 30 days
-          // If false, it will use the default session duration
-          persistSession: rememberMe
-        }
       });
 
       if (error) throw error;
 
       if (data.session) {
+        // If rememberMe is true, extend session duration
+        if (rememberMe) {
+          await supabase.auth.refreshSession();
+        }
         navigate("/dashboard");
       }
     } catch (error) {
