@@ -21,11 +21,11 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Get users from the team
+    // Get users from the team, handling multiple teams
     const { data: users, error: usersError } = await supabase
       .from('profiles')
-      .select('id, first_name, last_name')
-      .eq('team', teamName)
+      .select('id, first_name, last_name, team')
+      .or(teamName.split(',').map(team => `team.ilike.%${team.trim()}%`).join(','))
 
     if (usersError) {
       console.error('Error fetching users:', usersError)
@@ -40,7 +40,7 @@ serve(async (req) => {
       )
     }
 
-    console.log(`Found ${users.length} users in team ${teamName}`)
+    console.log(`Found ${users.length} users in team ${teamName}:`, users.map(u => `${u.first_name} ${u.last_name} (${u.team})`))
 
     // Get document types
     const { data: docTypes, error: docTypesError } = await supabase
@@ -79,11 +79,14 @@ serve(async (req) => {
       }
 
       if (documents && documents.length > 0) {
-        console.log(`Found ${documents.length} documents for user ${user.first_name}`)
+        console.log(`Found ${documents.length} documents for user ${user.first_name}:`, documents.map(d => d.file_name))
         
         for (const doc of documents) {
           const docType = doc.document_types
-          if (!docType) continue
+          if (!docType) {
+            console.log(`Skipping document ${doc.file_name} - no document type found`)
+            continue
+          }
 
           try {
             // Get file from storage
