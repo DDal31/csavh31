@@ -16,7 +16,7 @@ interface AdminUserEditFormProps {
 }
 
 export function AdminUserEditForm({ profile, onSubmit, isLoading }: AdminUserEditFormProps) {
-  console.log("Rendering AdminUserEditForm with profile:", profile);
+  console.log("Initializing AdminUserEditForm with profile:", profile);
   
   const form = useForm<AdminUserEditData>({
     resolver: zodResolver(profileSchema.omit({ id: true, password: true, created_at: true, updated_at: true })),
@@ -33,8 +33,14 @@ export function AdminUserEditForm({ profile, onSubmit, isLoading }: AdminUserEdi
   });
 
   const handleSubmit = async (data: AdminUserEditData) => {
-    console.log("Form submitted with data:", data);
-    await onSubmit(data);
+    try {
+      console.log("Form submission started with data:", data);
+      await onSubmit(data);
+      console.log("Form submission completed successfully");
+    } catch (error) {
+      console.error("Error during form submission:", error);
+      throw error;
+    }
   };
 
   return (
