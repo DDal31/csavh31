@@ -16,6 +16,8 @@ interface AdminUserEditFormProps {
 }
 
 export function AdminUserEditForm({ profile, onSubmit, isLoading }: AdminUserEditFormProps) {
+  console.log("Rendering AdminUserEditForm with profile:", profile);
+  
   const form = useForm<AdminUserEditData>({
     resolver: zodResolver(profileSchema.omit({ id: true, password: true, created_at: true, updated_at: true })),
     defaultValues: {
@@ -30,10 +32,15 @@ export function AdminUserEditForm({ profile, onSubmit, isLoading }: AdminUserEdi
     }
   });
 
+  const handleSubmit = async (data: AdminUserEditData) => {
+    console.log("Form submitted with data:", data);
+    await onSubmit(data);
+  };
+
   return (
     <Form {...form}>
       <form 
-        onSubmit={form.handleSubmit(onSubmit)} 
+        onSubmit={form.handleSubmit(handleSubmit)} 
         className="space-y-6"
         aria-label={`Formulaire de modification pour ${profile.first_name} ${profile.last_name}`}
       >
