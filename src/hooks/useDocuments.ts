@@ -64,34 +64,77 @@ export const useDocuments = (userId?: string) => {
   const uploadDocument = async (file: File, documentTypeId: string, currentUserId: string) => {
     setUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${currentUserId}/${documentTypeId}/${crypto.randomUUID()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('user-documents')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
+      console.log('Starting document upload process...');
+      
       // Get the document type from documentTypes
       const documentType = documentTypes?.find(type => type.id === documentTypeId);
       if (!documentType) throw new Error('Document type not found');
 
       const mappedDocumentType = mapDocumentTypeToEnum(documentType.name);
 
-      const { error: dbError } = await supabase
+      // Check if a document of this type already exists
+      const { data: existingDocs, error: fetchError } = await supabase
         .from('user_documents')
-        .insert({
-          user_id: currentUserId,
-          document_type_id: documentTypeId,
-          document_type: mappedDocumentType,
-          file_path: filePath,
-          file_name: file.name,
-          uploaded_by: currentUserId,
-          status: 'active'
-        });
+        .select('*')
+        .eq('user_id', currentUserId)
+        .eq('document_type', mappedDocumentType)
+        .eq('status', 'active');
 
-      if (dbError) throw dbError;
+      if (fetchError) throw fetchError;
+
+      // If document exists, delete the old file from storage
+      if (existingDocs && existingDocs.length > 0) {
+        console.log('Existing document found, deleting old file...');
+        const existingDoc = existingDocs[0];
+        
+        const { error: deleteStorageError } = await supabase.storage
+          .from('user-documents')
+          .remove([existingDoc.file_path]);
+
+        if (deleteStorageError) {
+          console.error('Error deleting old file:', deleteStorageError);
+          // Continue with upload even if delete fails
+        }
+      }
+
+      // Upload new file
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${currentUserId}/${documentTypeId}/${crypto.randomUUID()}.${fileExt}`;
+
+      console.log('Uploading new file to storage...');
+      const { error: uploadError } = await supabase.storage
+        .from('user-documents')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // Update or insert document record
+      const documentData = {
+        user_id: currentUserId,
+        document_type_id: documentTypeId,
+        document_type: mappedDocumentType,
+        file_path: filePath,
+        file_name: file.name,
+        uploaded_by: currentUserId,
+        status: 'active'
+      };
+
+      if (existingDocs && existingDocs.length > 0) {
+        console.log('Updating existing document record...');
+        const { error: updateError } = await supabase
+          .from('user_documents')
+          .update(documentData)
+          .eq('id', existingDocs[0].id);
+
+        if (updateError) throw updateError;
+      } else {
+        console.log('Inserting new document record...');
+        const { error: insertError } = await supabase
+          .from('user_documents')
+          .insert([documentData]);
+
+        if (insertError) throw insertError;
+      }
 
       toast({
         title: "Document téléversé",
@@ -106,6 +149,7 @@ export const useDocuments = (userId?: string) => {
         description: "Une erreur est survenue lors du téléversement du document",
         variant: "destructive",
       });
+      throw error;
     } finally {
       setUploading(false);
     }
@@ -142,6 +186,7 @@ export const useDocuments = (userId?: string) => {
         description: "Une erreur est survenue lors de la suppression du document",
         variant: "destructive",
       });
+      throw error;
     }
   };
 
