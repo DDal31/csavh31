@@ -74,31 +74,31 @@ const AdminDocuments = () => {
   };
 
   const handleDownloadDocument = async (
-    document: { file_path: string; file_name: string },
+    documentInfo: { file_path: string; file_name: string },
     userName: string,
     documentType: string
   ) => {
     try {
-      console.log("Downloading document:", document.file_path);
+      console.log("Downloading document:", documentInfo.file_path);
       const { data, error } = await supabase.storage
         .from('user-documents')
-        .download(document.file_path);
+        .download(documentInfo.file_path);
 
       if (error) {
         throw error;
       }
 
-      const fileExt = document.file_name.split('.').pop();
+      const fileExt = documentInfo.file_name.split('.').pop();
       const newFileName = `${userName}_${documentType}.${fileExt}`;
       
       const url = URL.createObjectURL(data);
-      const a = document.createElement('a');
+      const a = window.document.createElement('a');
       a.href = url;
       a.download = newFileName;
-      document.body.appendChild(a);
+      window.document.body.appendChild(a);
       a.click();
       URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      window.document.body.removeChild(a);
 
       toast({
         title: "Succès",
