@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2, Upload, Trash2 } from "lucide-react";
+import { ArrowLeft, Loader2, Upload, Trash2, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useDocuments } from "@/hooks/useDocuments";
 import type { UserWithDocuments } from "@/types/documents";
@@ -14,6 +14,8 @@ const AdminDocuments = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<UserWithDocuments[]>([]);
+  const [teams, setTeams] = useState<string[]>([]);
+  const [downloading, setDownloading] = useState<string | null>(null);
   const { documentTypes, uploadDocument, deleteDocument } = useDocuments();
 
   useEffect(() => {
@@ -37,6 +39,7 @@ const AdminDocuments = () => {
         }
 
         fetchUsers();
+        fetchTeams();
       } catch (error) {
         console.error("Error checking auth:", error);
         navigate("/dashboard");
@@ -45,6 +48,26 @@ const AdminDocuments = () => {
 
     checkAuth();
   }, [navigate]);
+
+  const fetchTeams = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('teams')
+        .select('name')
+        .order('name');
+
+      if (error) throw error;
+
+      setTeams(data.map(team => team.name));
+    } catch (error) {
+      console.error('Error fetching teams:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de récupérer la liste des équipes",
+        variant: "destructive"
+      });
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -91,17 +114,54 @@ const AdminDocuments = () => {
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, documentTypeId: string, userId: string) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleDownloadTeamDocuments = async (teamName: string) => {
+    try {
+      setDownloading(teamName);
+      
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/download-team-documents`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ teamName }),
+      });
 
-    await uploadDocument(file, documentTypeId, userId);
-    fetchUsers();
-  };
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Erreur lors du téléchargement');
+      }
 
-  const handleDeleteDocument = async (documentId: string, filePath: string) => {
-    await deleteDocument(documentId, filePath);
-    fetchUsers();
+      const contentType = response.headers.get('content-type');
+      if (contentType === 'application/json') {
+        const error = await response.json();
+        throw new Error(error.error || 'Aucun document disponible');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${teamName}_documents.zip`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Succès",
+        description: "Les documents ont été téléchargés avec succès",
+      });
+    } catch (error) {
+      console.error('Error downloading documents:', error);
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de télécharger les documents",
+        variant: "destructive"
+      });
+    } finally {
+      setDownloading(null);
+    }
   };
 
   if (loading) {
@@ -127,6 +187,30 @@ const AdminDocuments = () => {
               Retour au tableau de bord
             </Button>
             <h1 className="text-2xl font-bold text-white">Gestion des Documents</h1>
+          </div>
+
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-white mb-4">
+              Télécharger les documents par équipe
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {teams.map((team) => (
+                <Button
+                  key={team}
+                  onClick={() => handleDownloadTeamDocuments(team)}
+                  disabled={downloading === team}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white w-full"
+                  aria-label={`Télécharger les documents de l'équipe ${team}`}
+                >
+                  {downloading === team ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4 mr-2" />
+                  )}
+                  {team}
+                </Button>
+              ))}
+            </div>
           </div>
 
           <div className="space-y-8">
