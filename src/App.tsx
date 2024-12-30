@@ -142,7 +142,7 @@ function App() {
             }
           />
           <Route
-            path="/admin/users/:id"
+            path="/admin/users/:userId/edit"
             element={
               <ProtectedRoute requireAdmin>
                 <AdminUserEdit />
@@ -253,6 +253,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           {/* Admin Settings Routes */}
           <Route
             path="/admin/settings/presentation"
