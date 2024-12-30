@@ -21,10 +21,27 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Get users from the team, handling multiple teams
+    // Get users from the team with their profiles
+    console.log('Fetching users from team:', teamName)
     const { data: users, error: usersError } = await supabase
       .from('profiles')
-      .select('id, first_name, last_name, team')
+      .select(`
+        id,
+        first_name,
+        last_name,
+        team,
+        sport,
+        user_documents (
+          id,
+          file_path,
+          file_name,
+          document_type_id,
+          document_types (
+            id,
+            name
+          )
+        )
+      `)
       .or(teamName.split(',').map(team => `team.ilike.%${team.trim()}%`).join(','))
 
     if (usersError) {
@@ -42,77 +59,51 @@ serve(async (req) => {
 
     console.log(`Found ${users.length} users in team ${teamName}:`, users.map(u => `${u.first_name} ${u.last_name} (${u.team})`))
 
-    // Get document types
-    const { data: docTypes, error: docTypesError } = await supabase
-      .from('document_types')
-      .select('*')
-      .eq('status', 'active')
-
-    if (docTypesError) {
-      console.error('Error fetching document types:', docTypesError)
-      throw docTypesError
-    }
-
     // Create zip file
     const zip = new JSZip()
     let hasDocuments = false
 
-    // For each user and document type
+    // Process each user's documents
     for (const user of users) {
       console.log(`Processing documents for user: ${user.first_name} ${user.last_name}`)
       
-      const { data: documents, error: docsError } = await supabase
-        .from('user_documents')
-        .select(`
-          *,
-          document_types!user_documents_document_type_id_fkey (
-            id,
-            name
-          )
-        `)
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-
-      if (docsError) {
-        console.error('Error fetching documents for user:', user.id, docsError)
-        throw docsError
+      if (!user.user_documents || user.user_documents.length === 0) {
+        console.log(`No documents found for user ${user.first_name} ${user.last_name}`)
+        continue
       }
 
-      if (documents && documents.length > 0) {
-        console.log(`Found ${documents.length} documents for user ${user.first_name}:`, documents.map(d => d.file_name))
-        
-        for (const doc of documents) {
-          const docType = doc.document_types
-          if (!docType) {
-            console.log(`Skipping document ${doc.file_name} - no document type found`)
-            continue
-          }
+      console.log(`Found ${user.user_documents.length} documents for user ${user.first_name}:`, 
+        user.user_documents.map(d => d.file_name))
 
-          try {
-            // Get file from storage
-            const { data: fileData, error: fileError } = await supabase
-              .storage
-              .from('user-documents')
-              .download(doc.file_path)
-
-            if (fileError) {
-              console.error('Error downloading file:', doc.file_path, fileError)
-              continue
-            }
-
-            const folderPath = `${docType.name}/${user.last_name}_${user.first_name}`
-            const fileName = doc.file_name
-            
-            zip.file(`${folderPath}/${fileName}`, await fileData.arrayBuffer())
-            hasDocuments = true
-            console.log(`Added file to zip: ${folderPath}/${fileName}`)
-          } catch (error) {
-            console.error('Error processing document:', error)
-            continue
-          }
+      for (const doc of user.user_documents) {
+        if (!doc.document_types) {
+          console.log(`Skipping document ${doc.file_name} - no document type found`)
+          continue
         }
-      } else {
-        console.log(`No documents found for user ${user.first_name}`)
+
+        try {
+          console.log(`Downloading file from storage: ${doc.file_path}`)
+          // Get file from storage
+          const { data: fileData, error: fileError } = await supabase
+            .storage
+            .from('user-documents')
+            .download(doc.file_path)
+
+          if (fileError) {
+            console.error('Error downloading file:', doc.file_path, fileError)
+            continue
+          }
+
+          const folderPath = `${doc.document_types.name}/${user.last_name}_${user.first_name}`
+          const fileName = doc.file_name
+          
+          console.log(`Adding file to zip: ${folderPath}/${fileName}`)
+          zip.file(`${folderPath}/${fileName}`, await fileData.arrayBuffer())
+          hasDocuments = true
+        } catch (error) {
+          console.error('Error processing document:', error)
+          continue
+        }
       }
     }
 
