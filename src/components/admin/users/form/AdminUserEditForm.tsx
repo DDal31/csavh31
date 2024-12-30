@@ -6,6 +6,7 @@ import { UserBasicInfoFields } from "./UserBasicInfoFields";
 import { UserRoleFields } from "./UserRoleFields";
 import { UserSportsTeamsFields } from "./UserSportsTeamsFields";
 import { profileSchema } from "@/schemas/profileSchema";
+import { useToast } from "@/hooks/use-toast";
 import type { Profile } from "@/types/profile";
 import type { AdminUserEditData } from "@/types/auth";
 
@@ -16,6 +17,7 @@ interface AdminUserEditFormProps {
 }
 
 export function AdminUserEditForm({ profile, onSubmit, isLoading }: AdminUserEditFormProps) {
+  const { toast } = useToast();
   console.log("Initializing AdminUserEditForm with profile:", profile);
   
   const form = useForm<AdminUserEditData>({
@@ -35,10 +37,48 @@ export function AdminUserEditForm({ profile, onSubmit, isLoading }: AdminUserEdi
   const handleSubmit = async (data: AdminUserEditData) => {
     try {
       console.log("Form submission started with data:", data);
+      
+      // Validate required fields
+      if (!data.first_name.trim() || !data.last_name.trim()) {
+        toast({
+          title: "Erreur de validation",
+          description: "Le prénom et le nom sont requis",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if data has actually changed
+      const hasChanges = Object.keys(data).some(key => {
+        const dataValue = data[key as keyof AdminUserEditData];
+        const profileValue = profile[key as keyof Profile];
+        return dataValue !== profileValue;
+      });
+
+      if (!hasChanges) {
+        toast({
+          title: "Aucun changement",
+          description: "Aucune modification n'a été détectée",
+          variant: "destructive",
+        });
+        return;
+      }
+
       await onSubmit(data);
+      
+      toast({
+        title: "Succès",
+        description: "Le profil a été mis à jour avec succès",
+      });
+      
       console.log("Form submission completed successfully");
     } catch (error) {
       console.error("Error during form submission:", error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la mise à jour du profil",
+        variant: "destructive",
+      });
       throw error;
     }
   };
