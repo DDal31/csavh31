@@ -38,6 +38,24 @@ export function AttendanceSheetsList() {
       const wb = XLSX.utils.book_new();
 
       for (const sport of sports) {
+        console.log(`Generating sheet for sport: ${sport.name}`);
+
+        // Récupérer tous les joueurs pour ce sport
+        const { data: players, error: playersError } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name, sport')
+          .eq('sport', sport.name.toLowerCase())
+          .order('last_name');
+
+        if (playersError) throw playersError;
+
+        const allPlayers = players.map(player => ({
+          id: player.id,
+          name: `${player.last_name} ${player.first_name}`
+        }));
+
+        console.log(`Found ${allPlayers.length} players for ${sport.name}`);
+
         // Récupérer les entraînements pour ce sport et ce mois
         const { data: trainings, error: trainingsError } = await supabase
           .from('trainings')
@@ -59,7 +77,9 @@ export function AttendanceSheetsList() {
 
         if (trainingsError) throw trainingsError;
 
-        if (trainings.length > 0) {
+        if (trainings.length > 0 || allPlayers.length > 0) {
+          console.log(`Processing ${trainings.length} trainings for ${sport.name}`);
+          
           // Créer la carte de présence
           const attendanceMap = new Map();
           const dates = trainings.map(t => t.date);
@@ -86,7 +106,7 @@ export function AttendanceSheetsList() {
           });
 
           // Générer le worksheet pour ce sport
-          const ws = generateWorksheet(sport.name, dates, attendanceMap, monthDisplay);
+          const ws = generateWorksheet(sport.name, dates, attendanceMap, monthDisplay, allPlayers);
           XLSX.utils.book_append_sheet(wb, ws, sport.name);
         }
       }
