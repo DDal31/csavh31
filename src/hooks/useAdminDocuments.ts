@@ -39,11 +39,12 @@ export const useAdminDocuments = () => {
 
       if (usersError) throw usersError;
 
+      // Use document_type_id to join with document_types
       const { data: documents, error: documentsError } = await supabase
         .from("user_documents")
         .select(`
           *,
-          document_types (
+          document_types!document_type_id (
             id,
             name,
             status,
@@ -57,21 +58,9 @@ export const useAdminDocuments = () => {
 
       console.log("Fetched documents:", documents);
 
-      // Ensure the documents data matches our type expectations
-      const typedDocuments = documents.map(doc => ({
-        ...doc,
-        document_types: {
-          id: doc.document_types.id,
-          name: doc.document_types.name,
-          status: doc.document_types.status,
-          created_at: doc.document_types.created_at,
-          updated_at: doc.document_types.updated_at
-        }
-      }));
-
       const usersWithDocuments: UserWithDocuments[] = usersData.map(user => ({
         ...user,
-        documents: typedDocuments.filter(doc => doc.user_id === user.id),
+        documents: documents.filter(doc => doc.user_id === user.id),
         profile: {
           id: user.id,
           first_name: user.first_name,
