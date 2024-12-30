@@ -53,9 +53,15 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
     );
   }
 
-  if (requireAdmin && profile?.site_role !== "admin") {
-    console.log("User is not admin, redirecting to dashboard");
-    return <Navigate to="/dashboard" replace />;
+  // Vérification explicite du rôle admin
+  if (requireAdmin) {
+    console.log("Checking admin role. Profile:", profile);
+    console.log("Site role:", profile?.site_role);
+    
+    if (!profile || profile.site_role !== "admin") {
+      console.log("User is not admin, redirecting to dashboard");
+      return <Navigate to="/dashboard" replace />;
+    }
   }
 
   return <>{children}</>;
