@@ -55,6 +55,9 @@ export const updateDocumentRecord = async (
 
   if (existingDoc) {
     console.log('Updating existing document record...');
+    // Delete the old file from storage
+    await deleteExistingDocument(existingDoc);
+    
     const { error: updateError } = await supabase
       .from('user_documents')
       .update({
