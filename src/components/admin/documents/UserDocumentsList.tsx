@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Upload, Trash2 } from "lucide-react";
+import { Upload, Trash2, Download } from "lucide-react";
 import type { UserWithDocuments } from "@/types/documents";
 
 type Props = {
@@ -7,13 +7,27 @@ type Props = {
   documentTypes: any[];
   onUpload: (e: React.ChangeEvent<HTMLInputElement>, typeId: string, userId: string) => void;
   onDelete: (documentId: string, filePath: string) => void;
+  onDownload: (document: { file_path: string; file_name: string }, userName: string, documentName: string) => void;
   uploading: boolean;
+  selectedTeam: string | null;
 };
 
-export function UserDocumentsList({ users, documentTypes, onUpload, onDelete, uploading }: Props) {
+export function UserDocumentsList({ 
+  users, 
+  documentTypes, 
+  onUpload, 
+  onDelete, 
+  onDownload,
+  uploading,
+  selectedTeam 
+}: Props) {
+  const filteredUsers = selectedTeam 
+    ? users.filter(user => user.profile.team === selectedTeam)
+    : users;
+
   return (
     <div className="space-y-8">
-      {users.map((user) => (
+      {filteredUsers.map((user) => (
         <div
           key={user.id}
           className="bg-gray-800 rounded-lg p-6"
@@ -63,14 +77,31 @@ export function UserDocumentsList({ users, documentTypes, onUpload, onDelete, up
                       </label>
                     </div>
                   ) : (
-                    <Button
-                      variant="destructive"
-                      onClick={() => onDelete(userDoc.id, userDoc.file_path)}
-                      disabled={uploading}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Supprimer
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="destructive"
+                        onClick={() => onDelete(userDoc.id, userDoc.file_path)}
+                        disabled={uploading}
+                        className="flex-1"
+                        aria-label={`Supprimer ${type.name} de ${user.profile.first_name} ${user.profile.last_name}`}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Supprimer
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        onClick={() => onDownload(
+                          userDoc,
+                          `${user.profile.last_name}_${user.profile.first_name}`,
+                          type.name.toLowerCase().replace(/ /g, '_')
+                        )}
+                        className="flex-1"
+                        aria-label={`Télécharger ${type.name} de ${user.profile.first_name} ${user.profile.last_name}`}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Télécharger
+                      </Button>
+                    </div>
                   )}
                 </div>
               );

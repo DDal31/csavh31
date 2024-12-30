@@ -13,17 +13,11 @@ import { UserDocumentsList } from "@/components/admin/documents/UserDocumentsLis
 
 const AdminDocuments = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { documentTypes, uploadDocument, deleteDocument } = useDocuments();
-  const { 
-    users, 
-    teams, 
-    loading, 
-    downloading,
-    fetchUsers,
-    fetchTeams,
-    handleDownloadTeamDocuments 
-  } = useAdminDocuments();
+  const { users, teams, loading, fetchUsers, fetchTeams } = useAdminDocuments();
   const [uploading, setUploading] = useState(false);
+  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -62,7 +56,7 @@ const AdminDocuments = () => {
       setUploading(true);
       try {
         await uploadDocument(file, typeId, userId);
-        fetchUsers(); // Refresh the users list to show the new document
+        fetchUsers();
       } finally {
         setUploading(false);
       }
@@ -73,9 +67,50 @@ const AdminDocuments = () => {
     setUploading(true);
     try {
       await deleteDocument(documentId, filePath);
-      fetchUsers(); // Refresh the users list to remove the deleted document
+      fetchUsers();
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleDownloadDocument = async (
+    document: { file_path: string; file_name: string },
+    userName: string,
+    documentType: string
+  ) => {
+    try {
+      console.log("Downloading document:", document.file_path);
+      const { data, error } = await supabase.storage
+        .from('user-documents')
+        .download(document.file_path);
+
+      if (error) {
+        throw error;
+      }
+
+      const fileExt = document.file_name.split('.').pop();
+      const newFileName = `${userName}_${documentType}.${fileExt}`;
+      
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = newFileName;
+      document.body.appendChild(a);
+      a.click();
+      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Succès",
+        description: "Document téléchargé avec succès",
+      });
+    } catch (error) {
+      console.error("Error downloading document:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de télécharger le document",
+        variant: "destructive",
+      });
     }
   };
 
@@ -106,8 +141,8 @@ const AdminDocuments = () => {
 
           <TeamDownloads
             teams={teams}
-            downloading={downloading}
-            onDownload={handleDownloadTeamDocuments}
+            selectedTeam={selectedTeam}
+            onSelectTeam={setSelectedTeam}
           />
 
           <UserDocumentsList
@@ -115,7 +150,9 @@ const AdminDocuments = () => {
             documentTypes={documentTypes}
             onUpload={handleFileUpload}
             onDelete={handleDeleteDocument}
+            onDownload={handleDownloadDocument}
             uploading={uploading}
+            selectedTeam={selectedTeam}
           />
         </div>
       </main>
