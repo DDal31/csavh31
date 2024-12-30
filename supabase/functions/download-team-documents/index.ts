@@ -21,8 +21,8 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Get users from the team with their profiles
-    console.log('Fetching users from team:', teamName)
+    // Get users from the team with their documents and document types
+    console.log('Fetching users and documents from team:', teamName)
     const { data: users, error: usersError } = await supabase
       .from('profiles')
       .select(`
@@ -31,13 +31,12 @@ serve(async (req) => {
         last_name,
         team,
         sport,
-        user_documents (
+        user_documents!inner (
           id,
           file_path,
           file_name,
           document_type_id,
-          document_types (
-            id,
+          document_types!inner (
             name
           )
         )
@@ -46,7 +45,7 @@ serve(async (req) => {
 
     if (usersError) {
       console.error('Error fetching users:', usersError)
-      throw usersError
+      throw new Error(`Error fetching users: ${usersError.message}`)
     }
 
     if (!users || users.length === 0) {
@@ -57,7 +56,8 @@ serve(async (req) => {
       )
     }
 
-    console.log(`Found ${users.length} users in team ${teamName}:`, users.map(u => `${u.first_name} ${u.last_name} (${u.team})`))
+    console.log(`Found ${users.length} users in team ${teamName}:`, 
+      users.map(u => `${u.first_name} ${u.last_name} (${u.team})`))
 
     // Create zip file
     const zip = new JSZip()
@@ -65,43 +65,46 @@ serve(async (req) => {
 
     // Process each user's documents
     for (const user of users) {
-      console.log(`Processing documents for user: ${user.first_name} ${user.last_name}`)
-      
       if (!user.user_documents || user.user_documents.length === 0) {
         console.log(`No documents found for user ${user.first_name} ${user.last_name}`)
         continue
       }
 
-      console.log(`Found ${user.user_documents.length} documents for user ${user.first_name}:`, 
-        user.user_documents.map(d => d.file_name))
+      console.log(`Processing ${user.user_documents.length} documents for user: ${user.first_name} ${user.last_name}`)
 
       for (const doc of user.user_documents) {
-        if (!doc.document_types) {
-          console.log(`Skipping document ${doc.file_name} - no document type found`)
-          continue
-        }
-
         try {
+          if (!doc.document_types || !doc.document_types.name) {
+            console.log(`Skipping document ${doc.file_name} - invalid document type`)
+            continue
+          }
+
           console.log(`Downloading file from storage: ${doc.file_path}`)
-          // Get file from storage
           const { data: fileData, error: fileError } = await supabase
             .storage
             .from('user-documents')
             .download(doc.file_path)
 
           if (fileError) {
-            console.error('Error downloading file:', doc.file_path, fileError)
+            console.error(`Error downloading file ${doc.file_path}:`, fileError)
+            continue
+          }
+
+          if (!fileData) {
+            console.error(`No data received for file ${doc.file_path}`)
             continue
           }
 
           const folderPath = `${doc.document_types.name}/${user.last_name}_${user.first_name}`
-          const fileName = doc.file_name
+          console.log(`Adding file to zip: ${folderPath}/${doc.file_name}`)
           
-          console.log(`Adding file to zip: ${folderPath}/${fileName}`)
-          zip.file(`${folderPath}/${fileName}`, await fileData.arrayBuffer())
+          const arrayBuffer = await fileData.arrayBuffer()
+          zip.file(`${folderPath}/${doc.file_name}`, arrayBuffer)
           hasDocuments = true
+          
+          console.log(`Successfully added file: ${folderPath}/${doc.file_name}`)
         } catch (error) {
-          console.error('Error processing document:', error)
+          console.error(`Error processing document ${doc.file_name}:`, error)
           continue
         }
       }
@@ -128,15 +131,14 @@ serve(async (req) => {
           ...corsHeaders,
           'Content-Type': 'application/zip',
           'Content-Disposition': `attachment; filename="${teamName}_documents.zip"`
-        },
-        status: 200 
+        }
       }
     )
 
   } catch (error) {
     console.error('Error in download-team-documents:', error)
     return new Response(
-      JSON.stringify({ error: 'Une erreur est survenue lors du téléchargement' }),
+      JSON.stringify({ error: 'Une erreur est survenue lors du téléchargement', details: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     )
   }
