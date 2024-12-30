@@ -3,6 +3,14 @@ import type { Database } from "@/integrations/supabase/types";
 
 export type DocumentTypeStatus = Database["public"]["Enums"]["document_type_status"];
 
+export interface DocumentType {
+  id: string;
+  name: string;
+  status: DocumentTypeStatus;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface UserDocument {
   id: string;
   user_id: string;
@@ -13,9 +21,7 @@ export interface UserDocument {
   uploaded_at: string;
   uploaded_by: string;
   status: DocumentTypeStatus | null;
-  document_types?: {
-    name: string;
-  };
+  document_types: DocumentType;
 }
 
 export interface UserWithDocuments {

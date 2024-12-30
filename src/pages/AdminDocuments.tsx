@@ -71,6 +71,7 @@ const AdminDocuments = () => {
 
   const fetchUsers = async () => {
     try {
+      console.log("Fetching users data...");
       const { data: usersData, error: usersError } = await supabase
         .from("profiles")
         .select("*");
@@ -79,10 +80,12 @@ const AdminDocuments = () => {
 
       const { data: documents, error: documentsError } = await supabase
         .from("user_documents")
-        .select("*, document_types(name)")
+        .select("*, document_types(id, name, status, created_at, updated_at)")
         .eq("status", "active");
 
       if (documentsError) throw documentsError;
+
+      console.log("Fetched documents:", documents);
 
       const usersWithDocuments: UserWithDocuments[] = usersData.map(user => ({
         ...user,
