@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { format, parseISO, startOfMonth, endOfMonth } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,73 +6,39 @@ import { Card } from "@/components/ui/card";
 import { Download, ChevronLeft, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import * as XLSX from "xlsx";
-
-interface MonthlyTraining {
-  month: string;
-  count: number;
-}
+import { useAttendanceData } from "@/hooks/useAttendanceData";
+import { generateWorksheet, createExcelFile } from "@/utils/excel";
 
 export function AttendanceSheetsList() {
-  const [months, setMonths] = useState<MonthlyTraining[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const {
+    months,
+    currentPage,
+    setCurrentPage,
+    loading,
+    setLoading,
+    itemsPerPage,
+  } = useAttendanceData();
   const { toast } = useToast();
-  const itemsPerPage = 10;
-
-  useEffect(() => {
-    fetchTrainingMonths();
-  }, []);
-
-  const fetchTrainingMonths = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('trainings')
-        .select('date')
-        .order('date', { ascending: false });
-
-      if (error) throw error;
-
-      const monthsMap = new Map<string, number>();
-      
-      data.forEach(training => {
-        const monthKey = format(parseISO(training.date), 'yyyy-MM');
-        monthsMap.set(monthKey, (monthsMap.get(monthKey) || 0) + 1);
-      });
-
-      const monthsList = Array.from(monthsMap.entries()).map(([month, count]) => ({
-        month,
-        count
-      }));
-
-      setMonths(monthsList);
-    } catch (error) {
-      console.error('Error fetching training months:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger les mois d'entraînement",
-        variant: "destructive"
-      });
-    }
-  };
 
   const generateAttendanceSheet = async (monthStr: string) => {
     try {
       setLoading(true);
       const startDate = startOfMonth(parseISO(monthStr));
       const endDate = endOfMonth(parseISO(monthStr));
+      const monthDisplay = format(parseISO(monthStr), 'MMMM yyyy', { locale: fr });
 
-      // Fetch sports
+      // Récupérer les sports
       const { data: sports, error: sportsError } = await supabase
         .from('sports')
         .select('*');
 
       if (sportsError) throw sportsError;
 
-      // Create workbook
+      // Créer un nouveau workbook
       const wb = XLSX.utils.book_new();
 
       for (const sport of sports) {
-        // Fetch trainings for this sport and month
+        // Récupérer les entraînements pour ce sport et ce mois
         const { data: trainings, error: trainingsError } = await supabase
           .from('trainings')
           .select(`
@@ -95,9 +60,9 @@ export function AttendanceSheetsList() {
         if (trainingsError) throw trainingsError;
 
         if (trainings.length > 0) {
-          // Create attendance map
+          // Créer la carte de présence
           const attendanceMap = new Map();
-          const dates = trainings.map(t => format(parseISO(t.date), 'dd/MM/yyyy'));
+          const dates = trainings.map(t => t.date);
 
           trainings.forEach(training => {
             training.registrations.forEach(reg => {
@@ -120,24 +85,14 @@ export function AttendanceSheetsList() {
             });
           });
 
-          // Convert to worksheet data
-          const wsData = [
-            ['Joueur', ...dates, 'Total'],
-            ...Array.from(attendanceMap.values()).map(user => [
-              user.name,
-              ...user.attendance,
-              user.total
-            ])
-          ];
-
-          const ws = XLSX.utils.aoa_to_sheet(wsData);
+          // Générer le worksheet pour ce sport
+          const ws = generateWorksheet(sport.name, dates, attendanceMap, monthDisplay);
           XLSX.utils.book_append_sheet(wb, ws, sport.name);
         }
       }
 
-      // Generate and download file
-      const monthDisplay = format(parseISO(monthStr), 'MMMM yyyy', { locale: fr });
-      XLSX.writeFile(wb, `Présence_${monthDisplay}.xlsx`);
+      // Générer et télécharger le fichier
+      createExcelFile(wb, monthDisplay);
 
       toast({
         title: "Succès",
