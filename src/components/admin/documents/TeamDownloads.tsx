@@ -35,7 +35,7 @@ export function TeamDownloads({ teams, selectedTeam, onSelectTeam }: Props) {
                 ? "bg-primary hover:bg-primary/90"
                 : "bg-secondary hover:bg-secondary/90"
             } text-white w-full`}
-            aria-label={`Afficher l'équipe ${team}`}
+            aria-label={`Filtrer par ${team}`}
             aria-pressed={selectedTeam === team}
           >
             <Eye className="h-4 w-4 mr-2" />

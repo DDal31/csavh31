@@ -21,8 +21,9 @@ export function UserDocumentsList({
   uploading,
   selectedTeam 
 }: Props) {
+  // Filter users based on whether their team string contains the selected team
   const filteredUsers = selectedTeam 
-    ? users.filter(user => user.profile.team === selectedTeam)
+    ? users.filter(user => user.profile.team.toLowerCase().includes(selectedTeam.toLowerCase()))
     : users;
 
   return (
