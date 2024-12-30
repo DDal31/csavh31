@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, FileText, Mail, Newspaper, Palette, Users, ListCollapse, FileStack } from "lucide-react";
+import { Loader2, FileText, Mail, Newspaper, Palette, Users, ListCollapse, FileStack, FileSpreadsheet } from "lucide-react";
 
 const AdminSettings = () => {
   const navigate = useNavigate();
@@ -83,6 +83,13 @@ const AdminSettings = () => {
       route: "/admin/settings/document-types",
       bgColor: "bg-teal-600 hover:bg-teal-700",
       ariaLabel: "Gérer les types de documents"
+    },
+    {
+      title: "Télécharger une feuille de présence",
+      icon: FileSpreadsheet,
+      route: "/admin/settings/attendance-sheets",
+      bgColor: "bg-violet-600 hover:bg-violet-700",
+      ariaLabel: "Télécharger les feuilles de présence"
     }
   ];
 
