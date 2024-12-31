@@ -1,4 +1,4 @@
-import { User, Mail, Podcast } from "lucide-react";
+import { User, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -20,17 +20,10 @@ export const NavigationTiles = () => {
       bgColor: "bg-purple-600 hover:bg-purple-700",
       ariaLabel: "Nous contacter",
     },
-    {
-      title: "Podcast",
-      icon: Podcast,
-      route: "/podcast",
-      bgColor: "bg-orange-600 hover:bg-orange-700",
-      ariaLabel: "Écouter nos podcasts",
-    },
   ];
 
   return (
-    <div className="grid grid-cols-3 gap-2 sm:gap-4 w-full">
+    <div className="grid grid-cols-2 gap-2 sm:gap-4 w-full">
       {tiles.map((tile) => (
         <Card
           key={tile.title}
