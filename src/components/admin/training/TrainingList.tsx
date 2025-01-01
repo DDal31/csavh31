@@ -4,8 +4,9 @@ import { fr } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlayerRefereePanel } from "./PlayerRefereePanel";
-import { Plus, UserPlus, PencilIcon, Trash2 } from "lucide-react";
+import { UserPlus, PencilIcon, Trash2 } from "lucide-react";
 import type { Training } from "@/types/training";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type TrainingListProps = {
   trainings: Training[];
@@ -32,7 +33,7 @@ export function TrainingList({ trainings, onAddClick, onEditClick }: TrainingLis
     <div className="space-y-6">
       <div className="flex justify-end">
         <Button onClick={onAddClick} className="bg-purple-600 hover:bg-purple-700">
-          <Plus className="w-4 h-4 mr-2" />
+          <UserPlus className="w-4 h-4 mr-2" />
           Ajouter un entraînement
         </Button>
       </div>
@@ -49,6 +50,34 @@ export function TrainingList({ trainings, onAddClick, onEditClick }: TrainingLis
                   ? training.other_type_details || 'Événement' 
                   : training.type.charAt(0).toUpperCase() + training.type.slice(1)}
               </CardTitle>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setSelectedTraining(training)}
+                  className="text-white hover:bg-gray-600"
+                  aria-label={`Ajouter joueur/arbitre pour l'entraînement du ${formatTrainingDate(training.date)}`}
+                >
+                  <UserPlus className="w-5 h-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onEditClick(training)}
+                  className="text-white hover:bg-gray-600"
+                  aria-label={`Modifier l'entraînement du ${formatTrainingDate(training.date)}`}
+                >
+                  <PencilIcon className="w-5 h-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                  aria-label={`Supprimer l'entraînement du ${formatTrainingDate(training.date)}`}
+                >
+                  <Trash2 className="w-5 h-5" />
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="text-gray-300 space-y-2">
@@ -59,39 +88,28 @@ export function TrainingList({ trainings, onAddClick, onEditClick }: TrainingLis
                   {training.start_time.slice(0, 5)} - {training.end_time.slice(0, 5)}
                 </p>
                 {training.registrations && training.registrations.length > 0 && (
-                  <p className="mt-2">
-                    {training.registrations.length} participant{training.registrations.length > 1 ? 's' : ''} inscrit{training.registrations.length > 1 ? 's' : ''}
-                  </p>
+                  <div className="flex items-center space-x-2 mt-2">
+                    <p>
+                      {training.registrations.length} participant{training.registrations.length > 1 ? 's' : ''} inscrit{training.registrations.length > 1 ? 's' : ''}
+                    </p>
+                    <div className="flex -space-x-2">
+                      {training.registrations.slice(0, 3).map((registration) => (
+                        <Avatar key={registration.user_id} className="w-6 h-6 border-2 border-gray-800">
+                          <AvatarFallback className="text-xs">
+                            {registration.profiles.first_name[0]}{registration.profiles.last_name[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                      ))}
+                      {training.registrations.length > 3 && (
+                        <Avatar className="w-6 h-6 border-2 border-gray-800 bg-gray-700">
+                          <AvatarFallback className="text-xs">
+                            +{training.registrations.length - 3}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                    </div>
+                  </div>
                 )}
-                <div className="flex flex-wrap gap-2 mt-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSelectedTraining(training)}
-                    className="flex items-center gap-2 text-white border-gray-600 hover:bg-gray-600"
-                    aria-label={`Ajouter joueur/arbitre pour l'entraînement du ${formatTrainingDate(training.date)}`}
-                  >
-                    <UserPlus className="w-4 h-4" />
-                    <span className="hidden sm:inline">Ajouter joueur/arbitre</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onEditClick(training)}
-                    className="text-white hover:bg-gray-600"
-                    aria-label={`Modifier l'entraînement du ${formatTrainingDate(training.date)}`}
-                  >
-                    <PencilIcon className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
-                    aria-label={`Supprimer l'entraînement du ${formatTrainingDate(training.date)}`}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
               </div>
             </CardContent>
           </Card>
