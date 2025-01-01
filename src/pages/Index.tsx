@@ -5,8 +5,23 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { NavigationTiles } from "@/components/home/NavigationTiles";
 import { NewsCarousel } from "@/components/home/NewsCarousel";
+import { ErrorBoundary } from "react-error-boundary";
 
-const Index = () => {
+const ErrorFallback = ({ error }: { error: Error }) => {
+  console.error("Error in Index page:", error);
+  return (
+    <div className="min-h-screen bg-gray-900 text-gray-100 flex items-center justify-center">
+      <div className="text-center space-y-4">
+        <h2 className="text-xl font-bold">Une erreur est survenue</h2>
+        <p>Nous nous excusons pour ce désagrément. Veuillez rafraîchir la page.</p>
+      </div>
+    </div>
+  );
+};
+
+const IndexContent = () => {
+  console.log("Rendering IndexContent");
+  
   // Récupération du contenu de présentation
   const { data: presentationContent, isLoading: isLoadingPresentation } = useQuery({
     queryKey: ["presentation-content"],
@@ -98,6 +113,16 @@ const Index = () => {
 
       <Footer />
     </div>
+  );
+};
+
+const Index = () => {
+  console.log("Rendering Index page");
+  
+  return (
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <IndexContent />
+    </ErrorBoundary>
   );
 };
 
