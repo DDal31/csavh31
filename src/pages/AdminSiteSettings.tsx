@@ -220,16 +220,40 @@ const AdminSiteSettings = () => {
   const handleSettingChange = async (key: string, value: string | boolean) => {
     console.log("Handling setting change:", { key, value });
     try {
-      const { error } = await supabase
+      // Vérifier si le paramètre existe déjà
+      const { data: existingSettings, error: fetchError } = await supabase
         .from("site_settings")
-        .upsert({ 
-          setting_key: key, 
-          setting_value: value.toString() 
-        });
+        .select("id")
+        .eq("setting_key", key)
+        .single();
 
-      if (error) {
-        console.error("Error updating setting:", error);
-        throw error;
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        console.error("Error checking existing setting:", fetchError);
+        throw fetchError;
+      }
+
+      let updateError;
+      if (existingSettings) {
+        // Si le paramètre existe, faire une mise à jour
+        const { error } = await supabase
+          .from("site_settings")
+          .update({ setting_value: value.toString() })
+          .eq("setting_key", key);
+        updateError = error;
+      } else {
+        // Si le paramètre n'existe pas, faire une insertion
+        const { error } = await supabase
+          .from("site_settings")
+          .insert({ 
+            setting_key: key, 
+            setting_value: value.toString() 
+          });
+        updateError = error;
+      }
+
+      if (updateError) {
+        console.error("Error updating setting:", updateError);
+        throw updateError;
       }
 
       setSettings(prev => ({ ...prev, [key]: value }));
