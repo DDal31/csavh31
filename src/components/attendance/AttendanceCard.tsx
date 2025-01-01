@@ -6,23 +6,17 @@ import { ParticipantsList } from "./ParticipantsList";
 import type { Training } from "@/types/training";
 
 interface AttendanceCardProps {
-  training: Training & {
-    registrations: Array<{
-      profiles: {
-        first_name: string;
-        last_name: string;
-        club_role: string;
-      };
-    }>;
-  };
+  training: Training;
 }
 
 export function AttendanceCard({ training }: AttendanceCardProps) {
-  const players = training.registrations.filter(reg => 
+  const registrations = training.registrations || [];
+  
+  const players = registrations.filter(reg => 
     ["joueur", "joueur-entraineur", "joueur-arbitre", "les-trois"].includes(reg.profiles.club_role)
   );
 
-  const referees = training.registrations.filter(reg => 
+  const referees = registrations.filter(reg => 
     ["arbitre", "joueur-arbitre", "entraineur-arbitre", "les-trois"].includes(reg.profiles.club_role)
   );
 

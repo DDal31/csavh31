@@ -6,7 +6,7 @@ export type Training = {
   start_time: string;
   end_time: string;
   created_at: string;
-  registrations?: {
+  registrations: {
     id: string;
     user_id: string;
     created_at: string;
