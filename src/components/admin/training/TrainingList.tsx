@@ -1,173 +1,92 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Plus, Trash2, ArrowLeft } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
-
-type Training = Database["public"]["Tables"]["trainings"]["Row"];
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PlayerRefereePanel } from "./PlayerRefereePanel";
+import type { Training } from "@/types/training";
 
 type TrainingListProps = {
+  trainings: Training[];
   onAddClick: () => void;
   onEditClick: (training: Training) => void;
 };
 
-export function TrainingList({ onAddClick, onEditClick }: TrainingListProps) {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const { data: trainings, isLoading, refetch } = useQuery({
-    queryKey: ["trainings"],
-    queryFn: async () => {
-      console.log("Fetching upcoming trainings...");
-      const { data, error } = await supabase
-        .from("trainings")
-        .select("*")
-        .gte("date", new Date().toISOString().split("T")[0])
-        .order("date", { ascending: true })
-        .order("start_time", { ascending: true });
+export function TrainingList({ trainings, onAddClick, onEditClick }: TrainingListProps) {
+  const [selectedTraining, setSelectedTraining] = useState<Training | null>(null);
 
-      if (error) {
-        console.error("Error fetching trainings:", error);
-        throw error;
-      }
-
-      console.log("Trainings fetched:", data);
-      return data as Training[];
-    },
-  });
-
-  const handleDelete = async (trainingId: string) => {
-    try {
-      const { error } = await supabase
-        .from("trainings")
-        .delete()
-        .eq("id", trainingId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Entraînement supprimé",
-        description: "L'entraînement a été supprimé avec succès.",
-      });
-
-      refetch();
-    } catch (error) {
-      console.error("Error deleting training:", error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Une erreur est survenue lors de la suppression de l'entraînement.",
-      });
-    }
-  };
-
-  if (isLoading) {
-    return <div className="text-white">Chargement des entraînements...</div>;
+  if (trainings.length === 0) {
+    return (
+      <div className="text-center text-gray-400 mt-8">
+        Aucun entraînement n'a été créé.
+        <Button onClick={onAddClick} className="ml-2">
+          Créer un entraînement
+        </Button>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-8">
-      <Button 
-        onClick={() => navigate('/admin')} 
-        variant="ghost" 
-        className="text-white hover:text-gray-300 mb-6 w-full sm:w-auto"
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Retour au tableau de bord
+    <div className="space-y-4">
+      <Button onClick={onAddClick} className="w-full mb-6">
+        Créer un entraînement
       </Button>
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-2xl sm:text-3xl font-bold text-white bg-gradient-to-r from-purple-400 to-purple-600 bg-clip-text text-transparent">
-          Entraînements à venir
-        </h2>
-        <Button 
-          onClick={onAddClick} 
-          className="w-full sm:w-auto bg-[#9b87f5] hover:bg-[#7E69AB] text-white flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Ajouter un entraînement
-        </Button>
-      </div>
+      {trainings.map((training) => (
+        <Card key={training.id} className="bg-gray-800 border-gray-700">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xl font-bold text-white">
+              {training.type === 'other' 
+                ? training.other_type_details || 'Autre' 
+                : training.type.charAt(0).toUpperCase() + training.type.slice(1)}
+            </CardTitle>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedTraining(training)}
+                className="text-white hover:text-white hover:bg-gray-700"
+                aria-label="Ajouter des participants à l'entraînement"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Ajouter joueur/arbitre
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEditClick(training)}
+                className="text-white hover:text-white hover:bg-gray-700"
+              >
+                Modifier
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-gray-300">
+              <p>
+                {format(new Date(training.date), "EEEE d MMMM yyyy", { locale: fr })}
+              </p>
+              <p>
+                {training.start_time.slice(0, 5)} - {training.end_time.slice(0, 5)}
+              </p>
+              {training.registrations && training.registrations.length > 0 && (
+                <p className="mt-2">
+                  {training.registrations.length} participant{training.registrations.length > 1 ? 's' : ''}
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
 
-      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-2 sm:p-6 shadow-xl overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-white/5">
-              <TableHead className="text-[#9b87f5] hidden sm:table-cell">Date</TableHead>
-              <TableHead className="text-[#9b87f5]">Détails</TableHead>
-              <TableHead className="text-[#9b87f5] text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {trainings && trainings.length > 0 ? (
-              trainings.map((training) => (
-                <TableRow key={training.id} className="hover:bg-white/5">
-                  <TableCell className="text-gray-200 hidden sm:table-cell">
-                    {format(new Date(training.date), "EEEE d MMMM yyyy", {
-                      locale: fr,
-                    })}
-                  </TableCell>
-                  <TableCell className="text-gray-200">
-                    <div className="flex flex-col gap-1">
-                      <span className="sm:hidden font-medium">
-                        {format(new Date(training.date), "EEEE d MMMM yyyy", {
-                          locale: fr,
-                        })}
-                      </span>
-                      <span className="text-sm sm:text-base">
-                        {training.type === "other"
-                          ? training.other_type_details
-                          : training.type.charAt(0).toUpperCase() + training.type.slice(1)}
-                      </span>
-                      <span className="text-sm text-gray-400">
-                        {training.start_time.slice(0, 5)} - {training.end_time.slice(0, 5)}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex flex-col sm:flex-row gap-2 justify-end items-stretch sm:items-center">
-                      <Button
-                        variant="outline"
-                        onClick={() => onEditClick(training)}
-                        className="border-[#9b87f5] text-[#9b87f5] hover:bg-[#9b87f5] hover:text-white w-full sm:w-auto"
-                      >
-                        Modifier
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        onClick={() => handleDelete(training.id)}
-                        className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
-                        aria-label={`Supprimer l'entraînement du ${format(new Date(training.date), "EEEE d MMMM yyyy", {
-                          locale: fr,
-                        })}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center text-gray-400">
-                  Aucun entraînement à venir
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      {selectedTraining && (
+        <PlayerRefereePanel
+          training={selectedTraining}
+          isOpen={!!selectedTraining}
+          onClose={() => setSelectedTraining(null)}
+        />
+      )}
     </div>
   );
 }
