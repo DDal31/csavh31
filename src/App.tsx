@@ -39,6 +39,7 @@ import AdminDocuments from "@/pages/AdminDocuments";
 import AdminDocumentTypes from "@/pages/AdminDocumentTypes";
 import AdminAttendanceSheets from "@/pages/AdminAttendanceSheets";
 import AdminSettings from "@/pages/AdminSettings";
+import AdminSiteSettings from "@/pages/AdminSiteSettings";
 
 // Admin Settings pages
 import AdminSettingsPresentation from "@/pages/AdminPresentation";
@@ -250,6 +251,14 @@ function App() {
             element={
               <ProtectedRoute requireAdmin>
                 <AdminSettings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/settings/site"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminSiteSettings />
               </ProtectedRoute>
             }
           />
