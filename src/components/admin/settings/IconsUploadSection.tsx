@@ -29,36 +29,49 @@ export const IconsUploadSection = () => {
         
         // Pour chaque taille d'icône requise
         for (const { name } of REQUIRED_ICON_SIZES) {
-          // Vérifier si l'icône existe dans le bucket
-          const { data: fileExists } = await supabase.storage
-            .from("site-assets")
-            .list("", {
-              search: name
-            });
-
-          if (fileExists && fileExists.length > 0) {
-            console.log(`Found icon: ${name}`);
-            
-            // Obtenir l'URL publique
-            const { data: { publicUrl } } = supabase.storage
+          try {
+            // Vérifier si l'icône existe dans le bucket
+            const { data: fileExists, error: listError } = await supabase.storage
               .from("site-assets")
-              .getPublicUrl(name);
-
-            // Mettre à jour le paramètre dans site_settings
-            const settingKey = `icon_${name.replace(/\./g, '_')}`;
-            const { error: updateError } = await supabase
-              .from("site_settings")
-              .upsert({
-                setting_key: settingKey,
-                setting_value: publicUrl
+              .list("", {
+                search: name
               });
 
-            if (updateError) {
-              console.error(`Error updating setting for ${name}:`, updateError);
-              throw updateError;
+            if (listError) {
+              console.error(`Error listing files for ${name}:`, listError);
+              continue;
             }
 
-            console.log(`Updated setting for ${name} with URL: ${publicUrl}`);
+            if (fileExists && fileExists.length > 0) {
+              console.log(`Found icon: ${name}`);
+              
+              // Obtenir l'URL publique
+              const { data: { publicUrl } } = supabase.storage
+                .from("site-assets")
+                .getPublicUrl(name);
+
+              console.log(`Got public URL for ${name}: ${publicUrl}`);
+
+              // Mettre à jour le paramètre dans site_settings
+              const settingKey = `icon_${name.replace(/\./g, '_')}`;
+              const { error: updateError } = await supabase
+                .from("site_settings")
+                .upsert({
+                  setting_key: settingKey,
+                  setting_value: publicUrl
+                });
+
+              if (updateError) {
+                console.error(`Error updating setting for ${name}:`, updateError);
+                throw updateError;
+              }
+
+              console.log(`Successfully updated setting for ${name}`);
+            } else {
+              console.log(`No existing icon found for ${name}`);
+            }
+          } catch (error) {
+            console.error(`Error processing icon ${name}:`, error);
           }
         }
 
@@ -70,7 +83,7 @@ export const IconsUploadSection = () => {
         console.error("Error updating icons in settings:", error);
         toast({
           title: "Erreur",
-          description: "Impossible de mettre à jour les icônes",
+          description: "Impossible de mettre à jour les icônes. Vérifiez les logs pour plus de détails.",
           variant: "destructive"
         });
       }
@@ -96,7 +109,7 @@ export const IconsUploadSection = () => {
       if (!file) return;
 
       setUploading(true);
-      console.log(`Uploading icon ${fileName} (${iconSize}x${iconSize})`);
+      console.log(`Starting upload for icon ${fileName} (${iconSize}x${iconSize})`);
 
       const isValidSize = await validateImageDimensions(file, iconSize);
       if (!isValidSize) {
@@ -108,6 +121,7 @@ export const IconsUploadSection = () => {
         return;
       }
 
+      console.log(`Uploading file ${fileName} to storage...`);
       const { error: uploadError } = await supabase.storage
         .from("site-assets")
         .upload(fileName, file, {
@@ -120,13 +134,16 @@ export const IconsUploadSection = () => {
         throw uploadError;
       }
 
-      // Obtenir l'URL publique
+      console.log(`File ${fileName} uploaded successfully, getting public URL...`);
       const { data: { publicUrl } } = supabase.storage
         .from("site-assets")
         .getPublicUrl(fileName);
 
-      // Mettre à jour le paramètre dans site_settings
+      console.log(`Got public URL for ${fileName}: ${publicUrl}`);
+
       const settingKey = `icon_${fileName.replace(/\./g, '_')}`;
+      console.log(`Updating site_settings with key: ${settingKey}`);
+      
       const { error: updateError } = await supabase
         .from("site_settings")
         .upsert({
@@ -135,8 +152,11 @@ export const IconsUploadSection = () => {
         });
 
       if (updateError) {
+        console.error("Erreur lors de la mise à jour des paramètres:", updateError);
         throw updateError;
       }
+
+      console.log(`Successfully updated site_settings for ${fileName}`);
 
       toast({
         title: "Succès",
@@ -144,10 +164,10 @@ export const IconsUploadSection = () => {
       });
 
     } catch (error) {
-      console.error("Erreur lors de l'upload de l'icône:", error);
+      console.error("Erreur complète lors de l'upload de l'icône:", error);
       toast({
         title: "Erreur",
-        description: "Impossible de mettre à jour l'icône",
+        description: "Impossible de mettre à jour l'icône. Vérifiez les logs pour plus de détails.",
         variant: "destructive"
       });
     } finally {
