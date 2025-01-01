@@ -1,20 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>CSAVH31 Toulouse</title>
   <meta name="description" content="Club Sportif AVH31 Toulouse - Association sportive pour personnes déficientes visuelles" />
   <meta name="author" content="CSAVH31" />
-  <link rel="icon" type="image/png" href="/club-logo.png" />
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="512x512" href="/club-logo.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/app-icon-192.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/app-icon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/app-icon-16.png" />
+  
+  <!-- iOS -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/app-icon-180.png" />
+  <link rel="apple-touch-icon" sizes="152x152" href="/app-icon-152.png" />
+  <link rel="apple-touch-icon" sizes="120x120" href="/app-icon-120.png" />
+  <link rel="apple-touch-icon" sizes="76x76" href="/app-icon-76.png" />
+  <link rel="apple-touch-icon" sizes="60x60" href="/app-icon-60.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="CSAVH31" />
+  
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#1f2937" />
+  
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="CSAVH31 Toulouse" />
+  <meta property="og:description" content="Club Sportif AVH31 Toulouse - Association sportive pour personnes déficientes visuelles" />
   <meta property="og:image" content="/club-logo.png" />
 </head>
-
 <body>
   <div id="root"></div>
-  <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
   <script type="module" src="/src/main.tsx"></script>
 </body>
-
 </html>
