@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { SiteSettings, SocialMediaLinks } from "@/types/settings";
 
 const AdminSiteSettings = () => {
+  console.log("Rendering AdminSiteSettings component");
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -34,29 +35,37 @@ const AdminSiteSettings = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
+      console.log("Checking authentication...");
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
+          console.log("No session found, redirecting to login");
           navigate("/login");
           return;
         }
 
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("site_role")
           .eq("id", session.user.id)
           .single();
 
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
+          throw profileError;
+        }
+
         if (!profile || profile.site_role !== "admin") {
-          console.log("Accès non autorisé : l'utilisateur n'est pas admin");
+          console.log("User is not admin, redirecting to dashboard");
           navigate("/dashboard");
           return;
         }
 
+        console.log("Auth check passed, loading settings...");
         await loadSettings();
         setLoading(false);
       } catch (error) {
-        console.error("Erreur lors de la vérification des droits admin:", error);
+        console.error("Error during auth check:", error);
         navigate("/dashboard");
       }
     };
@@ -65,12 +74,18 @@ const AdminSiteSettings = () => {
   }, [navigate]);
 
   const loadSettings = async () => {
+    console.log("Loading settings...");
     try {
       const { data: settingsData, error: settingsError } = await supabase
         .from("site_settings")
         .select("*");
 
-      if (settingsError) throw settingsError;
+      if (settingsError) {
+        console.error("Error loading settings:", settingsError);
+        throw settingsError;
+      }
+
+      console.log("Settings data received:", settingsData);
 
       const settingsObj = settingsData.reduce<SiteSettings>((acc, curr) => {
         const key = curr.setting_key as keyof SiteSettings;
@@ -93,13 +108,19 @@ const AdminSiteSettings = () => {
         logo_url: "/club-logo.png"
       });
 
+      console.log("Processed settings:", settingsObj);
       setSettings(settingsObj);
 
       const { data: socialData, error: socialError } = await supabase
         .from("social_media_links")
         .select("*");
 
-      if (socialError) throw socialError;
+      if (socialError) {
+        console.error("Error loading social media links:", socialError);
+        throw socialError;
+      }
+
+      console.log("Social media data received:", socialData);
 
       const socialObj = socialData.reduce<SocialMediaLinks>((acc, curr) => {
         const platform = curr.platform as keyof SocialMediaLinks;
@@ -114,9 +135,10 @@ const AdminSiteSettings = () => {
         instagram: { url: "", is_active: true }
       });
 
+      console.log("Processed social media:", socialObj);
       setSocialMedia(socialObj);
     } catch (error) {
-      console.error("Erreur lors du chargement des paramètres:", error);
+      console.error("Error in loadSettings:", error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les paramètres du site",
@@ -126,6 +148,7 @@ const AdminSiteSettings = () => {
   };
 
   const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("Handling logo upload...");
     try {
       const file = event.target.files?.[0];
       if (!file) return;
@@ -150,28 +173,40 @@ const AdminSiteSettings = () => {
         };
       });
 
+      console.log("Uploading logo to storage...");
       const { data, error } = await supabase.storage
         .from("site-assets")
         .upload(`logo.${file.name.split(".").pop()}`, file, {
           upsert: true
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error uploading logo:", error);
+        throw error;
+      }
+
+      console.log("Logo uploaded successfully:", data);
 
       // Mettre à jour le paramètre logo_url
-      await supabase
+      const { error: updateError } = await supabase
         .from("site_settings")
         .upsert({ 
           setting_key: "logo_url", 
           setting_value: data.path 
         });
 
+      if (updateError) {
+        console.error("Error updating logo_url setting:", updateError);
+        throw updateError;
+      }
+
+      console.log("Logo URL updated in settings");
       toast({
         title: "Succès",
         description: "Logo mis à jour avec succès"
       });
     } catch (error) {
-      console.error("Erreur lors de l'upload du logo:", error);
+      console.error("Error in handleLogoUpload:", error);
       toast({
         title: "Erreur",
         description: "Impossible de mettre à jour le logo",
@@ -183,6 +218,7 @@ const AdminSiteSettings = () => {
   };
 
   const handleSettingChange = async (key: string, value: string | boolean) => {
+    console.log("Handling setting change:", { key, value });
     try {
       const { error } = await supabase
         .from("site_settings")
@@ -191,7 +227,10 @@ const AdminSiteSettings = () => {
           setting_value: value.toString() 
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating setting:", error);
+        throw error;
+      }
 
       setSettings(prev => ({ ...prev, [key]: value }));
       toast({
@@ -199,7 +238,7 @@ const AdminSiteSettings = () => {
         description: "Paramètres mis à jour avec succès"
       });
     } catch (error) {
-      console.error("Erreur lors de la mise à jour des paramètres:", error);
+      console.error("Error in handleSettingChange:", error);
       toast({
         title: "Erreur",
         description: "Impossible de mettre à jour les paramètres",
@@ -209,13 +248,17 @@ const AdminSiteSettings = () => {
   };
 
   const handleSocialMediaChange = async (platform: string, field: 'url' | 'is_active', value: string | boolean) => {
+    console.log("Handling social media change:", { platform, field, value });
     try {
       const { error } = await supabase
         .from("social_media_links")
         .update({ [field]: value })
         .eq("platform", platform);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating social media:", error);
+        throw error;
+      }
 
       setSocialMedia(prev => ({
         ...prev,
@@ -230,7 +273,7 @@ const AdminSiteSettings = () => {
         description: "Réseaux sociaux mis à jour avec succès"
       });
     } catch (error) {
-      console.error("Erreur lors de la mise à jour des réseaux sociaux:", error);
+      console.error("Error in handleSocialMediaChange:", error);
       toast({
         title: "Erreur",
         description: "Impossible de mettre à jour les réseaux sociaux",
