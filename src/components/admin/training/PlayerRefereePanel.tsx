@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,30 +23,17 @@ type PlayerRefereePanelProps = {
 };
 
 export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereePanelProps) {
+  // All hooks at the top level
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedTab, setSelectedTab] = useState("players");
 
-  // Early return if no training is provided
-  if (!training) {
-    return (
-      <Sheet open={isOpen} onOpenChange={onClose}>
-        <SheetContent side="right" className="w-full sm:w-[540px] bg-gray-900 text-white">
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center space-y-4">
-              <AlertCircle className="w-12 h-12 text-red-500 mx-auto" />
-              <p>Une erreur est survenue lors du chargement de l'entraînement.</p>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
-    );
-  }
-
-  // Fetch profiles based on sport and role
+  // Profiles query
   const { data: profiles = [], isLoading: isLoadingProfiles } = useQuery({
-    queryKey: ["profiles", training.type],
+    queryKey: ["profiles", training?.type],
     queryFn: async () => {
+      if (!training?.type) return [];
+      
       console.log("Fetching profiles for sport:", training.type);
       const { data, error } = await supabase
         .from("profiles")
@@ -61,13 +48,15 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
       console.log("Profiles fetched:", data);
       return data as Profile[];
     },
-    enabled: isOpen, // Only fetch when panel is open
+    enabled: isOpen && !!training?.type,
   });
 
-  // Fetch current registrations for this training
+  // Registrations query
   const { data: registrations = [], isLoading: isLoadingRegistrations } = useQuery({
-    queryKey: ["registrations", training.id],
+    queryKey: ["registrations", training?.id],
     queryFn: async () => {
+      if (!training?.id) return [];
+
       const { data, error } = await supabase
         .from("registrations")
         .select("user_id")
@@ -76,12 +65,14 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
       if (error) throw error;
       return data.map(reg => reg.user_id);
     },
-    enabled: isOpen, // Only fetch when panel is open
+    enabled: isOpen && !!training?.id,
   });
 
-  // Toggle registration mutation
+  // Registration mutation
   const toggleRegistration = useMutation({
     mutationFn: async (userId: string) => {
+      if (!training?.id) return;
+      
       const isRegistered = registrations.includes(userId);
       
       if (isRegistered) {
@@ -101,7 +92,7 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["registrations", training.id] });
+      queryClient.invalidateQueries({ queryKey: ["registrations", training?.id] });
       queryClient.invalidateQueries({ queryKey: ["trainings"] });
       toast({
         title: "Succès",
@@ -127,6 +118,22 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
   });
 
   const isLoading = isLoadingProfiles || isLoadingRegistrations;
+
+  // Early return for error state
+  if (!training) {
+    return (
+      <Sheet open={isOpen} onOpenChange={onClose}>
+        <SheetContent side="right" className="w-full sm:w-[540px] bg-gray-900 text-white">
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center space-y-4">
+              <AlertCircle className="w-12 h-12 text-red-500 mx-auto" />
+              <p>Une erreur est survenue lors du chargement de l'entraînement.</p>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
