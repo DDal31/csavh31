@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { CLUB_LOGO_URL } from "@/config/logo";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [siteTitle, setSiteTitle] = useState("CSAVH31 Toulouse");
+  const [logoUrl, setLogoUrl] = useState("/club-logo.png");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -14,7 +15,30 @@ const Navbar = () => {
       setIsAuthenticated(!!session);
     };
 
+    const loadSettings = async () => {
+      const { data: settings, error } = await supabase
+        .from("site_settings")
+        .select("setting_key, setting_value");
+      
+      if (error) {
+        console.error("Erreur lors du chargement des paramètres:", error);
+        return;
+      }
+
+      const title = settings.find(s => s.setting_key === "site_title")?.setting_value;
+      if (title) setSiteTitle(title);
+
+      const logo = settings.find(s => s.setting_key === "logo_url")?.setting_value;
+      if (logo) {
+        const { data: { publicUrl } } = supabase.storage
+          .from("site-assets")
+          .getPublicUrl(logo);
+        setLogoUrl(publicUrl);
+      }
+    };
+
     checkAuth();
+    loadSettings();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setIsAuthenticated(!!session);
@@ -30,12 +54,15 @@ const Navbar = () => {
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center gap-3">
               <img 
-                src={CLUB_LOGO_URL}
-                alt="Logo CSAVH31 Toulouse" 
+                src={logoUrl}
+                alt={`Logo ${siteTitle}`}
                 className="h-10 w-auto object-contain rounded-full"
-                onError={(e) => console.error('Erreur de chargement du logo:', e)}
+                onError={(e) => {
+                  console.error('Erreur de chargement du logo:', e);
+                  e.currentTarget.src = "/club-logo.png";
+                }}
               />
-              <span className="text-xl font-bold text-white">CSAVH31 Toulouse</span>
+              <span className="text-xl font-bold text-white">{siteTitle}</span>
             </Link>
           </div>
           

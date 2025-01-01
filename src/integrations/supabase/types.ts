@@ -224,6 +224,57 @@ export type Database = {
           },
         ]
       }
+      site_settings: {
+        Row: {
+          created_at: string
+          id: string
+          setting_key: string
+          setting_value: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          setting_key: string
+          setting_value?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          setting_key?: string
+          setting_value?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      social_media_links: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          platform: Database["public"]["Enums"]["social_media_platform"]
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          platform: Database["public"]["Enums"]["social_media_platform"]
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          platform?: Database["public"]["Enums"]["social_media_platform"]
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       sports: {
         Row: {
           created_at: string
@@ -385,6 +436,7 @@ export type Database = {
       document_type_status: "active" | "archived"
       news_status: "draft" | "published" | "archived"
       site_role: "member" | "admin"
+      social_media_platform: "twitter" | "facebook" | "instagram"
       sport_type: "goalball" | "torball" | "both"
       team_type: "loisir" | "d1_masculine" | "d1_feminine"
       training_type: "goalball" | "torball" | "other" | "showdown"

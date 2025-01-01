@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, FileText, Mail, Newspaper, Users, ListCollapse, FileStack, FileSpreadsheet } from "lucide-react";
+import { Loader2, FileText, Mail, Newspaper, Users, ListCollapse, FileStack, FileSpreadsheet, Settings } from "lucide-react";
 
 const AdminSettings = () => {
   const navigate = useNavigate();
@@ -83,6 +83,13 @@ const AdminSettings = () => {
       route: "/admin/settings/attendance-sheets",
       bgColor: "bg-violet-600 hover:bg-violet-700",
       ariaLabel: "Télécharger les feuilles de présence"
+    },
+    {
+      title: "Modifier en-tête, pieds de page et icône",
+      icon: Settings,
+      route: "/admin/settings/site",
+      bgColor: "bg-pink-600 hover:bg-pink-700",
+      ariaLabel: "Modifier l'apparence du site"
     }
   ];
 
@@ -120,9 +127,13 @@ const AdminSettings = () => {
                 onClick={() => navigate(tile.route)}
                 role="button"
                 aria-label={tile.ariaLabel}
+                tabIndex={0}
               >
                 <CardHeader className="text-center p-4 sm:p-6">
-                  <tile.icon className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-4 text-white" />
+                  <tile.icon 
+                    className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-4 text-white" 
+                    aria-hidden="true"
+                  />
                   <CardTitle className="text-sm sm:text-lg font-bold text-white">
                     {tile.title}
                   </CardTitle>
