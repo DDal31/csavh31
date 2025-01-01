@@ -9,6 +9,55 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      site_settings: {
+        Row: {
+          id: string
+          setting_key: string
+          setting_value: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          setting_key: string
+          setting_value?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          setting_key?: string
+          setting_value?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      social_media_links: {
+        Row: {
+          id: string
+          platform: "twitter" | "facebook" | "instagram"
+          url: string
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          platform: "twitter" | "facebook" | "instagram"
+          url: string
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          platform?: "twitter" | "facebook" | "instagram"
+          url?: string
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
       contacts: {
         Row: {
           created_at: string
@@ -281,6 +330,7 @@ export interface Database {
       [_ in never]: never
     }
     Enums: {
+      social_media_platform: "twitter" | "facebook" | "instagram"
       club_role: "joueur" | "entraineur" | "arbitre" | "joueur-entraineur" | "joueur-arbitre" | "entraineur-arbitre" | "les-trois"
       contact_status: "active" | "archived"
       document_type: "medical_certificate" | "ophthalmological_certificate" | "ffh_license" | "license" | "id_card" | "photo"

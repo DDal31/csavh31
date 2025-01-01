@@ -10,20 +10,23 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { SiteSettings, SocialMediaLinks } from "@/types/settings";
 
 const AdminSiteSettings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-  const [settings, setSettings] = useState({
+  const [settings, setSettings] = useState<SiteSettings>({
     site_title: "",
     site_description: "",
     show_description: true,
     show_navigation: true,
-    show_social_media: true
+    show_social_media: true,
+    logo_url: "/club-logo.png"
   });
-  const [socialMedia, setSocialMedia] = useState({
+  
+  const [socialMedia, setSocialMedia] = useState<SocialMediaLinks>({
     twitter: { url: "", is_active: true },
     facebook: { url: "", is_active: true },
     instagram: { url: "", is_active: true }
@@ -69,12 +72,18 @@ const AdminSiteSettings = () => {
 
       if (settingsError) throw settingsError;
 
-      const settingsObj = settingsData.reduce((acc, curr) => {
-        acc[curr.setting_key] = curr.setting_value === "true" ? true : curr.setting_value;
+      const settingsObj = settingsData.reduce<Partial<SiteSettings>>((acc, curr) => {
+        if (curr.setting_key === "show_description" || 
+            curr.setting_key === "show_navigation" || 
+            curr.setting_key === "show_social_media") {
+          acc[curr.setting_key] = curr.setting_value === "true";
+        } else {
+          acc[curr.setting_key as keyof SiteSettings] = curr.setting_value;
+        }
         return acc;
       }, {});
 
-      setSettings(settingsObj);
+      setSettings(prev => ({ ...prev, ...settingsObj }));
 
       const { data: socialData, error: socialError } = await supabase
         .from("social_media_links")
@@ -82,12 +91,15 @@ const AdminSiteSettings = () => {
 
       if (socialError) throw socialError;
 
-      const socialObj = socialData.reduce((acc, curr) => {
-        acc[curr.platform] = { url: curr.url, is_active: curr.is_active };
+      const socialObj = socialData.reduce<Partial<SocialMediaLinks>>((acc, curr) => {
+        acc[curr.platform as keyof SocialMediaLinks] = { 
+          url: curr.url, 
+          is_active: curr.is_active 
+        };
         return acc;
       }, {});
 
-      setSocialMedia(socialObj);
+      setSocialMedia(prev => ({ ...prev, ...socialObj }));
     } catch (error) {
       console.error("Erreur lors du chargement des paramètres:", error);
       toast({

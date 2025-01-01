@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Facebook, Instagram, Twitter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { SiteSettings, SocialMediaLinks } from "@/types/settings";
 
 const Footer = () => {
-  const [settings, setSettings] = useState({
+  const [settings, setSettings] = useState<SiteSettings>({
     site_title: "CSAVH31 Toulouse",
     site_description: "Association dédiée au sport et au bien-être pour les personnes déficientes visuelles.",
     show_description: true,
@@ -12,7 +13,8 @@ const Footer = () => {
     show_social_media: true,
     logo_url: "/club-logo.png"
   });
-  const [socialMedia, setSocialMedia] = useState({
+  
+  const [socialMedia, setSocialMedia] = useState<SocialMediaLinks>({
     twitter: { url: "", is_active: false },
     facebook: { url: "", is_active: false },
     instagram: { url: "", is_active: false }
@@ -27,8 +29,14 @@ const Footer = () => {
 
         if (settingsError) throw settingsError;
 
-        const settingsObj = settingsData.reduce((acc, curr) => {
-          acc[curr.setting_key] = curr.setting_value === "true" ? true : curr.setting_value;
+        const settingsObj = settingsData.reduce<Partial<SiteSettings>>((acc, curr) => {
+          if (curr.setting_key === "show_description" || 
+              curr.setting_key === "show_navigation" || 
+              curr.setting_key === "show_social_media") {
+            acc[curr.setting_key] = curr.setting_value === "true";
+          } else {
+            acc[curr.setting_key as keyof SiteSettings] = curr.setting_value;
+          }
           return acc;
         }, {});
 
@@ -47,12 +55,15 @@ const Footer = () => {
 
         if (socialError) throw socialError;
 
-        const socialObj = socialData.reduce((acc, curr) => {
-          acc[curr.platform] = { url: curr.url, is_active: curr.is_active };
+        const socialObj = socialData.reduce<Partial<SocialMediaLinks>>((acc, curr) => {
+          acc[curr.platform as keyof SocialMediaLinks] = { 
+            url: curr.url, 
+            is_active: curr.is_active 
+          };
           return acc;
         }, {});
 
-        setSocialMedia(socialObj);
+        setSocialMedia(prev => ({ ...prev, ...socialObj }));
       } catch (error) {
         console.error("Erreur lors du chargement des paramètres:", error);
       }
