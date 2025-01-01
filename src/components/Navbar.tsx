@@ -7,6 +7,7 @@ const Navbar = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [siteTitle, setSiteTitle] = useState("CSAVH31 Toulouse");
   const [logoUrl, setLogoUrl] = useState("/club-logo.png");
+  const [logoShape, setLogoShape] = useState("round");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,6 +17,7 @@ const Navbar = () => {
     };
 
     const loadSettings = async () => {
+      console.log("Loading navbar settings...");
       const { data: settings, error } = await supabase
         .from("site_settings")
         .select("setting_key, setting_value");
@@ -25,8 +27,16 @@ const Navbar = () => {
         return;
       }
 
+      console.log("Settings loaded:", settings);
+
       const title = settings.find(s => s.setting_key === "site_title")?.setting_value;
-      if (title) setSiteTitle(title);
+      if (title) {
+        setSiteTitle(title);
+        document.title = title; // Update page title
+      }
+
+      const shape = settings.find(s => s.setting_key === "logo_shape")?.setting_value;
+      if (shape) setLogoShape(shape);
 
       const logo = settings.find(s => s.setting_key === "logo_url")?.setting_value;
       if (logo) {
@@ -56,7 +66,7 @@ const Navbar = () => {
               <img 
                 src={logoUrl}
                 alt={`Logo ${siteTitle}`}
-                className="h-10 w-10 object-cover rounded-full"
+                className={`h-10 w-10 object-cover ${logoShape === 'round' ? 'rounded-full' : 'rounded-lg'}`}
                 onError={(e) => {
                   console.error('Erreur de chargement du logo:', e);
                   e.currentTarget.src = "/club-logo.png";

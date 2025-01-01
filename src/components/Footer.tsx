@@ -11,7 +11,8 @@ const Footer = () => {
     show_description: true,
     show_navigation: true,
     show_social_media: true,
-    logo_url: "/club-logo.png"
+    logo_url: "/club-logo.png",
+    logo_shape: "round"
   });
   
   const [socialMedia, setSocialMedia] = useState<SocialMediaLinks>({
@@ -22,12 +23,15 @@ const Footer = () => {
 
   useEffect(() => {
     const loadSettings = async () => {
+      console.log("Loading footer settings...");
       try {
         const { data: settingsData, error: settingsError } = await supabase
           .from("site_settings")
           .select("*");
 
         if (settingsError) throw settingsError;
+
+        console.log("Settings data received:", settingsData);
 
         const settingsObj = settingsData.reduce<SiteSettings>((acc, curr) => {
           const key = curr.setting_key as keyof SiteSettings;
@@ -37,7 +41,8 @@ const Footer = () => {
             acc[key] = curr.setting_value === "true";
           } else if (key === "site_title" || 
                      key === "site_description" || 
-                     key === "logo_url") {
+                     key === "logo_url" ||
+                     key === "logo_shape") {
             acc[key] = curr.setting_value || "";
           }
           return acc;
@@ -47,7 +52,8 @@ const Footer = () => {
           show_description: true,
           show_navigation: true,
           show_social_media: true,
-          logo_url: "/club-logo.png"
+          logo_url: "/club-logo.png",
+          logo_shape: "round"
         });
 
         if (settingsObj.logo_url) {
@@ -96,7 +102,7 @@ const Footer = () => {
               <img 
                 src={settings.logo_url}
                 alt={`Logo ${settings.site_title}`}
-                className="h-12 w-12 object-cover rounded-full"
+                className={`h-12 w-12 object-cover ${settings.logo_shape === 'round' ? 'rounded-full' : 'rounded-lg'}`}
                 onError={(e) => {
                   console.error('Erreur de chargement du logo:', e);
                   e.currentTarget.src = "/club-logo.png";

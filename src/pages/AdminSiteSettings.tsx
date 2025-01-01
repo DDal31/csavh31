@@ -24,7 +24,8 @@ const AdminSiteSettings = () => {
     show_description: true,
     show_navigation: true,
     show_social_media: true,
-    logo_url: "/club-logo.png"
+    logo_url: "/club-logo.png",
+    logo_shape: "round"
   });
   
   const [socialMedia, setSocialMedia] = useState<SocialMediaLinks>({
@@ -95,7 +96,8 @@ const AdminSiteSettings = () => {
           acc[key] = curr.setting_value === "true";
         } else if (key === "site_title" || 
                    key === "site_description" || 
-                   key === "logo_url") {
+                   key === "logo_url" ||
+                   key === "logo_shape") {
           acc[key] = curr.setting_value || "";
         }
         return acc;
@@ -105,7 +107,8 @@ const AdminSiteSettings = () => {
         show_description: true,
         show_navigation: true,
         show_social_media: true,
-        logo_url: "/club-logo.png"
+        logo_url: "/club-logo.png",
+        logo_shape: "round"
       });
 
       console.log("Processed settings:", settingsObj);
@@ -332,19 +335,37 @@ const AdminSiteSettings = () => {
           {/* Logo Upload Section */}
           <div className="bg-gray-800 p-6 rounded-lg space-y-4">
             <h2 className="text-xl font-semibold text-white mb-4">Logo du site</h2>
-            <div className="space-y-2">
-              <Label htmlFor="logo" className="text-white">
-                Télécharger un nouveau logo (512x512 pixels)
-              </Label>
-              <Input
-                id="logo"
-                type="file"
-                accept="image/*"
-                onChange={handleLogoUpload}
-                disabled={uploading}
-                className="bg-gray-700 text-white"
-                aria-label="Sélectionner un fichier pour le logo du site"
-              />
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="logo" className="text-white">
+                  Télécharger un nouveau logo (512x512 pixels)
+                </Label>
+                <Input
+                  id="logo"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  disabled={uploading}
+                  className="bg-gray-700 text-white"
+                  aria-label="Sélectionner un fichier pour le logo du site"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="logo_shape" className="text-white">
+                  Forme du logo
+                </Label>
+                <select
+                  id="logo_shape"
+                  value={settings.logo_shape}
+                  onChange={(e) => handleSettingChange("logo_shape", e.target.value)}
+                  className="w-full bg-gray-700 text-white rounded-md border-gray-600 focus:border-blue-500 focus:ring-blue-500"
+                  aria-label="Sélectionner la forme du logo"
+                >
+                  <option value="round">Rond</option>
+                  <option value="square">Carré</option>
+                </select>
+              </div>
             </div>
           </div>
 

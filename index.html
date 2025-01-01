@@ -1,20 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>CSAVH31 Toulouse</title>
   <meta name="description" content="Club Sportif AVH31 Toulouse - Association sportive pour personnes déficientes visuelles" />
   <meta name="author" content="CSAVH31" />
-  <link rel="icon" type="image/jpeg" href="https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/club-assets/IMG_0880.jpeg" />
-  <meta property="og:image" content="https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/club-assets/IMG_0880.jpeg" />
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/app-icon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/app-icon-16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/app-icon-180.png" />
+  
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#1f2937" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="CSAVH31 Toulouse" />
+  <meta property="og:description" content="Club Sportif AVH31 Toulouse - Association sportive pour personnes déficientes visuelles" />
+  <meta property="og:image" content="/app-icon-512.png" />
 </head>
-
 <body>
   <div id="root"></div>
-  <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
   <script type="module" src="/src/main.tsx"></script>
 </body>
-
 </html>

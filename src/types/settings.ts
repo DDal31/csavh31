@@ -5,10 +5,16 @@ export interface SiteSettings {
   show_navigation: boolean;
   show_social_media: boolean;
   logo_url: string;
+  logo_shape: string;
 }
 
 export interface SocialMediaLinks {
-  twitter: { url: string; is_active: boolean };
-  facebook: { url: string; is_active: boolean };
-  instagram: { url: string; is_active: boolean };
+  twitter: SocialMediaLink;
+  facebook: SocialMediaLink;
+  instagram: SocialMediaLink;
+}
+
+export interface SocialMediaLink {
+  url: string;
+  is_active: boolean;
 }
