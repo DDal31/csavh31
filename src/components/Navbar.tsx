@@ -56,7 +56,7 @@ const Navbar = () => {
               <img 
                 src={logoUrl}
                 alt={`Logo ${siteTitle}`}
-                className="h-10 w-auto object-contain rounded-full"
+                className="h-10 w-10 object-cover rounded-full"
                 onError={(e) => {
                   console.error('Erreur de chargement du logo:', e);
                   e.currentTarget.src = "/club-logo.png";

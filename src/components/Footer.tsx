@@ -96,7 +96,7 @@ const Footer = () => {
               <img 
                 src={settings.logo_url}
                 alt={`Logo ${settings.site_title}`}
-                className="h-12 w-auto object-contain rounded-full"
+                className="h-12 w-12 object-cover rounded-full"
                 onError={(e) => {
                   console.error('Erreur de chargement du logo:', e);
                   e.currentTarget.src = "/club-logo.png";
