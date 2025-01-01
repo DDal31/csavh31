@@ -32,7 +32,7 @@ const Navbar = () => {
       const title = settings.find(s => s.setting_key === "site_title")?.setting_value;
       if (title) {
         setSiteTitle(title);
-        document.title = title; // Update page title
+        document.title = title;
       }
 
       const shape = settings.find(s => s.setting_key === "logo_shape")?.setting_value;
@@ -44,6 +44,29 @@ const Navbar = () => {
           .from("site-assets")
           .getPublicUrl(logo);
         setLogoUrl(publicUrl);
+      }
+
+      // Set favicon and Apple touch icons
+      const favicon = settings.find(s => s.setting_key === "favicon_url")?.setting_value;
+      if (favicon) {
+        const { data: { publicUrl } } = supabase.storage
+          .from("site-assets")
+          .getPublicUrl(favicon);
+        const faviconLink = document.querySelector("link[rel='icon']") as HTMLLinkElement;
+        if (faviconLink) {
+          faviconLink.href = publicUrl;
+        }
+      }
+
+      const appleIcon = settings.find(s => s.setting_key === "apple_touch_icon_url")?.setting_value;
+      if (appleIcon) {
+        const { data: { publicUrl } } = supabase.storage
+          .from("site-assets")
+          .getPublicUrl(appleIcon);
+        const appleIconLink = document.querySelector("link[rel='apple-touch-icon']") as HTMLLinkElement;
+        if (appleIconLink) {
+          appleIconLink.href = publicUrl;
+        }
       }
     };
 
