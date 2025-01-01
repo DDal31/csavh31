@@ -23,7 +23,6 @@ type PlayerRefereePanelProps = {
 };
 
 export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereePanelProps) {
-  // All hooks at the top level
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedTab, setSelectedTab] = useState("players");
@@ -37,8 +36,7 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
       console.log("Fetching profiles for sport:", training.type);
       const { data, error } = await supabase
         .from("profiles")
-        .select("*")
-        .or(`sport.eq.${training.type},sport.eq.both`);
+        .select("*");
 
       if (error) {
         console.error("Error fetching profiles:", error);
@@ -119,7 +117,6 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
 
   const isLoading = isLoadingProfiles || isLoadingRegistrations;
 
-  // Early return for error state
   if (!training) {
     return (
       <Sheet open={isOpen} onOpenChange={onClose}>
@@ -155,33 +152,41 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
 
             <TabsContent value="players" className="mt-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {filteredProfiles.map((profile) => (
-                  <Button
-                    key={profile.id}
-                    variant={registrations.includes(profile.id) ? "default" : "outline"}
-                    className="w-full justify-start"
-                    onClick={() => toggleRegistration.mutate(profile.id)}
-                    aria-label={`${registrations.includes(profile.id) ? "Désinscrire" : "Inscrire"} ${profile.first_name} ${profile.last_name}`}
-                  >
-                    {profile.first_name} {profile.last_name}
-                  </Button>
-                ))}
+                {filteredProfiles.length === 0 ? (
+                  <p className="text-gray-400 col-span-2 text-center">Aucun joueur disponible</p>
+                ) : (
+                  filteredProfiles.map((profile) => (
+                    <Button
+                      key={profile.id}
+                      variant={registrations.includes(profile.id) ? "default" : "outline"}
+                      className="w-full justify-start"
+                      onClick={() => toggleRegistration.mutate(profile.id)}
+                      aria-label={`${registrations.includes(profile.id) ? "Désinscrire" : "Inscrire"} ${profile.first_name} ${profile.last_name}`}
+                    >
+                      {profile.first_name} {profile.last_name}
+                    </Button>
+                  ))
+                )}
               </div>
             </TabsContent>
 
             <TabsContent value="referees" className="mt-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {filteredProfiles.map((profile) => (
-                  <Button
-                    key={profile.id}
-                    variant={registrations.includes(profile.id) ? "default" : "outline"}
-                    className="w-full justify-start"
-                    onClick={() => toggleRegistration.mutate(profile.id)}
-                    aria-label={`${registrations.includes(profile.id) ? "Désinscrire" : "Inscrire"} ${profile.first_name} ${profile.last_name}`}
-                  >
-                    {profile.first_name} {profile.last_name}
-                  </Button>
-                ))}
+                {filteredProfiles.length === 0 ? (
+                  <p className="text-gray-400 col-span-2 text-center">Aucun arbitre disponible</p>
+                ) : (
+                  filteredProfiles.map((profile) => (
+                    <Button
+                      key={profile.id}
+                      variant={registrations.includes(profile.id) ? "default" : "outline"}
+                      className="w-full justify-start"
+                      onClick={() => toggleRegistration.mutate(profile.id)}
+                      aria-label={`${registrations.includes(profile.id) ? "Désinscrire" : "Inscrire"} ${profile.first_name} ${profile.last_name}`}
+                    >
+                      {profile.first_name} {profile.last_name}
+                    </Button>
+                  ))
+                )}
               </div>
             </TabsContent>
           </Tabs>
