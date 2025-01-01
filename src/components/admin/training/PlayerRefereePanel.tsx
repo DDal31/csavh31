@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { AlertCircle, LoaderCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Training } from "@/types/training";
 
@@ -16,7 +17,7 @@ type Profile = {
 };
 
 type PlayerRefereePanelProps = {
-  training: Training;
+  training: Training | null;
   isOpen: boolean;
   onClose: () => void;
 };
@@ -26,8 +27,24 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
   const queryClient = useQueryClient();
   const [selectedTab, setSelectedTab] = useState("players");
 
+  // Early return if no training is provided
+  if (!training) {
+    return (
+      <Sheet open={isOpen} onOpenChange={onClose}>
+        <SheetContent side="right" className="w-full sm:w-[540px] bg-gray-900 text-white">
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center space-y-4">
+              <AlertCircle className="w-12 h-12 text-red-500 mx-auto" />
+              <p>Une erreur est survenue lors du chargement de l'entraînement.</p>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
   // Fetch profiles based on sport and role
-  const { data: profiles = [] } = useQuery({
+  const { data: profiles = [], isLoading: isLoadingProfiles } = useQuery({
     queryKey: ["profiles", training.type],
     queryFn: async () => {
       console.log("Fetching profiles for sport:", training.type);
@@ -44,10 +61,11 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
       console.log("Profiles fetched:", data);
       return data as Profile[];
     },
+    enabled: isOpen, // Only fetch when panel is open
   });
 
   // Fetch current registrations for this training
-  const { data: registrations = [] } = useQuery({
+  const { data: registrations = [], isLoading: isLoadingRegistrations } = useQuery({
     queryKey: ["registrations", training.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -58,6 +76,7 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
       if (error) throw error;
       return data.map(reg => reg.user_id);
     },
+    enabled: isOpen, // Only fetch when panel is open
   });
 
   // Toggle registration mutation
@@ -107,6 +126,8 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
     }
   });
 
+  const isLoading = isLoadingProfiles || isLoadingRegistrations;
+
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent side="right" className="w-full sm:w-[540px] bg-gray-900 text-white">
@@ -114,44 +135,50 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
           <SheetTitle className="text-white">Ajouter des participants</SheetTitle>
         </SheetHeader>
         
-        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="mt-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="players">Joueurs</TabsTrigger>
-            <TabsTrigger value="referees">Arbitres</TabsTrigger>
-          </TabsList>
+        {isLoading ? (
+          <div className="flex items-center justify-center h-full">
+            <LoaderCircle className="w-8 h-8 animate-spin text-purple-500" />
+          </div>
+        ) : (
+          <Tabs value={selectedTab} onValueChange={setSelectedTab} className="mt-6">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="players">Joueurs</TabsTrigger>
+              <TabsTrigger value="referees">Arbitres</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="players" className="mt-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {filteredProfiles.map((profile) => (
-                <Button
-                  key={profile.id}
-                  variant={registrations.includes(profile.id) ? "default" : "outline"}
-                  className="w-full justify-start"
-                  onClick={() => toggleRegistration.mutate(profile.id)}
-                  aria-label={`${registrations.includes(profile.id) ? "Désinscrire" : "Inscrire"} ${profile.first_name} ${profile.last_name}`}
-                >
-                  {profile.first_name} {profile.last_name}
-                </Button>
-              ))}
-            </div>
-          </TabsContent>
+            <TabsContent value="players" className="mt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {filteredProfiles.map((profile) => (
+                  <Button
+                    key={profile.id}
+                    variant={registrations.includes(profile.id) ? "default" : "outline"}
+                    className="w-full justify-start"
+                    onClick={() => toggleRegistration.mutate(profile.id)}
+                    aria-label={`${registrations.includes(profile.id) ? "Désinscrire" : "Inscrire"} ${profile.first_name} ${profile.last_name}`}
+                  >
+                    {profile.first_name} {profile.last_name}
+                  </Button>
+                ))}
+              </div>
+            </TabsContent>
 
-          <TabsContent value="referees" className="mt-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {filteredProfiles.map((profile) => (
-                <Button
-                  key={profile.id}
-                  variant={registrations.includes(profile.id) ? "default" : "outline"}
-                  className="w-full justify-start"
-                  onClick={() => toggleRegistration.mutate(profile.id)}
-                  aria-label={`${registrations.includes(profile.id) ? "Désinscrire" : "Inscrire"} ${profile.first_name} ${profile.last_name}`}
-                >
-                  {profile.first_name} {profile.last_name}
-                </Button>
-              ))}
-            </div>
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="referees" className="mt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {filteredProfiles.map((profile) => (
+                  <Button
+                    key={profile.id}
+                    variant={registrations.includes(profile.id) ? "default" : "outline"}
+                    className="w-full justify-start"
+                    onClick={() => toggleRegistration.mutate(profile.id)}
+                    aria-label={`${registrations.includes(profile.id) ? "Désinscrire" : "Inscrire"} ${profile.first_name} ${profile.last_name}`}
+                  >
+                    {profile.first_name} {profile.last_name}
+                  </Button>
+                ))}
+              </div>
+            </TabsContent>
+          </Tabs>
+        )}
       </SheetContent>
     </Sheet>
   );
