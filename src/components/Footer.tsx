@@ -30,12 +30,15 @@ const Footer = () => {
         if (settingsError) throw settingsError;
 
         const settingsObj = settingsData.reduce<SiteSettings>((acc, curr) => {
-          if (curr.setting_key === "show_description" || 
-              curr.setting_key === "show_navigation" || 
-              curr.setting_key === "show_social_media") {
-            acc[curr.setting_key] = curr.setting_value === "true";
-          } else {
-            acc[curr.setting_key as keyof SiteSettings] = curr.setting_value || "";
+          const key = curr.setting_key as keyof SiteSettings;
+          if (key === "show_description" || 
+              key === "show_navigation" || 
+              key === "show_social_media") {
+            acc[key] = curr.setting_value === "true";
+          } else if (key === "site_title" || 
+                     key === "site_description" || 
+                     key === "logo_url") {
+            acc[key] = curr.setting_value || "";
           }
           return acc;
         }, {
@@ -63,7 +66,8 @@ const Footer = () => {
         if (socialError) throw socialError;
 
         const socialObj = socialData.reduce<SocialMediaLinks>((acc, curr) => {
-          acc[curr.platform as keyof SocialMediaLinks] = { 
+          const platform = curr.platform as keyof SocialMediaLinks;
+          acc[platform] = { 
             url: curr.url, 
             is_active: curr.is_active 
           };
