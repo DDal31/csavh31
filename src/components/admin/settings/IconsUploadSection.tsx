@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
@@ -21,6 +21,63 @@ const REQUIRED_ICON_SIZES = [
 export const IconsUploadSection = () => {
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    const updateIconsInSettings = async () => {
+      try {
+        console.log("Updating icons in settings...");
+        
+        // Pour chaque taille d'icône requise
+        for (const { name } of REQUIRED_ICON_SIZES) {
+          // Vérifier si l'icône existe dans le bucket
+          const { data: fileExists } = await supabase.storage
+            .from("site-assets")
+            .list("", {
+              search: name
+            });
+
+          if (fileExists && fileExists.length > 0) {
+            console.log(`Found icon: ${name}`);
+            
+            // Obtenir l'URL publique
+            const { data: { publicUrl } } = supabase.storage
+              .from("site-assets")
+              .getPublicUrl(name);
+
+            // Mettre à jour le paramètre dans site_settings
+            const settingKey = `icon_${name.replace(/\./g, '_')}`;
+            const { error: updateError } = await supabase
+              .from("site_settings")
+              .upsert({
+                setting_key: settingKey,
+                setting_value: publicUrl
+              });
+
+            if (updateError) {
+              console.error(`Error updating setting for ${name}:`, updateError);
+              throw updateError;
+            }
+
+            console.log(`Updated setting for ${name} with URL: ${publicUrl}`);
+          }
+        }
+
+        toast({
+          title: "Succès",
+          description: "Les icônes ont été mises à jour avec succès"
+        });
+      } catch (error) {
+        console.error("Error updating icons in settings:", error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de mettre à jour les icônes",
+          variant: "destructive"
+        });
+      }
+    };
+
+    updateIconsInSettings();
+  }, [toast]);
 
   const validateImageDimensions = (file: File, requiredSize: number): Promise<boolean> => {
     return new Promise((resolve) => {
@@ -61,6 +118,24 @@ export const IconsUploadSection = () => {
       if (uploadError) {
         console.error("Erreur lors de l'upload:", uploadError);
         throw uploadError;
+      }
+
+      // Obtenir l'URL publique
+      const { data: { publicUrl } } = supabase.storage
+        .from("site-assets")
+        .getPublicUrl(fileName);
+
+      // Mettre à jour le paramètre dans site_settings
+      const settingKey = `icon_${fileName.replace(/\./g, '_')}`;
+      const { error: updateError } = await supabase
+        .from("site_settings")
+        .upsert({
+          setting_key: settingKey,
+          setting_value: publicUrl
+        });
+
+      if (updateError) {
+        throw updateError;
       }
 
       toast({
