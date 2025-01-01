@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import { downloadAndSaveIcon } from "@/utils/iconUtils";
 
 const REQUIRED_ICON_SIZES = [
   { size: 512, name: "club-logo.png", label: "Logo principal (512x512)" },
@@ -49,6 +50,9 @@ export const IconsUploadSection = () => {
 
               console.log(`Got public URL for ${name}: ${publicUrl}`);
 
+              // Download and save icon to public directory
+              await downloadAndSaveIcon(name, publicUrl);
+
               const settingKey = `icon_${name.replace(/\./g, '_')}`;
               const { error: updateError } = await supabase
                 .from("site_settings")
@@ -76,6 +80,19 @@ export const IconsUploadSection = () => {
             console.error(`Error processing icon ${name}:`, error);
           }
         }
+
+        // Update meta tags for iOS
+        const appleIcons = document.querySelectorAll('link[rel="apple-touch-icon"]');
+        appleIcons.forEach(async (icon: HTMLLinkElement) => {
+          const size = icon.sizes?.value;
+          const matchingIcon = REQUIRED_ICON_SIZES.find(i => i.size === parseInt(size));
+          if (matchingIcon) {
+            const { data: { publicUrl } } = supabase.storage
+              .from("site-assets")
+              .getPublicUrl(matchingIcon.name);
+            icon.href = publicUrl;
+          }
+        });
 
         toast({
           title: "Succès",
