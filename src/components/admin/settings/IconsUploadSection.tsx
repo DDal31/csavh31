@@ -27,10 +27,8 @@ export const IconsUploadSection = () => {
       try {
         console.log("Updating icons in settings...");
         
-        // Pour chaque taille d'icône requise
         for (const { name } of REQUIRED_ICON_SIZES) {
           try {
-            // Vérifier si l'icône existe dans le bucket
             const { data: fileExists, error: listError } = await supabase.storage
               .from("site-assets")
               .list("", {
@@ -45,21 +43,25 @@ export const IconsUploadSection = () => {
             if (fileExists && fileExists.length > 0) {
               console.log(`Found icon: ${name}`);
               
-              // Obtenir l'URL publique
               const { data: { publicUrl } } = supabase.storage
                 .from("site-assets")
                 .getPublicUrl(name);
 
               console.log(`Got public URL for ${name}: ${publicUrl}`);
 
-              // Mettre à jour le paramètre dans site_settings
               const settingKey = `icon_${name.replace(/\./g, '_')}`;
               const { error: updateError } = await supabase
                 .from("site_settings")
-                .upsert({
-                  setting_key: settingKey,
-                  setting_value: publicUrl
-                });
+                .upsert(
+                  {
+                    setting_key: settingKey,
+                    setting_value: publicUrl
+                  },
+                  {
+                    onConflict: 'setting_key',
+                    ignoreDuplicates: false
+                  }
+                );
 
               if (updateError) {
                 console.error(`Error updating setting for ${name}:`, updateError);
@@ -146,10 +148,16 @@ export const IconsUploadSection = () => {
       
       const { error: updateError } = await supabase
         .from("site_settings")
-        .upsert({
-          setting_key: settingKey,
-          setting_value: publicUrl
-        });
+        .upsert(
+          {
+            setting_key: settingKey,
+            setting_value: publicUrl
+          },
+          {
+            onConflict: 'setting_key',
+            ignoreDuplicates: false
+          }
+        );
 
       if (updateError) {
         console.error("Erreur lors de la mise à jour des paramètres:", updateError);
