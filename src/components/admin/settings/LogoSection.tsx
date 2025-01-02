@@ -43,26 +43,30 @@ export const LogoSection = ({ settings, onSettingChange }: LogoSectionProps) => 
         };
       });
 
-      console.log("Uploading logo to storage...");
-      const { data, error } = await supabase.storage
-        .from("site-assets")
-        .upload(`logo.${file.name.split(".").pop()}`, file, {
-          upsert: true
-        });
+      // Créer un FormData pour envoyer le fichier
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('fileName', 'club-logo.png');
 
-      if (error) {
-        console.error("Error uploading logo:", error);
-        throw error;
+      // Appeler la fonction Edge pour sauvegarder le fichier
+      const response = await fetch('/api/save-public-icon', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Erreur lors de l\'upload');
       }
 
-      console.log("Logo uploaded successfully:", data);
-
-      // Mettre à jour le paramètre logo_url
+      // Mettre à jour le paramètre logo_url avec upsert
       const { error: updateError } = await supabase
         .from("site_settings")
         .upsert({ 
           setting_key: "logo_url", 
-          setting_value: data.path 
+          setting_value: "club-logo.png" 
+        }, {
+          onConflict: 'setting_key'
         });
 
       if (updateError) {
