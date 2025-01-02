@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const REQUIRED_ICON_SIZES = [
   { size: 512, name: "club-logo.png", label: "Logo principal (512x512)" },
@@ -55,15 +56,15 @@ export const IconsUploadSection = () => {
       formData.append('file', file);
       formData.append('fileName', fileName);
 
-      // Appeler la fonction Edge pour sauvegarder le fichier
-      const response = await fetch('/api/save-public-icon', {
+      // Appeler la fonction Edge en utilisant le client Supabase
+      const { error: uploadError } = await supabase.functions.invoke('save-public-icon', {
         method: 'POST',
         body: formData
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Erreur lors de l\'upload');
+      if (uploadError) {
+        console.error("Error in Edge Function:", uploadError);
+        throw uploadError;
       }
 
       toast({
