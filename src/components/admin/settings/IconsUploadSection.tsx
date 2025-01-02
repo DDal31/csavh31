@@ -54,22 +54,26 @@ export const IconsUploadSection = () => {
               await downloadAndSaveIcon(name, publicUrl);
 
               const settingKey = `icon_${name.replace(/\./g, '_')}`;
+              
+              // First try to update
               const { error: updateError } = await supabase
                 .from("site_settings")
-                .upsert(
-                  {
+                .update({ setting_value: publicUrl })
+                .eq('setting_key', settingKey);
+
+              // If no rows were updated (setting doesn't exist), then insert
+              if (updateError) {
+                const { error: insertError } = await supabase
+                  .from("site_settings")
+                  .insert({
                     setting_key: settingKey,
                     setting_value: publicUrl
-                  },
-                  {
-                    onConflict: 'setting_key',
-                    ignoreDuplicates: false
-                  }
-                );
+                  });
 
-              if (updateError) {
-                console.error(`Error updating setting for ${name}:`, updateError);
-                throw updateError;
+                if (insertError) {
+                  console.error(`Error inserting setting for ${name}:`, insertError);
+                  throw insertError;
+                }
               }
 
               console.log(`Successfully updated setting for ${name}`);
@@ -163,22 +167,25 @@ export const IconsUploadSection = () => {
       const settingKey = `icon_${fileName.replace(/\./g, '_')}`;
       console.log(`Updating site_settings with key: ${settingKey}`);
       
+      // First try to update
       const { error: updateError } = await supabase
         .from("site_settings")
-        .upsert(
-          {
+        .update({ setting_value: publicUrl })
+        .eq('setting_key', settingKey);
+
+      // If no rows were updated (setting doesn't exist), then insert
+      if (updateError) {
+        const { error: insertError } = await supabase
+          .from("site_settings")
+          .insert({
             setting_key: settingKey,
             setting_value: publicUrl
-          },
-          {
-            onConflict: 'setting_key',
-            ignoreDuplicates: false
-          }
-        );
+          });
 
-      if (updateError) {
-        console.error("Erreur lors de la mise à jour des paramètres:", updateError);
-        throw updateError;
+        if (insertError) {
+          console.error("Error inserting setting:", insertError);
+          throw insertError;
+        }
       }
 
       console.log(`Successfully updated site_settings for ${fileName}`);
@@ -189,7 +196,7 @@ export const IconsUploadSection = () => {
       });
 
     } catch (error) {
-      console.error("Erreur complète lors de l'upload de l'icône:", error);
+      console.error("Error in handleIconUpload:", error);
       toast({
         title: "Erreur",
         description: "Impossible de mettre à jour l'icône. Vérifiez les logs pour plus de détails.",
