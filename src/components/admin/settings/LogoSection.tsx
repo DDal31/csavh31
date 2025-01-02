@@ -49,7 +49,7 @@ export const LogoSection = ({ settings, onSettingChange }: LogoSectionProps) => 
       formData.append('fileName', 'club-logo.png');
 
       // Appeler la fonction Edge pour sauvegarder le fichier
-      const response = await fetch('/api/save-public-icon', {
+      const response = await fetch('https://kzahxvazbthyjjzugxsy.supabase.co/functions/v1/save-public-icon', {
         method: 'POST',
         body: formData
       });
