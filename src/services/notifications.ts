@@ -17,6 +17,7 @@ const convertVapidKey = (base64String: string) => {
 
 export const registerServiceWorker = async () => {
   try {
+    console.log('Registering service worker...');
     const registration = await navigator.serviceWorker.register('/sw.js');
     console.log('Service Worker registered:', registration);
     return registration;
@@ -28,34 +29,48 @@ export const registerServiceWorker = async () => {
 
 export const subscribeToPushNotifications = async () => {
   try {
-    const registration = await navigator.serviceWorker.ready;
+    console.log('Starting push notification subscription process...');
     
-    // Get the current subscription
+    // S'assurer que le Service Worker est enregistré
+    const registration = await registerServiceWorker();
+    console.log('Service worker registration successful');
+    
+    // Attendre que le Service Worker soit actif
+    await navigator.serviceWorker.ready;
+    console.log('Service worker is ready');
+    
+    // Obtenir la souscription actuelle
     let subscription = await registration.pushManager.getSubscription();
     
-    // If already subscribed, return the existing subscription
+    // Si déjà souscrit, retourner la souscription existante
     if (subscription) {
       console.log('Already subscribed to push notifications');
       return subscription;
     }
 
-    // Request permission if not already granted
+    // Demander la permission si pas déjà accordée
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') {
       throw new Error('Notification permission denied');
     }
+    console.log('Notification permission granted');
 
-    // Get VAPID key from Edge Function
+    // Obtenir la clé VAPID depuis Edge Function
     const { data: { publicKey }, error: keyError } = await supabase.functions.invoke('get-vapid-key');
-    if (keyError) throw keyError;
+    if (keyError) {
+      console.error('Error getting VAPID key:', keyError);
+      throw keyError;
+    }
+    console.log('VAPID public key retrieved successfully');
 
-    // Subscribe to push notifications
+    // Souscrire aux notifications push
     subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: convertVapidKey(publicKey)
     });
+    console.log('Push notification subscription successful');
 
-    // Save subscription to database
+    // Sauvegarder la souscription dans la base de données
     const { error: saveError } = await supabase
       .from('push_subscriptions')
       .upsert({
@@ -63,7 +78,10 @@ export const subscribeToPushNotifications = async () => {
         subscription: JSON.parse(JSON.stringify(subscription))
       });
 
-    if (saveError) throw saveError;
+    if (saveError) {
+      console.error('Error saving subscription to database:', saveError);
+      throw saveError;
+    }
     
     console.log('Successfully subscribed to push notifications');
     return subscription;
@@ -82,7 +100,7 @@ export const unsubscribeFromPushNotifications = async () => {
     if (subscription) {
       await subscription.unsubscribe();
       
-      // Remove subscription from database
+      // Supprimer la souscription de la base de données
       const { error } = await supabase
         .from('push_subscriptions')
         .delete()
