@@ -55,6 +55,20 @@ serve(async (req) => {
 
     console.log(`File uploaded successfully. Public URL: ${publicUrl}`)
 
+    // Save to public directory
+    if (fileName === 'app-icon-192.png') {
+      try {
+        const fileData = await file.arrayBuffer();
+        const publicDir = '/public';
+        await Deno.mkdir(publicDir, { recursive: true });
+        await Deno.writeFile(`${publicDir}/${fileName}`, new Uint8Array(fileData));
+        console.log(`File ${fileName} saved to public directory`);
+      } catch (writeError) {
+        console.error('Error writing to public directory:', writeError);
+        // Continue even if public directory write fails
+      }
+    }
+
     return new Response(
       JSON.stringify({ success: true, publicUrl }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
