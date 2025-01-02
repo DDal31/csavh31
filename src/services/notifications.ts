@@ -60,7 +60,7 @@ export const subscribeToPushNotifications = async () => {
       .from('push_subscriptions')
       .upsert({
         user_id: (await supabase.auth.getUser()).data.user?.id,
-        subscription: subscription
+        subscription: JSON.parse(JSON.stringify(subscription))
       });
 
     if (saveError) throw saveError;
