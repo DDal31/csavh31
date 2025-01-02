@@ -55,12 +55,25 @@ serve(async (req) => {
 
     console.log(`File uploaded successfully. Public URL: ${publicUrl}`)
 
-    // Save to public directory
-    if (fileName === 'app-icon-192.png') {
+    // Save specific files to public directory with replacement
+    if (fileName === 'app-icon-192.png' || fileName === 'club-logo.png') {
       try {
         const fileData = await file.arrayBuffer();
         const publicDir = '/public';
+        
+        // Ensure directory exists
         await Deno.mkdir(publicDir, { recursive: true });
+        
+        // Remove existing file if it exists
+        try {
+          await Deno.remove(`${publicDir}/${fileName}`);
+          console.log(`Existing file ${fileName} removed from public directory`);
+        } catch (removeError) {
+          // Ignore error if file doesn't exist
+          console.log(`No existing ${fileName} found in public directory or error removing:`, removeError);
+        }
+        
+        // Write new file
         await Deno.writeFile(`${publicDir}/${fileName}`, new Uint8Array(fileData));
         console.log(`File ${fileName} saved to public directory`);
       } catch (writeError) {
