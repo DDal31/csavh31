@@ -12,7 +12,7 @@ export const MemberRoutes = () => {
   return (
     <>
       <Route
-        path="/dashboard"
+        path="dashboard"
         element={
           <ProtectedRoute>
             <Dashboard />
@@ -20,7 +20,7 @@ export const MemberRoutes = () => {
         }
       />
       <Route
-        path="/profile"
+        path="profile"
         element={
           <ProtectedRoute>
             <Profile />
@@ -28,7 +28,7 @@ export const MemberRoutes = () => {
         }
       />
       <Route
-        path="/profile/edit"
+        path="profile/edit"
         element={
           <ProtectedRoute>
             <ProfileEdit />
@@ -36,7 +36,7 @@ export const MemberRoutes = () => {
         }
       />
       <Route
-        path="/change-password"
+        path="change-password"
         element={
           <ProtectedRoute>
             <ChangePassword />
@@ -44,7 +44,7 @@ export const MemberRoutes = () => {
         }
       />
       <Route
-        path="/training"
+        path="training"
         element={
           <ProtectedRoute>
             <Training />
@@ -52,7 +52,7 @@ export const MemberRoutes = () => {
         }
       />
       <Route
-        path="/attendance"
+        path="attendance"
         element={
           <ProtectedRoute>
             <Attendance />
@@ -60,7 +60,7 @@ export const MemberRoutes = () => {
         }
       />
       <Route
-        path="/documents"
+        path="documents"
         element={
           <ProtectedRoute>
             <Documents />

@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { PublicRoutes } from "@/routes/publicRoutes";
@@ -20,10 +20,12 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <Routes>
-          <PublicRoutes />
-          <MemberRoutes />
-          <AdminRoutes />
-          <AdminSettingsRoutes />
+          <Route>
+            <Route>{PublicRoutes()}</Route>
+            <Route>{MemberRoutes()}</Route>
+            <Route>{AdminRoutes()}</Route>
+            <Route>{AdminSettingsRoutes()}</Route>
+          </Route>
         </Routes>
         <Toaster />
       </Router>

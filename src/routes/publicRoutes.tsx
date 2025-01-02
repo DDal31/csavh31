@@ -11,14 +11,14 @@ import Contact from "@/pages/Contact";
 export const PublicRoutes = () => {
   return (
     <>
-      <Route path="/" element={<Index />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/update-password" element={<UpdatePassword />} />
-      <Route path="/actualites" element={<Actualites />} />
-      <Route path="/actualites/:id" element={<NewsArticle />} />
-      <Route path="/presentation" element={<Presentation />} />
-      <Route path="/contact" element={<Contact />} />
+      <Route index element={<Index />} />
+      <Route path="login" element={<Login />} />
+      <Route path="reset-password" element={<ResetPassword />} />
+      <Route path="update-password" element={<UpdatePassword />} />
+      <Route path="actualites" element={<Actualites />} />
+      <Route path="actualites/:id" element={<NewsArticle />} />
+      <Route path="presentation" element={<Presentation />} />
+      <Route path="contact" element={<Contact />} />
     </>
   );
 };
