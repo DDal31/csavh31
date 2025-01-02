@@ -12,27 +12,58 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Processing icon save request...')
     const formData = await req.formData()
     const file = formData.get('file')
+    const fileName = formData.get('fileName')?.toString()
 
-    if (!file) {
-      throw new Error('No file uploaded')
+    if (!file || !fileName) {
+      console.error('Missing file or fileName in request')
+      return new Response(
+        JSON.stringify({ error: 'No file or fileName provided' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
     }
 
-    // Save to public directory
-    const fileName = file.name
-    const publicPath = `/public/${fileName}`
-    
-    await Deno.writeFile(publicPath, new Uint8Array(await file.arrayBuffer()))
+    console.log(`Processing file: ${fileName}`)
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
+    // Upload to site-assets bucket
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('site-assets')
+      .upload(fileName, file, {
+        contentType: file.type,
+        upsert: true
+      })
+
+    if (uploadError) {
+      console.error('Upload error:', uploadError)
+      return new Response(
+        JSON.stringify({ error: 'Failed to upload file', details: uploadError }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      )
+    }
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('site-assets')
+      .getPublicUrl(fileName)
+
+    console.log(`File uploaded successfully. Public URL: ${publicUrl}`)
 
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ success: true, publicUrl }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
+    console.error('Unexpected error:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     )
   }
 })

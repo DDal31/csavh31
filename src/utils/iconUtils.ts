@@ -12,9 +12,10 @@ export const downloadAndSaveIcon = async (iconName: string, publicUrl: string) =
     const blob = await response.blob();
     const formData = new FormData();
     formData.append('file', blob, iconName);
+    formData.append('fileName', iconName);
 
-    // Save to public directory using an edge function
-    const { error } = await supabase.functions.invoke('save-public-icon', {
+    console.log(`Saving icon ${iconName} to storage...`);
+    const { data, error } = await supabase.functions.invoke('save-public-icon', {
       body: formData,
     });
 
@@ -23,7 +24,7 @@ export const downloadAndSaveIcon = async (iconName: string, publicUrl: string) =
       throw error;
     }
 
-    console.log(`Successfully saved icon ${iconName} to public directory`);
+    console.log(`Successfully saved icon ${iconName}`);
     return true;
   } catch (error) {
     console.error(`Error processing icon ${iconName}:`, error);
