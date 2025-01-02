@@ -48,15 +48,15 @@ export const LogoSection = ({ settings, onSettingChange }: LogoSectionProps) => 
       formData.append('file', file);
       formData.append('fileName', 'club-logo.png');
 
-      // Appeler la fonction Edge pour sauvegarder le fichier
-      const response = await fetch('https://kzahxvazbthyjjzugxsy.supabase.co/functions/v1/save-public-icon', {
+      // Appeler la fonction Edge en utilisant le client Supabase
+      const { error: uploadError } = await supabase.functions.invoke('save-public-icon', {
         method: 'POST',
         body: formData
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Erreur lors de l\'upload');
+      if (uploadError) {
+        console.error("Error in Edge Function:", uploadError);
+        throw uploadError;
       }
 
       // Mettre à jour le paramètre logo_url avec upsert
