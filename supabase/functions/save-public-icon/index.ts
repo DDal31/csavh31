@@ -1,5 +1,4 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,7 +6,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -28,113 +26,37 @@ serve(async (req) => {
 
     console.log(`Processing file: ${fileName}`)
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
-
-    // Upload to site-assets bucket
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('site-assets')
-      .upload(fileName, file, {
-        contentType: file.type,
-        upsert: true
-      })
-
-    if (uploadError) {
-      console.error('Upload error:', uploadError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to upload file', details: uploadError }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      )
-    }
-
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('site-assets')
-      .getPublicUrl(fileName)
-
-    console.log(`File uploaded successfully. Public URL: ${publicUrl}`)
-
-    // First try to update existing setting
-    const settingKey = `icon_${fileName.replace(/\./g, '_')}`
-    console.log(`Updating setting with key: ${settingKey}`)
-
-    const { data: existingSetting, error: selectError } = await supabase
-      .from('site_settings')
-      .select('id')
-      .eq('setting_key', settingKey)
-      .single()
-
-    if (selectError && selectError.code !== 'PGRST116') {
-      console.error('Error checking existing setting:', selectError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to check existing setting', details: selectError }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      )
-    }
-
-    let settingsError
-    if (existingSetting?.id) {
-      console.log(`Updating existing setting for ${settingKey}`)
-      const { error: updateError } = await supabase
-        .from('site_settings')
-        .update({ 
-          setting_value: publicUrl,
-          updated_at: new Date().toISOString()
-        })
-        .eq('setting_key', settingKey)
-      settingsError = updateError
-    } else {
-      console.log(`Creating new setting for ${settingKey}`)
-      const { error: insertError } = await supabase
-        .from('site_settings')
-        .insert({
-          setting_key: settingKey,
-          setting_value: publicUrl
-        })
-      settingsError = insertError
-    }
-
-    if (settingsError) {
-      console.error('Error updating site_settings:', settingsError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to update settings', details: settingsError }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      )
-    }
-
-    // Save specific files to public directory with replacement
-    if (fileName === 'app-icon-192.png' || fileName === 'club-logo.png') {
+    try {
+      const fileData = await file.arrayBuffer()
+      const publicDir = '/public'
+      
+      // Ensure directory exists
+      await Deno.mkdir(publicDir, { recursive: true })
+      
+      // Remove existing file if it exists
       try {
-        const fileData = await file.arrayBuffer()
-        const publicDir = '/public'
-        
-        // Ensure directory exists
-        await Deno.mkdir(publicDir, { recursive: true })
-        
-        // Remove existing file if it exists
-        try {
-          await Deno.remove(`${publicDir}/${fileName}`)
-          console.log(`Existing file ${fileName} removed from public directory`)
-        } catch (removeError) {
-          // Ignore error if file doesn't exist
-          console.log(`No existing ${fileName} found in public directory or error removing:`, removeError)
-        }
-        
-        // Write new file
-        await Deno.writeFile(`${publicDir}/${fileName}`, new Uint8Array(fileData))
-        console.log(`File ${fileName} saved to public directory`)
-      } catch (writeError) {
-        console.error('Error writing to public directory:', writeError)
-        // Continue even if public directory write fails
+        await Deno.remove(`${publicDir}/${fileName}`)
+        console.log(`Existing file ${fileName} removed from public directory`)
+      } catch (removeError) {
+        // Ignore error if file doesn't exist
+        console.log(`No existing ${fileName} found in public directory or error removing:`, removeError)
       }
-    }
+      
+      // Write new file
+      await Deno.writeFile(`${publicDir}/${fileName}`, new Uint8Array(fileData))
+      console.log(`File ${fileName} saved to public directory`)
 
-    return new Response(
-      JSON.stringify({ success: true, publicUrl }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+      return new Response(
+        JSON.stringify({ success: true, message: `File ${fileName} saved successfully` }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    } catch (writeError) {
+      console.error('Error writing to public directory:', writeError)
+      return new Response(
+        JSON.stringify({ error: 'Failed to save file', details: writeError }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      )
+    }
   } catch (error) {
     console.error('Unexpected error:', error)
     return new Response(

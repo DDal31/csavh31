@@ -1,11 +1,9 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
-import { downloadAndSaveIcon } from "@/utils/iconUtils";
 
 const REQUIRED_ICON_SIZES = [
   { size: 512, name: "club-logo.png", label: "Logo principal (512x512)" },
@@ -22,98 +20,6 @@ const REQUIRED_ICON_SIZES = [
 export const IconsUploadSection = () => {
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
-
-  useEffect(() => {
-    const updateIconsInSettings = async () => {
-      try {
-        console.log("Updating icons in settings...");
-        
-        for (const { name } of REQUIRED_ICON_SIZES) {
-          try {
-            const { data: fileExists, error: listError } = await supabase.storage
-              .from("site-assets")
-              .list("", {
-                search: name
-              });
-
-            if (listError) {
-              console.error(`Error listing files for ${name}:`, listError);
-              continue;
-            }
-
-            if (fileExists && fileExists.length > 0) {
-              console.log(`Found icon: ${name}`);
-              
-              const { data: { publicUrl } } = supabase.storage
-                .from("site-assets")
-                .getPublicUrl(name);
-
-              console.log(`Got public URL for ${name}: ${publicUrl}`);
-
-              // Download and save icon to public directory
-              await downloadAndSaveIcon(name, publicUrl);
-
-              const settingKey = `icon_${name.replace(/\./g, '_')}`;
-              
-              // First try to update
-              const { error: updateError } = await supabase
-                .from("site_settings")
-                .update({ setting_value: publicUrl })
-                .eq('setting_key', settingKey);
-
-              // If no rows were updated (setting doesn't exist), then insert
-              if (updateError) {
-                const { error: insertError } = await supabase
-                  .from("site_settings")
-                  .insert({
-                    setting_key: settingKey,
-                    setting_value: publicUrl
-                  });
-
-                if (insertError) {
-                  console.error(`Error inserting setting for ${name}:`, insertError);
-                  throw insertError;
-                }
-              }
-
-              console.log(`Successfully updated setting for ${name}`);
-            } else {
-              console.log(`No existing icon found for ${name}`);
-            }
-          } catch (error) {
-            console.error(`Error processing icon ${name}:`, error);
-          }
-        }
-
-        // Update meta tags for iOS
-        const appleIcons = document.querySelectorAll('link[rel="apple-touch-icon"]');
-        appleIcons.forEach(async (icon: HTMLLinkElement) => {
-          const size = icon.sizes?.value;
-          const matchingIcon = REQUIRED_ICON_SIZES.find(i => i.size === parseInt(size));
-          if (matchingIcon) {
-            const { data: { publicUrl } } = supabase.storage
-              .from("site-assets")
-              .getPublicUrl(matchingIcon.name);
-            icon.href = publicUrl;
-          }
-        });
-
-        toast({
-          title: "Succès",
-          description: "Les icônes ont été mises à jour avec succès"
-        });
-      } catch (error) {
-        console.error("Error updating icons in settings:", error);
-        toast({
-          title: "Erreur",
-          description: "Impossible de mettre à jour les icônes. Vérifiez les logs pour plus de détails.",
-          variant: "destructive"
-        });
-      }
-    };
-
-    updateIconsInSettings();
-  }, [toast]);
 
   const validateImageDimensions = (file: File, requiredSize: number): Promise<boolean> => {
     return new Promise((resolve) => {
@@ -144,51 +50,21 @@ export const IconsUploadSection = () => {
         return;
       }
 
-      console.log(`Uploading file ${fileName} to storage...`);
-      const { error: uploadError } = await supabase.storage
-        .from("site-assets")
-        .upload(fileName, file, {
-          upsert: true,
-          contentType: file.type
-        });
+      // Créer un FormData pour envoyer le fichier
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('fileName', fileName);
 
-      if (uploadError) {
-        console.error("Erreur lors de l'upload:", uploadError);
-        throw uploadError;
+      // Appeler la fonction Edge pour sauvegarder le fichier
+      const response = await fetch('/api/save-public-icon', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Erreur lors de l\'upload');
       }
-
-      console.log(`File ${fileName} uploaded successfully, getting public URL...`);
-      const { data: { publicUrl } } = supabase.storage
-        .from("site-assets")
-        .getPublicUrl(fileName);
-
-      console.log(`Got public URL for ${fileName}: ${publicUrl}`);
-
-      const settingKey = `icon_${fileName.replace(/\./g, '_')}`;
-      console.log(`Updating site_settings with key: ${settingKey}`);
-      
-      // First try to update
-      const { error: updateError } = await supabase
-        .from("site_settings")
-        .update({ setting_value: publicUrl })
-        .eq('setting_key', settingKey);
-
-      // If no rows were updated (setting doesn't exist), then insert
-      if (updateError) {
-        const { error: insertError } = await supabase
-          .from("site_settings")
-          .insert({
-            setting_key: settingKey,
-            setting_value: publicUrl
-          });
-
-        if (insertError) {
-          console.error("Error inserting setting:", insertError);
-          throw insertError;
-        }
-      }
-
-      console.log(`Successfully updated site_settings for ${fileName}`);
 
       toast({
         title: "Succès",
