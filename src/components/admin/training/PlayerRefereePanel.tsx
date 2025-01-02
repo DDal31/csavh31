@@ -27,7 +27,7 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
   const queryClient = useQueryClient();
   const [selectedTab, setSelectedTab] = useState("players");
 
-  // Profiles query
+  // Profiles query with sport filtering
   const { data: profiles = [], isLoading: isLoadingProfiles } = useQuery({
     queryKey: ["profiles", training?.type],
     queryFn: async () => {
@@ -43,8 +43,14 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
         throw error;
       }
 
-      console.log("Profiles fetched:", data);
-      return data as Profile[];
+      // Filter profiles based on sport
+      const filteredProfiles = data.filter(profile => {
+        const sports = profile.sport.toLowerCase().split(',').map(s => s.trim());
+        return sports.includes(training.type.toLowerCase());
+      });
+
+      console.log("Filtered profiles:", filteredProfiles);
+      return filteredProfiles as Profile[];
     },
     enabled: isOpen && !!training?.type,
   });
@@ -136,7 +142,9 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent side="right" className="w-full sm:w-[540px] bg-gray-900 text-white">
         <SheetHeader>
-          <SheetTitle className="text-white">Ajouter des participants</SheetTitle>
+          <SheetTitle className="text-white">
+            Ajouter des participants - {training.type.charAt(0).toUpperCase() + training.type.slice(1)}
+          </SheetTitle>
         </SheetHeader>
         
         {isLoading ? (
@@ -153,7 +161,9 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
             <TabsContent value="players" className="mt-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {filteredProfiles.length === 0 ? (
-                  <p className="text-gray-400 col-span-2 text-center">Aucun joueur disponible</p>
+                  <p className="text-gray-400 col-span-2 text-center">
+                    Aucun joueur disponible pour ce sport
+                  </p>
                 ) : (
                   filteredProfiles.map((profile) => (
                     <Button
@@ -173,7 +183,9 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
             <TabsContent value="referees" className="mt-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {filteredProfiles.length === 0 ? (
-                  <p className="text-gray-400 col-span-2 text-center">Aucun arbitre disponible</p>
+                  <p className="text-gray-400 col-span-2 text-center">
+                    Aucun arbitre disponible pour ce sport
+                  </p>
                 ) : (
                   filteredProfiles.map((profile) => (
                     <Button
