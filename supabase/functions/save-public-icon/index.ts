@@ -7,6 +7,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -54,6 +55,24 @@ serve(async (req) => {
       .getPublicUrl(fileName)
 
     console.log(`File uploaded successfully. Public URL: ${publicUrl}`)
+
+    // Update site_settings with upsert
+    const settingKey = `icon_${fileName.replace(/\./g, '_')}`
+    const { error: settingsError } = await supabase
+      .from('site_settings')
+      .upsert({ 
+        setting_key: settingKey,
+        setting_value: publicUrl,
+        updated_at: new Date().toISOString()
+      })
+
+    if (settingsError) {
+      console.error('Error updating site_settings:', settingsError)
+      return new Response(
+        JSON.stringify({ error: 'Failed to update settings', details: settingsError }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      )
+    }
 
     // Save specific files to public directory with replacement
     if (fileName === 'app-icon-192.png' || fileName === 'club-logo.png') {
