@@ -56,15 +56,45 @@ serve(async (req) => {
 
     console.log(`File uploaded successfully. Public URL: ${publicUrl}`)
 
-    // Update site_settings with upsert
+    // First try to update existing setting
     const settingKey = `icon_${fileName.replace(/\./g, '_')}`
-    const { error: settingsError } = await supabase
+    console.log(`Updating setting with key: ${settingKey}`)
+
+    const { data: existingSetting, error: selectError } = await supabase
       .from('site_settings')
-      .upsert({ 
-        setting_key: settingKey,
-        setting_value: publicUrl,
-        updated_at: new Date().toISOString()
-      })
+      .select('id')
+      .eq('setting_key', settingKey)
+      .single()
+
+    if (selectError && selectError.code !== 'PGRST116') {
+      console.error('Error checking existing setting:', selectError)
+      return new Response(
+        JSON.stringify({ error: 'Failed to check existing setting', details: selectError }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      )
+    }
+
+    let settingsError
+    if (existingSetting?.id) {
+      console.log(`Updating existing setting for ${settingKey}`)
+      const { error: updateError } = await supabase
+        .from('site_settings')
+        .update({ 
+          setting_value: publicUrl,
+          updated_at: new Date().toISOString()
+        })
+        .eq('setting_key', settingKey)
+      settingsError = updateError
+    } else {
+      console.log(`Creating new setting for ${settingKey}`)
+      const { error: insertError } = await supabase
+        .from('site_settings')
+        .insert({
+          setting_key: settingKey,
+          setting_value: publicUrl
+        })
+      settingsError = insertError
+    }
 
     if (settingsError) {
       console.error('Error updating site_settings:', settingsError)
@@ -77,26 +107,26 @@ serve(async (req) => {
     // Save specific files to public directory with replacement
     if (fileName === 'app-icon-192.png' || fileName === 'club-logo.png') {
       try {
-        const fileData = await file.arrayBuffer();
-        const publicDir = '/public';
+        const fileData = await file.arrayBuffer()
+        const publicDir = '/public'
         
         // Ensure directory exists
-        await Deno.mkdir(publicDir, { recursive: true });
+        await Deno.mkdir(publicDir, { recursive: true })
         
         // Remove existing file if it exists
         try {
-          await Deno.remove(`${publicDir}/${fileName}`);
-          console.log(`Existing file ${fileName} removed from public directory`);
+          await Deno.remove(`${publicDir}/${fileName}`)
+          console.log(`Existing file ${fileName} removed from public directory`)
         } catch (removeError) {
           // Ignore error if file doesn't exist
-          console.log(`No existing ${fileName} found in public directory or error removing:`, removeError);
+          console.log(`No existing ${fileName} found in public directory or error removing:`, removeError)
         }
         
         // Write new file
-        await Deno.writeFile(`${publicDir}/${fileName}`, new Uint8Array(fileData));
-        console.log(`File ${fileName} saved to public directory`);
+        await Deno.writeFile(`${publicDir}/${fileName}`, new Uint8Array(fileData))
+        console.log(`File ${fileName} saved to public directory`)
       } catch (writeError) {
-        console.error('Error writing to public directory:', writeError);
+        console.error('Error writing to public directory:', writeError)
         // Continue even if public directory write fails
       }
     }
