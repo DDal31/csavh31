@@ -42,7 +42,16 @@ Deno.serve(async (req) => {
 
     if (!subscription || !payload) {
       console.error('Missing required parameters:', { subscription: !!subscription, payload: !!payload })
-      throw new Error('Missing required parameters')
+      return new Response(
+        JSON.stringify({ 
+          error: 'Missing required parameters',
+          details: 'Subscription and payload are required'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        },
+      )
     }
 
     if (!subscription.endpoint || !subscription.keys?.p256dh || !subscription.keys?.auth) {
@@ -52,7 +61,16 @@ Deno.serve(async (req) => {
         hasP256dh: !!subscription.keys?.p256dh,
         hasAuth: !!subscription.keys?.auth
       })
-      throw new Error('Invalid subscription format')
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid subscription format',
+          details: 'Subscription must include endpoint and p256dh/auth keys'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        },
+      )
     }
 
     try {
@@ -80,11 +98,45 @@ Deno.serve(async (req) => {
           }
         }
         console.log('Formatted Apple payload:', applePayload)
-        const result = await webpush.sendNotification(subscription, JSON.stringify(applePayload))
-        console.log('Apple push notification sent successfully:', {
-          statusCode: result?.statusCode,
-          headers: result?.headers
-        })
+        try {
+          const result = await webpush.sendNotification(subscription, JSON.stringify(applePayload))
+          console.log('Apple push notification sent successfully:', {
+            statusCode: result?.statusCode,
+            headers: result?.headers,
+            body: result?.body
+          })
+        } catch (appleError: any) {
+          console.error('Apple push notification error:', {
+            name: appleError.name,
+            message: appleError.message,
+            statusCode: appleError.statusCode,
+            body: appleError.body
+          })
+          // Vérifier si l'erreur est liée à une clé VAPID invalide
+          if (appleError.statusCode === 410 || 
+              appleError.body?.includes('VapidPkHashMismatch') ||
+              appleError.message?.includes('VAPID') ||
+              appleError.message?.includes('Unauthorized')) {
+            return new Response(
+              JSON.stringify({ 
+                error: 'Apple Push Error',
+                details: 'VAPID key mismatch. The subscription needs to be renewed.',
+                statusCode: 410,
+                endpoint: subscription.endpoint,
+                errorDetails: {
+                  message: appleError.message,
+                  body: appleError.body,
+                  statusCode: appleError.statusCode
+                }
+              }),
+              {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                status: 410,
+              },
+            )
+          }
+          throw appleError
+        }
       } else {
         // Standard web push notification
         const result = await webpush.sendNotification(subscription, JSON.stringify(payload))
@@ -114,35 +166,19 @@ Deno.serve(async (req) => {
         body: pushError.body
       })
 
-      // Handle Apple-specific errors
-      if (subscription.endpoint.includes('web.push.apple.com')) {
-        if (pushError.body?.includes('VapidPkHashMismatch') || 
-            pushError.statusCode === 410 || 
-            pushError.message?.includes('VAPID') ||
-            pushError.message?.includes('Unauthorized')) {
-          return new Response(
-            JSON.stringify({ 
-              error: 'Apple Push Error',
-              details: 'VAPID key mismatch. The subscription needs to be renewed.',
-              statusCode: 410,
-              endpoint: subscription.endpoint
-            }),
-            {
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-              status: 410,
-            },
-          )
-        }
-      }
-
-      // Check if subscription is expired or invalid
+      // Handle subscription expiration
       if (pushError.statusCode === 404 || pushError.statusCode === 410) {
         return new Response(
           JSON.stringify({ 
             error: 'Subscription expired or invalid',
             details: pushError.message,
             statusCode: pushError.statusCode,
-            endpoint: subscription.endpoint
+            endpoint: subscription.endpoint,
+            errorDetails: {
+              message: pushError.message,
+              body: pushError.body,
+              statusCode: pushError.statusCode
+            }
           }),
           {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -151,14 +187,18 @@ Deno.serve(async (req) => {
         )
       }
 
-      // Handle other web push specific errors
+      // Handle other errors
       return new Response(
         JSON.stringify({ 
           error: 'Push notification error',
           details: pushError.message,
           statusCode: pushError.statusCode || 400,
           endpoint: subscription.endpoint,
-          body: pushError.body
+          errorDetails: {
+            message: pushError.message,
+            body: pushError.body,
+            statusCode: pushError.statusCode
+          }
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -174,18 +214,19 @@ Deno.serve(async (req) => {
       body: error.body
     })
     
-    const statusCode = error.statusCode || 400
-    const errorMessage = error.body ? JSON.parse(error.body).message : error.message
-    
     return new Response(
       JSON.stringify({ 
-        error: errorMessage || 'Internal server error',
-        details: error.toString(),
-        statusCode
+        error: 'Internal server error',
+        details: error.message,
+        errorDetails: {
+          message: error.message,
+          body: error.body,
+          stack: error.stack
+        }
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: statusCode,
+        status: 500,
       },
     )
   }
