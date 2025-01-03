@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
 
     console.log('Sending push notification with payload:', payload)
     
-    // Envoyer la notification
+    // Send the notification
     await webpush.sendNotification(subscription, JSON.stringify(payload))
 
     return new Response(
