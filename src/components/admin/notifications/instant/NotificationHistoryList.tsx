@@ -1,26 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { Card } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 
 export function NotificationHistoryList() {
-  const { data: notifications, isLoading } = useQuery({
+  const { data: history, isLoading } = useQuery({
     queryKey: ["notification-history"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("notification_history")
         .select("*")
         .order("sent_at", { ascending: false });
-
       if (error) throw error;
       return data;
     },
@@ -28,50 +18,43 @@ export function NotificationHistoryList() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center py-8" role="status">
-        <Loader2 className="h-8 w-8 animate-spin text-purple-400" />
-        <span className="sr-only">Chargement de l'historique des notifications...</span>
+      <div className="flex justify-center items-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
+      </div>
+    );
+  }
+
+  if (!history?.length) {
+    return (
+      <div className="text-center py-8 text-gray-400">
+        Aucune notification n'a été envoyée pour le moment.
       </div>
     );
   }
 
   return (
-    <div className="rounded-lg border border-purple-500/20 overflow-hidden">
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-b border-purple-500/20">
-              <TableHead className="text-purple-300 bg-gray-800/50">Titre</TableHead>
-              <TableHead className="text-purple-300 bg-gray-800/50">Contenu</TableHead>
-              <TableHead className="text-purple-300 bg-gray-800/50">Groupe cible</TableHead>
-              <TableHead className="text-purple-300 bg-gray-800/50">Sport</TableHead>
-              <TableHead className="text-purple-300 bg-gray-800/50">Date d'envoi</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {notifications?.map((notification) => (
-              <TableRow 
-                key={notification.id}
-                className="border-b border-purple-500/10 hover:bg-purple-900/20"
-              >
-                <TableCell className="text-gray-300">{notification.title}</TableCell>
-                <TableCell className="text-gray-300">{notification.content}</TableCell>
-                <TableCell className="text-gray-300">
-                  {notification.target_group === "all"
-                    ? "Tous les utilisateurs"
-                    : "Sport spécifique"}
-                </TableCell>
-                <TableCell className="text-gray-300">
-                  {notification.sport || "-"}
-                </TableCell>
-                <TableCell className="text-gray-300">
-                  {format(new Date(notification.sent_at), "PPp", { locale: fr })}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+    <div className="space-y-4">
+      {history.map((notification) => (
+        <Card
+          key={notification.id}
+          className="p-4 bg-gray-800 border-gray-700"
+        >
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="font-medium text-gray-200">{notification.title}</h3>
+              <p className="text-gray-400 mt-1">{notification.content}</p>
+              {notification.sport && (
+                <span className="inline-block bg-purple-900/50 text-purple-200 text-sm px-2 py-1 rounded mt-2">
+                  Sport : {notification.sport}
+                </span>
+              )}
+            </div>
+            <time className="text-sm text-gray-500">
+              {new Date(notification.sent_at).toLocaleDateString()}
+            </time>
+          </div>
+        </Card>
+      ))}
     </div>
   );
 }
