@@ -88,7 +88,7 @@ export function NotificationTemplateForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 bg-white rounded-lg shadow p-6">
-      <h2 className="text-xl font-semibold mb-6">
+      <h2 className="text-xl font-semibold mb-6" id="form-title">
         {template ? "Modifier" : "Créer"} un Modèle de Notification
       </h2>
 
@@ -102,7 +102,12 @@ export function NotificationTemplateForm({
               setFormData((prev) => ({ ...prev, title: e.target.value }))
             }
             required
+            aria-required="true"
+            aria-describedby="title-description"
           />
+          <p id="title-description" className="text-sm text-gray-500 mt-1">
+            Entrez un titre descriptif pour ce modèle de notification
+          </p>
         </div>
 
         <div>
@@ -114,7 +119,12 @@ export function NotificationTemplateForm({
               setFormData((prev) => ({ ...prev, type: e.target.value }))
             }
             required
+            aria-required="true"
+            aria-describedby="type-description"
           />
+          <p id="type-description" className="text-sm text-gray-500 mt-1">
+            Spécifiez le type de notification (ex: rappel, alerte, information)
+          </p>
         </div>
 
         <div>
@@ -125,7 +135,7 @@ export function NotificationTemplateForm({
               setFormData((prev) => ({ ...prev, sport: value }))
             }
           >
-            <SelectTrigger>
+            <SelectTrigger id="sport" aria-label="Sélectionner un sport">
               <SelectValue placeholder="Sélectionner un sport" />
             </SelectTrigger>
             <SelectContent>
@@ -134,6 +144,9 @@ export function NotificationTemplateForm({
               <SelectItem value="showdown">Showdown</SelectItem>
             </SelectContent>
           </Select>
+          <p id="sport-description" className="text-sm text-gray-500 mt-1">
+            Sélectionnez un sport spécifique si nécessaire
+          </p>
         </div>
 
         <div>
@@ -146,7 +159,12 @@ export function NotificationTemplateForm({
             }
             required
             className="h-32"
+            aria-required="true"
+            aria-describedby="content-description"
           />
+          <p id="content-description" className="text-sm text-gray-500 mt-1">
+            Rédigez le contenu de la notification
+          </p>
         </div>
       </div>
 
@@ -156,10 +174,15 @@ export function NotificationTemplateForm({
           variant="outline"
           onClick={onCancel}
           disabled={isSubmitting}
+          aria-label="Annuler et retourner à la liste"
         >
           Annuler
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
+        <Button 
+          type="submit" 
+          disabled={isSubmitting}
+          aria-label={isSubmitting ? "Enregistrement en cours..." : "Enregistrer le modèle"}
+        >
           {isSubmitting ? "Enregistrement..." : "Enregistrer"}
         </Button>
       </div>

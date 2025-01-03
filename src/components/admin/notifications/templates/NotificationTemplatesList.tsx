@@ -44,11 +44,16 @@ export function NotificationTemplatesList({
   });
 
   if (isLoading) {
-    return <div>Chargement des modèles...</div>;
+    return (
+      <div role="status" className="text-center py-4">
+        <span className="sr-only">Chargement des modèles...</span>
+        <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
+      </div>
+    );
   }
 
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md border" role="region" aria-label="Liste des modèles de notification">
       <Table>
         <TableHeader>
           <TableRow>
@@ -70,15 +75,17 @@ export function NotificationTemplatesList({
                     variant="outline"
                     size="sm"
                     onClick={() => onEdit(template)}
+                    aria-label={`Modifier le modèle ${template.title}`}
                   >
-                    <Pencil className="h-4 w-4" />
+                    <Pencil className="h-4 w-4" aria-hidden="true" />
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => onDelete(template.id)}
+                    aria-label={`Supprimer le modèle ${template.title}`}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 </div>
               </TableCell>

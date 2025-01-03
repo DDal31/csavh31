@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { NotificationTemplatesList } from "@/components/admin/notifications/templates/NotificationTemplatesList";
 import { NotificationTemplateForm } from "@/components/admin/notifications/templates/NotificationTemplateForm";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -58,26 +58,31 @@ export default function AdminNotificationTemplates() {
   return (
     <div className="min-h-screen bg-gray-900">
       <Navbar />
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8" role="main">
         <div className="max-w-6xl mx-auto">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-white">
+          <div className="flex items-center mb-6">
+            <Button
+              onClick={() => navigate("/admin/settings")}
+              variant="ghost"
+              className="mr-4 text-gray-300 hover:text-white hover:bg-gray-800"
+              aria-label="Retour aux paramètres"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
+              Retour
+            </Button>
+            <h1 className="text-2xl font-bold text-white flex-grow">
               Modèles de Notification
             </h1>
-            <div className="space-x-4">
-              {!showForm && (
-                <Button onClick={() => setShowForm(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nouveau Modèle
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                onClick={() => navigate("/admin/settings")}
+            {!showForm && (
+              <Button 
+                onClick={() => setShowForm(true)}
+                className="bg-green-600 hover:bg-green-700 text-white"
+                aria-label="Créer un nouveau modèle de notification"
               >
-                Retour
+                <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
+                Nouveau Modèle
               </Button>
-            </div>
+            )}
           </div>
 
           {showForm ? (
