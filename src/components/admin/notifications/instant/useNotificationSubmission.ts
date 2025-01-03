@@ -15,15 +15,31 @@ export function useNotificationSubmission() {
   const { toast } = useToast();
 
   const handleRenewSubscription = async (subscription: any) => {
-    console.log("Renewing subscription for:", subscription);
+    console.log("Starting subscription renewal process...");
     try {
+      // First, remove the old subscription
       await unsubscribeFromPushNotifications();
-      console.log("Successfully unsubscribed");
-      await subscribeToPushNotifications();
-      console.log("Successfully resubscribed");
+      console.log("Successfully unsubscribed from old subscription");
+
+      // Get a new subscription
+      const newSubscription = await subscribeToPushNotifications();
+      console.log("Successfully created new subscription:", newSubscription);
+
+      // Update the subscription in the database
+      const { error: updateError } = await supabase
+        .from("push_subscriptions")
+        .update({ subscription: newSubscription })
+        .eq("subscription->endpoint", subscription.endpoint);
+
+      if (updateError) {
+        console.error("Error updating subscription in database:", updateError);
+        return false;
+      }
+
+      console.log("Successfully updated subscription in database");
       return true;
     } catch (error) {
-      console.error("Error renewing subscription:", error);
+      console.error("Error during subscription renewal:", error);
       return false;
     }
   };
@@ -70,27 +86,45 @@ export function useNotificationSubmission() {
 
       for (const sub of subscriptions || []) {
         try {
-          console.log("Sending notification to subscription:", sub.subscription);
+          console.log("Attempting to send notification to subscription:", {
+            endpoint: sub.subscription?.endpoint,
+            keys: sub.subscription?.keys ? {
+              p256dh: sub.subscription.keys.p256dh?.substring(0, 10) + '...',
+              auth: sub.subscription.keys.auth?.substring(0, 10) + '...'
+            } : undefined
+          });
+
           const response = await supabase.functions.invoke("send-push-notification", {
             body: { subscription: sub.subscription, payload: notificationData },
           });
 
           if (response.error) {
             const errorData = JSON.parse(response.error.message);
+            console.log("Received error response:", errorData);
             
+            // Check for VAPID key mismatch error
             if (errorData?.body?.includes("VapidPkHashMismatch") || 
-                (typeof errorData.body === 'string' && JSON.parse(errorData.body)?.details?.includes("VAPID key mismatch"))) {
+                (typeof errorData.body === 'string' && 
+                 (JSON.parse(errorData.body)?.details?.includes("VAPID key mismatch") || 
+                  JSON.parse(errorData.body)?.reason === "VapidPkHashMismatch"))) {
               console.log("VAPID key mismatch detected, attempting to renew subscription");
               const renewed = await handleRenewSubscription(sub.subscription);
               if (renewed) {
                 renewalCount++;
                 // Retry sending notification with renewed subscription
-                await supabase.functions.invoke("send-push-notification", {
+                const retryResponse = await supabase.functions.invoke("send-push-notification", {
                   body: { subscription: sub.subscription, payload: notificationData },
                 });
-                successCount++;
+                if (!retryResponse.error) {
+                  successCount++;
+                  console.log("Successfully sent notification after renewal");
+                } else {
+                  failureCount++;
+                  console.error("Failed to send notification after renewal:", retryResponse.error);
+                }
               } else {
                 failureCount++;
+                console.error("Failed to renew subscription");
               }
             } else {
               console.error("Error sending notification:", errorData);
@@ -98,6 +132,7 @@ export function useNotificationSubmission() {
             }
           } else {
             successCount++;
+            console.log("Successfully sent notification");
           }
         } catch (error) {
           console.error("Error processing notification:", error);
