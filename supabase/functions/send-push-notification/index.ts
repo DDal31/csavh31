@@ -45,10 +45,12 @@ Deno.serve(async (req) => {
       throw new Error('Missing required parameters')
     }
 
-    if (!subscription.endpoint || !subscription.keys) {
+    if (!subscription.endpoint || !subscription.keys?.p256dh || !subscription.keys?.auth) {
       console.error('Invalid subscription format:', { 
         hasEndpoint: !!subscription.endpoint, 
-        hasKeys: !!subscription.keys 
+        hasKeys: !!subscription.keys,
+        hasP256dh: !!subscription.keys?.p256dh,
+        hasAuth: !!subscription.keys?.auth
       })
       throw new Error('Invalid subscription format')
     }
@@ -66,7 +68,8 @@ Deno.serve(async (req) => {
           url: payload.url,
           actions: payload.actions,
           icon: payload.icon,
-          badge: payload.badge
+          badge: payload.badge,
+          timestamp: new Date().getTime()
         }
         console.log('Formatted Apple payload:', applePayload)
         const result = await webpush.sendNotification(subscription, JSON.stringify(applePayload))
@@ -93,7 +96,7 @@ Deno.serve(async (req) => {
           status: 200,
         },
       )
-    } catch (pushError) {
+    } catch (pushError: any) {
       console.error('WebPush error:', {
         name: pushError.name,
         message: pushError.message,
@@ -105,7 +108,9 @@ Deno.serve(async (req) => {
 
       // Handle Apple-specific errors
       if (subscription.endpoint.includes('web.push.apple.com')) {
-        if (pushError.body?.includes('VapidPkHashMismatch')) {
+        if (pushError.body?.includes('VapidPkHashMismatch') || 
+            pushError.statusCode === 410 || 
+            pushError.message?.includes('VAPID')) {
           return new Response(
             JSON.stringify({ 
               error: 'Apple Push Error',
@@ -152,7 +157,7 @@ Deno.serve(async (req) => {
         },
       )
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in send-push-notification:', {
       name: error.name,
       message: error.message,
