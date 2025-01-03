@@ -2,7 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { unsubscribeFromPushNotifications, subscribeToPushNotifications } from "@/services/notifications";
-import { WebPushSubscription } from "@/types/notifications";
+import { WebPushSubscription, SerializedPushSubscription } from "@/types/notifications";
 
 interface NotificationData {
   title: string;
@@ -14,6 +14,27 @@ interface NotificationData {
 export function useNotificationSubmission() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+
+  const serializePushSubscription = (subscription: PushSubscription): SerializedPushSubscription => {
+    if (!subscription.getKey) {
+      throw new Error("Invalid subscription: missing getKey method");
+    }
+
+    const p256dhKey = subscription.getKey('p256dh');
+    const authKey = subscription.getKey('auth');
+
+    if (!p256dhKey || !authKey) {
+      throw new Error("Invalid subscription: missing required keys");
+    }
+
+    return {
+      endpoint: subscription.endpoint,
+      keys: {
+        p256dh: btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(p256dhKey)))),
+        auth: btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(authKey))))
+      }
+    };
+  };
 
   const handleRenewSubscription = async (subscription: WebPushSubscription) => {
     console.log("Starting subscription renewal process...");
@@ -32,18 +53,14 @@ export function useNotificationSubmission() {
       }
 
       // Convert the subscription to a serializable format
-      const subscriptionData = {
-        endpoint: newSubscription.endpoint,
-        keys: {
-          p256dh: newSubscription.keys.p256dh,
-          auth: newSubscription.keys.auth
-        }
-      } as WebPushSubscription;
+      const subscriptionData = serializePushSubscription(newSubscription);
 
       // Update the subscription in the database
       const { error: updateError } = await supabase
         .from("push_subscriptions")
-        .update({ subscription: subscriptionData })
+        .update({ 
+          subscription: subscriptionData as unknown as Json 
+        })
         .eq("subscription->endpoint", subscription.endpoint);
 
       if (updateError) {
