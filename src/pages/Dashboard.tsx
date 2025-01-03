@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import { Loader2 } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { DashboardTiles } from "@/components/dashboard/DashboardTiles";
+import { NotificationButton } from "@/components/dashboard/NotificationButton";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -43,7 +44,7 @@ const Dashboard = () => {
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
-      navigate("/"); // Redirect to homepage after sign out
+      navigate("/");
     } catch (error) {
       console.error("Erreur lors de la déconnexion:", error);
     }
@@ -62,8 +63,11 @@ const Dashboard = () => {
     <div className="min-h-screen bg-gray-900">
       <Navbar />
       <main className="container mx-auto px-4 py-12" role="main">
-        <div className="max-w-6xl mx-auto">
-          <DashboardHeader onSignOut={handleSignOut} />
+        <div className="max-w-6xl mx-auto space-y-8">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <DashboardHeader onSignOut={handleSignOut} />
+            <NotificationButton />
+          </div>
           <DashboardTiles isAdmin={isAdmin} />
         </div>
       </main>
