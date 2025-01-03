@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { Bell, BellOff, Info } from "lucide-react";
 
 interface NotificationSetting {
   id?: string;
@@ -95,15 +96,30 @@ export function NotificationSettingsForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-xl font-semibold mb-6">
-        {setting ? "Modifier" : "Ajouter"} des Paramètres de Notification
-      </h2>
+    <form 
+      onSubmit={handleSubmit} 
+      className="bg-gray-900 rounded-lg shadow-lg border border-gray-800 p-6"
+      role="form"
+      aria-label="Formulaire de paramètres de notification"
+    >
+      <div className="flex items-center gap-3 mb-6">
+        {setting?.enabled ? (
+          <Bell className="h-6 w-6 text-primary" aria-hidden="true" />
+        ) : (
+          <BellOff className="h-6 w-6 text-gray-400" aria-hidden="true" />
+        )}
+        <h2 className="text-xl font-semibold text-white">
+          {setting ? "Modifier" : "Ajouter"} des Paramètres de Notification
+        </h2>
+      </div>
 
       <div className="space-y-6">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label htmlFor="type">Type de Notification</Label>
+            <Label htmlFor="type" className="text-gray-200">
+              Type de Notification
+              <span className="text-red-400 ml-1" aria-hidden="true">*</span>
+            </Label>
             <Input
               id="type"
               value={formData.type}
@@ -111,34 +127,48 @@ export function NotificationSettingsForm({
                 setFormData((prev) => ({ ...prev, type: e.target.value }))
               }
               required
+              aria-required="true"
+              className="bg-gray-800 border-gray-700 text-white"
+              placeholder="Ex: Rappel d'entraînement"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notification_type">Catégorie</Label>
+            <Label htmlFor="notification_type" className="text-gray-200">
+              Catégorie
+              <span className="text-red-400 ml-1" aria-hidden="true">*</span>
+            </Label>
             <Select
               value={formData.notification_type}
               onValueChange={(value: any) =>
                 setFormData((prev) => ({ ...prev, notification_type: value }))
               }
             >
-              <SelectTrigger>
-                <SelectValue />
+              <SelectTrigger 
+                id="notification_type"
+                className="bg-gray-800 border-gray-700 text-white"
+              >
+                <SelectValue placeholder="Sélectionnez une catégorie" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="training_reminder">
+              <SelectContent className="bg-gray-800 border-gray-700">
+                <SelectItem value="training_reminder" className="text-white">
                   Rappel d'entraînement
                 </SelectItem>
-                <SelectItem value="missing_players">
+                <SelectItem value="missing_players" className="text-white">
                   Joueurs manquants
                 </SelectItem>
-                <SelectItem value="custom">Personnalisé</SelectItem>
+                <SelectItem value="custom" className="text-white">
+                  Personnalisé
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="delay_hours">Délai (heures)</Label>
+            <Label htmlFor="delay_hours" className="text-gray-200">
+              Délai (heures)
+              <span className="text-red-400 ml-1" aria-hidden="true">*</span>
+            </Label>
             <Input
               id="delay_hours"
               type="number"
@@ -151,24 +181,36 @@ export function NotificationSettingsForm({
                 }))
               }
               required
+              aria-required="true"
+              className="bg-gray-800 border-gray-700 text-white"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="target_group">Groupe Cible</Label>
+            <Label htmlFor="target_group" className="text-gray-200">
+              Groupe Cible
+              <span className="text-red-400 ml-1" aria-hidden="true">*</span>
+            </Label>
             <Select
               value={formData.target_group}
               onValueChange={(value: any) =>
                 setFormData((prev) => ({ ...prev, target_group: value }))
               }
             >
-              <SelectTrigger>
-                <SelectValue />
+              <SelectTrigger 
+                id="target_group"
+                className="bg-gray-800 border-gray-700 text-white"
+              >
+                <SelectValue placeholder="Sélectionnez un groupe cible" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous</SelectItem>
-                <SelectItem value="sport_specific">Sport spécifique</SelectItem>
-                <SelectItem value="training_registered">
+              <SelectContent className="bg-gray-800 border-gray-700">
+                <SelectItem value="all" className="text-white">
+                  Tous
+                </SelectItem>
+                <SelectItem value="sport_specific" className="text-white">
+                  Sport spécifique
+                </SelectItem>
+                <SelectItem value="training_registered" className="text-white">
                   Inscrits uniquement
                 </SelectItem>
               </SelectContent>
@@ -177,7 +219,10 @@ export function NotificationSettingsForm({
 
           {formData.target_group === "sport_specific" && (
             <div className="space-y-2">
-              <Label htmlFor="sport">Sport</Label>
+              <Label htmlFor="sport" className="text-gray-200">
+                Sport
+                <span className="text-red-400 ml-1" aria-hidden="true">*</span>
+              </Label>
               <Input
                 id="sport"
                 value={formData.sport || ""}
@@ -185,32 +230,50 @@ export function NotificationSettingsForm({
                   setFormData((prev) => ({ ...prev, sport: e.target.value }))
                 }
                 required
+                aria-required="true"
+                className="bg-gray-800 border-gray-700 text-white"
+                placeholder="Ex: Goalball"
               />
             </div>
           )}
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-3 py-4">
           <Switch
             id="enabled"
             checked={formData.enabled}
             onCheckedChange={(checked) =>
               setFormData((prev) => ({ ...prev, enabled: checked }))
             }
+            aria-label="Activer les notifications"
           />
-          <Label htmlFor="enabled">Activer les notifications</Label>
+          <Label 
+            htmlFor="enabled" 
+            className="text-gray-200 cursor-pointer select-none"
+          >
+            Activer les notifications
+          </Label>
+          <Info 
+            className="h-4 w-4 text-gray-400" 
+            aria-hidden="true"
+          />
         </div>
 
-        <div className="flex justify-end space-x-4">
+        <div className="flex justify-end space-x-4 pt-4">
           <Button
             type="button"
             variant="outline"
             onClick={onCancel}
             disabled={isSubmitting}
+            className="bg-transparent border-gray-700 text-gray-200 hover:bg-gray-800 hover:text-white"
           >
             Annuler
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button 
+            type="submit" 
+            disabled={isSubmitting}
+            className="bg-primary hover:bg-primary/90"
+          >
             {isSubmitting ? "Enregistrement..." : "Enregistrer"}
           </Button>
         </div>
