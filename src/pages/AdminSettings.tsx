@@ -4,7 +4,18 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, FileText, Mail, Newspaper, Users, ListCollapse, FileStack, FileSpreadsheet, Settings } from "lucide-react";
+import { 
+  Loader2, 
+  FileText, 
+  Mail, 
+  Newspaper, 
+  Users, 
+  ListCollapse, 
+  FileStack, 
+  FileSpreadsheet, 
+  Settings,
+  Bell 
+} from "lucide-react";
 
 const AdminSettings = () => {
   const navigate = useNavigate();
@@ -90,6 +101,13 @@ const AdminSettings = () => {
       route: "/admin/settings/site",
       bgColor: "bg-pink-600 hover:bg-pink-700",
       ariaLabel: "Modifier l'apparence du site"
+    },
+    {
+      title: "Configuration des Notifications",
+      icon: Bell,
+      route: "/admin/settings/notifications",
+      bgColor: "bg-yellow-600 hover:bg-yellow-700",
+      ariaLabel: "Configurer les notifications"
     }
   ];
 
