@@ -29,39 +29,65 @@ Deno.serve(async (req) => {
 
     // Parse and validate request body
     const { subscription, payload } = await req.json()
-    console.log('Processing notification request:', { subscription, payload })
+    console.log('Processing notification request:', { 
+      subscription: {
+        endpoint: subscription?.endpoint,
+        keys: subscription?.keys ? {
+          p256dh: subscription.keys.p256dh?.substring(0, 10) + '...',
+          auth: subscription.keys.auth?.substring(0, 10) + '...'
+        } : undefined
+      }, 
+      payload 
+    })
 
     if (!subscription || !payload) {
-      console.error('Missing required parameters')
+      console.error('Missing required parameters:', { subscription: !!subscription, payload: !!payload })
       throw new Error('Missing required parameters')
     }
 
     if (!subscription.endpoint || !subscription.keys) {
-      console.error('Invalid subscription format:', subscription)
+      console.error('Invalid subscription format:', { 
+        hasEndpoint: !!subscription.endpoint, 
+        hasKeys: !!subscription.keys 
+      })
       throw new Error('Invalid subscription format')
     }
 
     try {
       console.log('Attempting to send push notification...')
-      await webpush.sendNotification(subscription, JSON.stringify(payload))
-      console.log('Push notification sent successfully')
+      const result = await webpush.sendNotification(subscription, JSON.stringify(payload))
+      console.log('Push notification sent successfully:', {
+        statusCode: result?.statusCode,
+        headers: result?.headers
+      })
 
       return new Response(
-        JSON.stringify({ success: true }),
+        JSON.stringify({ 
+          success: true,
+          details: 'Notification sent successfully'
+        }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200,
         },
       )
     } catch (pushError) {
-      console.error('WebPush error:', pushError)
+      console.error('WebPush error:', {
+        name: pushError.name,
+        message: pushError.message,
+        statusCode: pushError.statusCode,
+        headers: pushError.headers,
+        endpoint: subscription.endpoint
+      })
+
       // Check if subscription is expired or invalid
       if (pushError.statusCode === 404 || pushError.statusCode === 410) {
         return new Response(
           JSON.stringify({ 
             error: 'Subscription expired or invalid',
             details: pushError.message,
-            statusCode: pushError.statusCode
+            statusCode: pushError.statusCode,
+            endpoint: subscription.endpoint
           }),
           {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -69,10 +95,27 @@ Deno.serve(async (req) => {
           },
         )
       }
-      throw pushError
+
+      // Handle other web push specific errors
+      return new Response(
+        JSON.stringify({ 
+          error: 'Push notification error',
+          details: pushError.message,
+          statusCode: pushError.statusCode || 400,
+          endpoint: subscription.endpoint
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: pushError.statusCode || 400,
+        },
+      )
     }
   } catch (error) {
-    console.error('Error in send-push-notification:', error)
+    console.error('Error in send-push-notification:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    })
     
     const statusCode = error.statusCode || 400
     const errorMessage = error.body ? JSON.parse(error.body).message : error.message
