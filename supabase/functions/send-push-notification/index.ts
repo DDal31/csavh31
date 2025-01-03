@@ -27,16 +27,26 @@ Deno.serve(async (req) => {
       vapidPrivateKey
     )
 
+    // Parse and validate request body
     const { subscription, payload } = await req.json()
+    console.log('Received request with subscription:', subscription)
+    console.log('Received request with payload:', payload)
 
     if (!subscription || !payload) {
+      console.error('Missing required parameters')
       throw new Error('Missing required parameters')
     }
 
-    console.log('Sending push notification with payload:', payload)
+    if (!subscription.endpoint || !subscription.keys) {
+      console.error('Invalid subscription format')
+      throw new Error('Invalid subscription format')
+    }
+
+    console.log('Sending push notification...')
     
     // Send the notification
     await webpush.sendNotification(subscription, JSON.stringify(payload))
+    console.log('Push notification sent successfully')
 
     return new Response(
       JSON.stringify({ success: true }),
@@ -46,12 +56,16 @@ Deno.serve(async (req) => {
       },
     )
   } catch (error) {
-    console.error('Error sending push notification:', error)
+    console.error('Error in send-push-notification:', error)
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message || 'Internal server error',
+        details: error.toString()
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
+        status: error.statusCode || 400,
       },
     )
   }
