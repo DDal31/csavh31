@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
-import { SerializedPushSubscription } from "@/types/notifications";
+import { WebPushSubscription, SerializedPushSubscription } from "@/types/notifications";
+import { Json } from "@/integrations/supabase/types";
 
 const convertVapidKey = (base64String: string) => {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -64,13 +65,28 @@ export const subscribeToPushNotifications = async (): Promise<PushSubscription |
     });
     console.log('Push notification subscription successful');
 
-    const serializedSubscription: SerializedPushSubscription = {
-      endpoint: subscription.endpoint,
-      keys: {
-        p256dh: btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(subscription.getKey('p256dh'))))),
-        auth: btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(subscription.getKey('auth')))))
+    const serializePushSubscription = (sub: PushSubscription): SerializedPushSubscription => {
+      if (!sub.getKey) {
+        throw new Error("Invalid subscription: missing getKey method");
       }
+
+      const p256dhKey = sub.getKey('p256dh');
+      const authKey = sub.getKey('auth');
+
+      if (!p256dhKey || !authKey) {
+        throw new Error("Invalid subscription: missing required keys");
+      }
+
+      return {
+        endpoint: sub.endpoint,
+        keys: {
+          p256dh: btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(p256dhKey)))),
+          auth: btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(authKey))))
+        }
+      };
     };
+
+    const serializedSubscription = serializePushSubscription(subscription);
 
     const { error: saveError } = await supabase
       .from('push_subscriptions')

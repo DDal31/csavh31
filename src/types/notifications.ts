@@ -1,3 +1,5 @@
+import { Json } from "@/integrations/supabase/types";
+
 export interface PushSubscriptionKeys {
   p256dh: string;
   auth: string;

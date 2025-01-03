@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { unsubscribeFromPushNotifications, subscribeToPushNotifications } from "@/services/notifications";
 import { WebPushSubscription, SerializedPushSubscription } from "@/types/notifications";
+import { Json } from "@/integrations/supabase/types";
 
 interface NotificationData {
   title: string;
@@ -39,11 +40,9 @@ export function useNotificationSubmission() {
   const handleRenewSubscription = async (subscription: WebPushSubscription) => {
     console.log("Starting subscription renewal process...");
     try {
-      // First, remove the old subscription
       await unsubscribeFromPushNotifications();
       console.log("Successfully unsubscribed from old subscription");
 
-      // Get a new subscription
       const newSubscription = await subscribeToPushNotifications();
       console.log("Successfully created new subscription:", newSubscription);
 
@@ -52,10 +51,8 @@ export function useNotificationSubmission() {
         return false;
       }
 
-      // Convert the subscription to a serializable format
       const subscriptionData = serializePushSubscription(newSubscription);
 
-      // Update the subscription in the database
       const { error: updateError } = await supabase
         .from("push_subscriptions")
         .update({ 
@@ -118,8 +115,7 @@ export function useNotificationSubmission() {
 
       for (const sub of subscriptions || []) {
         try {
-          // Ensure the subscription data matches our WebPushSubscription type
-          const subscription = sub.subscription as WebPushSubscription;
+          const subscription = sub.subscription as unknown as WebPushSubscription;
           
           if (!subscription?.endpoint || !subscription?.keys?.p256dh || !subscription?.keys?.auth) {
             console.error("Invalid subscription format:", subscription);
@@ -143,7 +139,6 @@ export function useNotificationSubmission() {
             const errorData = JSON.parse(response.error.message);
             console.log("Received error response:", errorData);
             
-            // Check for VAPID key mismatch error
             if (errorData?.body?.includes("VapidPkHashMismatch") || 
                 (typeof errorData.body === 'string' && 
                  (JSON.parse(errorData.body)?.details?.includes("VAPID key mismatch") || 
@@ -152,7 +147,6 @@ export function useNotificationSubmission() {
               const renewed = await handleRenewSubscription(subscription);
               if (renewed) {
                 renewalCount++;
-                // Retry sending notification with renewed subscription
                 const retryResponse = await supabase.functions.invoke("send-push-notification", {
                   body: { subscription, payload: notificationData },
                 });
@@ -181,7 +175,6 @@ export function useNotificationSubmission() {
         }
       }
 
-      // Record notification history
       console.log("Recording notification in history...");
       const { error: historyError } = await supabase
         .from("notification_history")
