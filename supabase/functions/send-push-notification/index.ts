@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
 
     // Configure web-push with VAPID details
     webpush.setVapidDetails(
-      'mailto:your-email@example.com',
+      'https://kzahxvazbthyjjzugxsy.supabase.co',
       vapidPublicKey,
       vapidPrivateKey
     )
@@ -59,15 +59,14 @@ Deno.serve(async (req) => {
       // Special handling for Apple push notifications
       if (subscription.endpoint.includes('web.push.apple.com')) {
         console.log('Detected Apple push notification endpoint')
-        // Ensure payload is properly formatted for Apple
+        // Format payload according to Apple's requirements
         const applePayload = {
-          aps: {
-            alert: {
-              title: payload.title,
-              body: payload.body
-            },
-            url: payload.url
-          }
+          title: payload.title,
+          body: payload.body,
+          url: payload.url,
+          actions: payload.actions,
+          icon: payload.icon,
+          badge: payload.badge
         }
         console.log('Formatted Apple payload:', applePayload)
         const result = await webpush.sendNotification(subscription, JSON.stringify(applePayload))
@@ -103,6 +102,24 @@ Deno.serve(async (req) => {
         endpoint: subscription.endpoint,
         body: pushError.body
       })
+
+      // Handle Apple-specific errors
+      if (subscription.endpoint.includes('web.push.apple.com')) {
+        if (pushError.body?.includes('VapidPkHashMismatch')) {
+          return new Response(
+            JSON.stringify({ 
+              error: 'Apple Push Error',
+              details: 'VAPID key mismatch. The subscription needs to be renewed.',
+              statusCode: 410,
+              endpoint: subscription.endpoint
+            }),
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 410,
+            },
+          )
+        }
+      }
 
       // Check if subscription is expired or invalid
       if (pushError.statusCode === 404 || pushError.statusCode === 410) {
