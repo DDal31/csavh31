@@ -119,6 +119,84 @@ export type Database = {
           },
         ]
       }
+      notification_settings: {
+        Row: {
+          created_at: string
+          delay_hours: number
+          enabled: boolean | null
+          id: string
+          logo_path: string | null
+          notification_type:
+            | Database["public"]["Enums"]["notification_type"]
+            | null
+          sound_path: string | null
+          sport: string | null
+          target_group: Database["public"]["Enums"]["target_group"] | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          delay_hours: number
+          enabled?: boolean | null
+          id?: string
+          logo_path?: string | null
+          notification_type?:
+            | Database["public"]["Enums"]["notification_type"]
+            | null
+          sound_path?: string | null
+          sport?: string | null
+          target_group?: Database["public"]["Enums"]["target_group"] | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          delay_hours?: number
+          enabled?: boolean | null
+          id?: string
+          logo_path?: string | null
+          notification_type?:
+            | Database["public"]["Enums"]["notification_type"]
+            | null
+          sound_path?: string | null
+          sport?: string | null
+          target_group?: Database["public"]["Enums"]["target_group"] | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notification_templates: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          sport: string | null
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          sport?: string | null
+          title: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          sport?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pages_content: {
         Row: {
           content: string
@@ -459,9 +537,11 @@ export type Database = {
         | "photo"
       document_type_status: "active" | "archived"
       news_status: "draft" | "published" | "archived"
+      notification_type: "training_reminder" | "missing_players" | "custom"
       site_role: "member" | "admin"
       social_media_platform: "twitter" | "facebook" | "instagram"
       sport_type: "goalball" | "torball" | "both"
+      target_group: "all" | "sport_specific" | "training_registered"
       team_type: "loisir" | "d1_masculine" | "d1_feminine"
       training_type: "goalball" | "torball" | "other" | "showdown"
     }

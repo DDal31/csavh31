@@ -1,15 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Bell } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { NavigationTiles } from "@/components/home/NavigationTiles";
 import { NewsCarousel } from "@/components/home/NewsCarousel";
 import { ErrorBoundary } from "react-error-boundary";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
-import { subscribeToPushNotifications } from "@/services/notifications";
-import { useEffect, useState } from "react";
 
 const ErrorFallback = ({ error }: { error: Error }) => {
   console.error("Error in Index page:", error);
@@ -25,36 +21,6 @@ const ErrorFallback = ({ error }: { error: Error }) => {
 
 const IndexContent = () => {
   console.log("Rendering IndexContent");
-  const { toast } = useToast();
-  const [notificationsSupported, setNotificationsSupported] = useState(false);
-  
-  useEffect(() => {
-    // Vérifier si les notifications sont supportées
-    const checkNotificationSupport = () => {
-      const supported = 'Notification' in window && 'serviceWorker' in navigator;
-      setNotificationsSupported(supported);
-      console.log('Notifications supported:', supported);
-    };
-    
-    checkNotificationSupport();
-  }, []);
-
-  const handleSubscribe = async () => {
-    try {
-      await subscribeToPushNotifications();
-      toast({
-        title: "Notifications activées",
-        description: "Vous recevrez désormais des notifications pour les entraînements.",
-      });
-    } catch (error) {
-      console.error('Error subscribing to notifications:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible d'activer les notifications. Veuillez réessayer.",
-        variant: "destructive",
-      });
-    }
-  };
   
   // Récupération du contenu de présentation
   const { data: presentationContent, isLoading: isLoadingPresentation } = useQuery({
@@ -86,20 +52,6 @@ const IndexContent = () => {
       <Navbar />
 
       <main className="container mx-auto px-4 py-12 space-y-16" role="main">
-        {/* Section Notifications */}
-        {notificationsSupported && (
-          <section className="w-full flex justify-center" aria-label="Activation des notifications">
-            <Button
-              onClick={handleSubscribe}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <Bell className="h-4 w-4" />
-              Activer les notifications
-            </Button>
-          </section>
-        )}
-
         {/* Section 1: Tuiles de Navigation */}
         <section 
           className="w-full" 
