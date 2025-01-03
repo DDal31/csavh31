@@ -6,21 +6,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { NotificationSettingsList } from "@/components/admin/notifications/NotificationSettingsList";
 import { NotificationSettingsForm } from "@/components/admin/notifications/NotificationSettingsForm";
-import { Loader2 } from "lucide-react";
-
-interface NotificationSetting {
-  id: string;
-  type: string;
-  notification_type: "training_reminder" | "missing_players" | "custom";
-  delay_hours: number;
-  enabled: boolean;
-  sport?: string;
-  target_group?: "all" | "sport_specific" | "training_registered";
-  sound_path?: string;
-  logo_path?: string;
-  created_at: string;
-  updated_at: string;
-}
+import { Loader2, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const AdminNotificationSettings = () => {
   const navigate = useNavigate();
@@ -59,8 +46,9 @@ const AdminNotificationSettings = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center" role="status">
         <Loader2 className="h-8 w-8 animate-spin text-purple-400" />
+        <span className="sr-only">Chargement des paramètres de notification...</span>
       </div>
     );
   }
@@ -68,34 +56,42 @@ const AdminNotificationSettings = () => {
   return (
     <div className="min-h-screen bg-gray-900">
       <Navbar />
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex justify-between items-center mb-8">
+      <main 
+        className="container mx-auto px-4 py-8"
+        role="main"
+        aria-label="Configuration des notifications"
+      >
+        <div className="max-w-6xl mx-auto space-y-8">
+          <div className="flex items-center gap-4">
+            <Button
+              onClick={() => navigate("/admin/settings")}
+              variant="ghost"
+              className="text-gray-300 hover:text-white hover:bg-gray-800"
+              aria-label="Retour aux paramètres"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
+              Retour
+            </Button>
             <h1 className="text-2xl font-bold text-white">
               Configuration des Notifications
             </h1>
-            <button
-              onClick={() => navigate("/admin/settings")}
-              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors duration-200 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900"
-              aria-label="Retourner aux paramètres"
-            >
-              Retour
-            </button>
           </div>
 
-          {showForm ? (
-            <NotificationSettingsForm
-              setting={editingSetting}
-              onSuccess={handleClose}
-              onCancel={handleClose}
-            />
-          ) : (
-            <NotificationSettingsList
-              settings={settings}
-              onAddClick={() => setShowForm(true)}
-              onEditClick={handleEdit}
-            />
-          )}
+          <div className="bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6">
+            {showForm ? (
+              <NotificationSettingsForm
+                setting={editingSetting}
+                onSuccess={handleClose}
+                onCancel={handleClose}
+              />
+            ) : (
+              <NotificationSettingsList
+                settings={settings}
+                onAddClick={() => setShowForm(true)}
+                onEditClick={handleEdit}
+              />
+            )}
+          </div>
         </div>
       </main>
       <Footer />
