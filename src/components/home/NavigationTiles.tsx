@@ -12,6 +12,7 @@ export const NavigationTiles = () => {
       route: "/login",
       bgColor: "bg-blue-600 hover:bg-blue-700",
       ariaLabel: "Accéder à l'espace membre",
+      description: "Connectez-vous à votre espace personnel"
     },
     {
       title: "Contact",
@@ -19,19 +20,29 @@ export const NavigationTiles = () => {
       route: "/contact",
       bgColor: "bg-purple-600 hover:bg-purple-700",
       ariaLabel: "Nous contacter",
+      description: "Envoyez-nous un message"
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-2 sm:gap-4 w-full">
+    <nav 
+      className="grid grid-cols-2 gap-2 sm:gap-4 w-full" 
+      aria-label="Navigation principale"
+    >
       {tiles.map((tile) => (
         <Card
           key={tile.title}
-          className={`${tile.bgColor} border-none cursor-pointer transform transition-all duration-300 hover:scale-105 focus-within:ring-2 focus-within:ring-white min-w-[100px]`}
+          className={`${tile.bgColor} border-none cursor-pointer transform transition-all duration-300 hover:scale-105 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none min-w-[100px]`}
           onClick={() => navigate(tile.route)}
-          role="button"
+          role="link"
           aria-label={tile.ariaLabel}
           tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              navigate(tile.route);
+            }
+          }}
         >
           <CardHeader className="text-center p-2 sm:p-6">
             <tile.icon
@@ -41,9 +52,10 @@ export const NavigationTiles = () => {
             <CardTitle className="text-xs sm:text-lg font-bold text-white">
               {tile.title}
             </CardTitle>
+            <span className="sr-only">{tile.description}</span>
           </CardHeader>
         </Card>
       ))}
-    </div>
+    </nav>
   );
 };
