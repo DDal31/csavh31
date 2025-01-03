@@ -60,7 +60,7 @@ const AdminNotificationSettings = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-white" />
+        <Loader2 className="h-8 w-8 animate-spin text-purple-400" />
       </div>
     );
   }
@@ -76,7 +76,8 @@ const AdminNotificationSettings = () => {
             </h1>
             <button
               onClick={() => navigate("/admin/settings")}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors duration-200 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+              aria-label="Retourner aux paramètres"
             >
               Retour
             </button>

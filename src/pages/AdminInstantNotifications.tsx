@@ -19,8 +19,9 @@ export default function AdminInstantNotifications() {
           <div className="flex items-center justify-between mb-8">
             <Button
               variant="ghost"
-              className="text-gray-300 hover:text-white hover:bg-gray-800"
+              className="text-purple-300 hover:text-white hover:bg-purple-800/50"
               onClick={() => navigate("/admin/settings/notifications")}
+              aria-label="Retourner aux paramètres de notification"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Retour
@@ -28,13 +29,14 @@ export default function AdminInstantNotifications() {
             <Button
               onClick={() => setShowForm(!showForm)}
               variant="outline"
-              className="ml-4"
+              className="ml-4 border-purple-500 text-purple-300 hover:bg-purple-800/50 hover:text-white"
+              aria-label={showForm ? "Voir l'historique des notifications" : "Créer une nouvelle notification"}
             >
               {showForm ? "Voir l'historique" : "Nouvelle notification"}
             </Button>
           </div>
 
-          <div className="bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700">
+          <div className="bg-gray-800 rounded-lg shadow-lg p-6 border border-purple-500/20">
             <h1 className="text-2xl font-bold text-white mb-6">
               {showForm ? "Envoyer une notification" : "Historique des notifications"}
             </h1>
