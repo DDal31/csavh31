@@ -2,6 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { unsubscribeFromPushNotifications, subscribeToPushNotifications } from "@/services/notifications";
+import { WebPushSubscription } from "@/types/notifications";
 
 interface NotificationData {
   title: string;
@@ -14,7 +15,7 @@ export function useNotificationSubmission() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const handleRenewSubscription = async (subscription: any) => {
+  const handleRenewSubscription = async (subscription: WebPushSubscription) => {
     console.log("Starting subscription renewal process...");
     try {
       // First, remove the old subscription
@@ -28,7 +29,9 @@ export function useNotificationSubmission() {
       // Update the subscription in the database
       const { error: updateError } = await supabase
         .from("push_subscriptions")
-        .update({ subscription: newSubscription })
+        .update({ 
+          subscription: JSON.parse(JSON.stringify(newSubscription))
+        })
         .eq("subscription->endpoint", subscription.endpoint);
 
       if (updateError) {
@@ -86,16 +89,17 @@ export function useNotificationSubmission() {
 
       for (const sub of subscriptions || []) {
         try {
+          const subscription = sub.subscription as WebPushSubscription;
           console.log("Attempting to send notification to subscription:", {
-            endpoint: sub.subscription?.endpoint,
-            keys: sub.subscription?.keys ? {
-              p256dh: sub.subscription.keys.p256dh?.substring(0, 10) + '...',
-              auth: sub.subscription.keys.auth?.substring(0, 10) + '...'
+            endpoint: subscription.endpoint,
+            keys: subscription.keys ? {
+              p256dh: subscription.keys.p256dh?.substring(0, 10) + '...',
+              auth: subscription.keys.auth?.substring(0, 10) + '...'
             } : undefined
           });
 
           const response = await supabase.functions.invoke("send-push-notification", {
-            body: { subscription: sub.subscription, payload: notificationData },
+            body: { subscription, payload: notificationData },
           });
 
           if (response.error) {
@@ -108,12 +112,12 @@ export function useNotificationSubmission() {
                  (JSON.parse(errorData.body)?.details?.includes("VAPID key mismatch") || 
                   JSON.parse(errorData.body)?.reason === "VapidPkHashMismatch"))) {
               console.log("VAPID key mismatch detected, attempting to renew subscription");
-              const renewed = await handleRenewSubscription(sub.subscription);
+              const renewed = await handleRenewSubscription(subscription);
               if (renewed) {
                 renewalCount++;
                 // Retry sending notification with renewed subscription
                 const retryResponse = await supabase.functions.invoke("send-push-notification", {
-                  body: { subscription: sub.subscription, payload: notificationData },
+                  body: { subscription, payload: notificationData },
                 });
                 if (!retryResponse.error) {
                   successCount++;
