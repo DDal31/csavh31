@@ -26,12 +26,24 @@ export function useNotificationSubmission() {
       const newSubscription = await subscribeToPushNotifications();
       console.log("Successfully created new subscription:", newSubscription);
 
+      if (!newSubscription) {
+        console.error("Failed to create new subscription");
+        return false;
+      }
+
+      // Convert the subscription to a serializable format
+      const subscriptionData = {
+        endpoint: newSubscription.endpoint,
+        keys: {
+          p256dh: newSubscription.keys.p256dh,
+          auth: newSubscription.keys.auth
+        }
+      } as WebPushSubscription;
+
       // Update the subscription in the database
       const { error: updateError } = await supabase
         .from("push_subscriptions")
-        .update({ 
-          subscription: JSON.parse(JSON.stringify(newSubscription))
-        })
+        .update({ subscription: subscriptionData })
         .eq("subscription->endpoint", subscription.endpoint);
 
       if (updateError) {
@@ -89,13 +101,21 @@ export function useNotificationSubmission() {
 
       for (const sub of subscriptions || []) {
         try {
+          // Ensure the subscription data matches our WebPushSubscription type
           const subscription = sub.subscription as WebPushSubscription;
+          
+          if (!subscription?.endpoint || !subscription?.keys?.p256dh || !subscription?.keys?.auth) {
+            console.error("Invalid subscription format:", subscription);
+            failureCount++;
+            continue;
+          }
+
           console.log("Attempting to send notification to subscription:", {
             endpoint: subscription.endpoint,
-            keys: subscription.keys ? {
-              p256dh: subscription.keys.p256dh?.substring(0, 10) + '...',
-              auth: subscription.keys.auth?.substring(0, 10) + '...'
-            } : undefined
+            keys: {
+              p256dh: subscription.keys.p256dh.substring(0, 10) + '...',
+              auth: subscription.keys.auth.substring(0, 10) + '...'
+            }
           });
 
           const response = await supabase.functions.invoke("send-push-notification", {
