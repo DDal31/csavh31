@@ -29,8 +29,7 @@ Deno.serve(async (req) => {
 
     // Parse and validate request body
     const { subscription, payload } = await req.json()
-    console.log('Received request with subscription:', subscription)
-    console.log('Received request with payload:', payload)
+    console.log('Processing notification request:', { subscription, payload })
 
     if (!subscription || !payload) {
       console.error('Missing required parameters')
@@ -38,34 +37,55 @@ Deno.serve(async (req) => {
     }
 
     if (!subscription.endpoint || !subscription.keys) {
-      console.error('Invalid subscription format')
+      console.error('Invalid subscription format:', subscription)
       throw new Error('Invalid subscription format')
     }
 
-    console.log('Sending push notification...')
-    
-    // Send the notification
-    await webpush.sendNotification(subscription, JSON.stringify(payload))
-    console.log('Push notification sent successfully')
+    try {
+      console.log('Attempting to send push notification...')
+      await webpush.sendNotification(subscription, JSON.stringify(payload))
+      console.log('Push notification sent successfully')
 
-    return new Response(
-      JSON.stringify({ success: true }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      },
-    )
+      return new Response(
+        JSON.stringify({ success: true }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        },
+      )
+    } catch (pushError) {
+      console.error('WebPush error:', pushError)
+      // Check if subscription is expired or invalid
+      if (pushError.statusCode === 404 || pushError.statusCode === 410) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Subscription expired or invalid',
+            details: pushError.message,
+            statusCode: pushError.statusCode
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: pushError.statusCode,
+          },
+        )
+      }
+      throw pushError
+    }
   } catch (error) {
     console.error('Error in send-push-notification:', error)
     
+    const statusCode = error.statusCode || 400
+    const errorMessage = error.body ? JSON.parse(error.body).message : error.message
+    
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Internal server error',
-        details: error.toString()
+        error: errorMessage || 'Internal server error',
+        details: error.toString(),
+        statusCode
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: error.statusCode || 400,
+        status: statusCode,
       },
     )
   }
