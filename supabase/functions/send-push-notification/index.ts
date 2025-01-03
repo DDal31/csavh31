@@ -1,7 +1,12 @@
 import webpush from 'npm:web-push@3.6.6'
-import { corsHeaders, validateSubscription, createApplePayload, handleAppleError } from './utils.ts'
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
 Deno.serve(async (req) => {
+  // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -11,7 +16,7 @@ Deno.serve(async (req) => {
     const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY')
 
     if (!vapidPublicKey || !vapidPrivateKey) {
-      console.error('VAPID keys not found in environment variables')
+      console.error('VAPID keys not configured')
       throw new Error('VAPID keys not configured')
     }
 
@@ -22,139 +27,118 @@ Deno.serve(async (req) => {
     )
 
     const { subscription, payload } = await req.json()
-    console.log('Processing notification request:', { 
-      subscription: {
-        endpoint: subscription?.endpoint,
-        keys: subscription?.keys ? {
-          p256dh: subscription.keys.p256dh?.substring(0, 10) + '...',
-          auth: subscription.keys.auth?.substring(0, 10) + '...'
-        } : undefined
-      }, 
-      payload 
+    console.log('Processing notification request:', {
+      endpoint: subscription?.endpoint,
+      payload
     })
 
-    if (!subscription || !payload) {
-      console.error('Missing required parameters')
+    // Validate input
+    if (!subscription?.endpoint || !subscription?.keys?.p256dh || !subscription?.keys?.auth) {
+      console.error('Invalid subscription format:', subscription)
       return new Response(
-        JSON.stringify({ 
-          error: 'Missing required parameters',
-          details: 'Subscription and payload are required'
+        JSON.stringify({
+          error: 'Invalid subscription format',
+          details: 'Subscription must include endpoint and p256dh/auth keys'
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 400,
+        }
+      )
+    }
+
+    // Format payload for Apple Push if needed
+    let notificationPayload = payload
+    if (subscription.endpoint.includes('web.push.apple.com')) {
+      console.log('Formatting payload for Apple Push')
+      notificationPayload = {
+        aps: {
+          alert: {
+            title: payload.title,
+            body: payload.body
+          },
+          'content-available': 1,
+          'mutable-content': 1,
+          sound: 'default'
         },
-      )
-    }
-
-    const validationResult = validateSubscription(subscription)
-    if (!validationResult.isValid) {
-      return new Response(
-        JSON.stringify(validationResult.error),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400,
+        webpush: {
+          ...payload,
+          timestamp: new Date().getTime()
         }
-      )
-    }
-
-    try {
-      console.log('Attempting to send push notification...')
-      
-      if (subscription.endpoint.includes('web.push.apple.com')) {
-        console.log('Detected Apple push notification endpoint')
-        const applePayload = createApplePayload(payload)
-        console.log('Formatted Apple payload:', applePayload)
-        
-        try {
-          const result = await webpush.sendNotification(subscription, JSON.stringify(applePayload))
-          console.log('Apple push notification sent successfully:', {
-            statusCode: result?.statusCode,
-            headers: result?.headers,
-            body: result?.body
-          })
-        } catch (appleError: any) {
-          const errorResponse = handleAppleError(appleError)
-          return new Response(
-            JSON.stringify(errorResponse),
-            {
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-              status: errorResponse.statusCode,
-            }
-          )
-        }
-      } else {
-        const result = await webpush.sendNotification(subscription, JSON.stringify(payload))
-        console.log('Push notification sent successfully:', {
-          statusCode: result?.statusCode,
-          headers: result?.headers
-        })
       }
-
-      return new Response(
-        JSON.stringify({ 
-          success: true,
-          details: 'Notification sent successfully'
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200,
-        }
-      )
-    } catch (pushError: any) {
-      console.error('WebPush error:', {
-        name: pushError.name,
-        message: pushError.message,
-        statusCode: pushError.statusCode,
-        headers: pushError.headers,
-        endpoint: subscription.endpoint,
-        body: pushError.body
-      })
-
-      if (pushError.statusCode === 404 || pushError.statusCode === 410) {
-        return new Response(
-          JSON.stringify({ 
-            error: 'Subscription expired or invalid',
-            details: pushError.message,
-            statusCode: pushError.statusCode,
-            endpoint: subscription.endpoint
-          }),
-          {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: pushError.statusCode,
-          }
-        )
-      }
-
-      return new Response(
-        JSON.stringify({ 
-          error: 'Push notification error',
-          details: pushError.message,
-          statusCode: pushError.statusCode || 400,
-          endpoint: subscription.endpoint
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: pushError.statusCode || 400,
-        }
-      )
     }
-  } catch (error: any) {
+
+    console.log('Sending notification with payload:', notificationPayload)
+
+    const result = await webpush.sendNotification(
+      subscription,
+      JSON.stringify(notificationPayload)
+    )
+
+    console.log('Push notification sent successfully:', {
+      statusCode: result?.statusCode,
+      headers: result?.headers
+    })
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        details: 'Notification sent successfully'
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      }
+    )
+
+  } catch (error) {
     console.error('Error in send-push-notification:', {
       name: error.name,
       message: error.message,
       stack: error.stack,
+      statusCode: error.statusCode,
       body: error.body
     })
-    
+
+    // Handle subscription expiration
+    if (error.statusCode === 404 || error.statusCode === 410) {
+      return new Response(
+        JSON.stringify({
+          error: 'Subscription expired',
+          details: error.message,
+          statusCode: error.statusCode
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: error.statusCode
+        }
+      )
+    }
+
+    // Handle VAPID errors
+    if (error.body?.includes('VAPID') || error.message?.includes('VAPID')) {
+      return new Response(
+        JSON.stringify({
+          error: 'VAPID configuration error',
+          details: error.message,
+          statusCode: error.statusCode || 400
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: error.statusCode || 400
+        }
+      )
+    }
+
     return new Response(
-      JSON.stringify({ 
-        error: 'Internal server error',
-        details: error.message
+      JSON.stringify({
+        error: 'Push notification error',
+        details: error.message,
+        statusCode: error.statusCode || 500
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
+        status: error.statusCode || 500
       }
     )
   }
