@@ -55,11 +55,34 @@ Deno.serve(async (req) => {
 
     try {
       console.log('Attempting to send push notification...')
-      const result = await webpush.sendNotification(subscription, JSON.stringify(payload))
-      console.log('Push notification sent successfully:', {
-        statusCode: result?.statusCode,
-        headers: result?.headers
-      })
+      
+      // Special handling for Apple push notifications
+      if (subscription.endpoint.includes('web.push.apple.com')) {
+        console.log('Detected Apple push notification endpoint')
+        // Ensure payload is properly formatted for Apple
+        const applePayload = {
+          aps: {
+            alert: {
+              title: payload.title,
+              body: payload.body
+            },
+            url: payload.url
+          }
+        }
+        console.log('Formatted Apple payload:', applePayload)
+        const result = await webpush.sendNotification(subscription, JSON.stringify(applePayload))
+        console.log('Apple push notification sent successfully:', {
+          statusCode: result?.statusCode,
+          headers: result?.headers
+        })
+      } else {
+        // Standard web push notification
+        const result = await webpush.sendNotification(subscription, JSON.stringify(payload))
+        console.log('Push notification sent successfully:', {
+          statusCode: result?.statusCode,
+          headers: result?.headers
+        })
+      }
 
       return new Response(
         JSON.stringify({ 
@@ -77,7 +100,8 @@ Deno.serve(async (req) => {
         message: pushError.message,
         statusCode: pushError.statusCode,
         headers: pushError.headers,
-        endpoint: subscription.endpoint
+        endpoint: subscription.endpoint,
+        body: pushError.body
       })
 
       // Check if subscription is expired or invalid
@@ -102,7 +126,8 @@ Deno.serve(async (req) => {
           error: 'Push notification error',
           details: pushError.message,
           statusCode: pushError.statusCode || 400,
-          endpoint: subscription.endpoint
+          endpoint: subscription.endpoint,
+          body: pushError.body
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -114,7 +139,8 @@ Deno.serve(async (req) => {
     console.error('Error in send-push-notification:', {
       name: error.name,
       message: error.message,
-      stack: error.stack
+      stack: error.stack,
+      body: error.body
     })
     
     const statusCode = error.statusCode || 400
