@@ -22,7 +22,7 @@ export const handleApplePushError = async (
       
       if (renewed) {
         console.log("Subscription renewed successfully, retrying notification");
-        return await sendPushNotification(subscription, notificationData);
+        return await sendPushNotification(renewed as WebPushSubscription, notificationData);
       }
     }
     
@@ -55,19 +55,9 @@ export const renewSubscription = async (subscription: WebPushSubscription) => {
     }
 
     const serializedSubscription = serializeSubscription(newSubscription);
+    console.log("Successfully created new subscription");
     
-    const { error: updateError } = await supabase
-      .from("push_subscriptions")
-      .update({ subscription: serializedSubscription as unknown as Json })
-      .eq("subscription->endpoint", subscription.endpoint);
-
-    if (updateError) {
-      console.error("Error updating subscription:", updateError);
-      return false;
-    }
-
-    console.log("Successfully renewed subscription");
-    return true;
+    return serializedSubscription;
   } catch (error) {
     console.error("Error during subscription renewal:", error);
     return false;

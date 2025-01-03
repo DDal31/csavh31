@@ -4,7 +4,8 @@ import { useToast } from "@/hooks/use-toast";
 import { WebPushSubscription } from "@/types/notifications";
 import {
   handleApplePushError,
-  sendPushNotification
+  sendPushNotification,
+  renewSubscription
 } from "@/utils/pushNotifications";
 
 interface NotificationData {
@@ -32,7 +33,7 @@ export function useNotificationSubmission() {
 
       const subscriptionsQuery = supabase
         .from("push_subscriptions")
-        .select("subscription");
+        .select("subscription, id");
 
       if (targetGroup === "sport_specific" && selectedSport) {
         console.log("Filtering subscriptions for sport:", selectedSport);
@@ -68,9 +69,11 @@ export function useNotificationSubmission() {
           }
 
           const response = await sendPushNotification(subscription, notificationData);
+          console.log("Push notification response:", response);
 
           if (response.error) {
             if (subscription.endpoint.includes('web.push.apple.com')) {
+              console.log("Handling Apple Push error for subscription:", sub.id);
               const result = await handleApplePushError(
                 response.error,
                 subscription,
@@ -78,6 +81,27 @@ export function useNotificationSubmission() {
               );
               
               if (result.error) {
+                console.log("Failed to handle Apple Push error:", result.error);
+                // Try to renew the subscription
+                const renewed = await renewSubscription(subscription);
+                if (renewed) {
+                  console.log("Successfully renewed subscription");
+                  // Update the subscription in the database
+                  const { error: updateError } = await supabase
+                    .from("push_subscriptions")
+                    .update({ subscription: renewed })
+                    .eq("id", sub.id);
+                  
+                  if (!updateError) {
+                    // Retry sending the notification with the renewed subscription
+                    const retryResponse = await sendPushNotification(renewed as WebPushSubscription, notificationData);
+                    if (!retryResponse.error) {
+                      successCount++;
+                      renewalCount++;
+                      continue;
+                    }
+                  }
+                }
                 failureCount++;
               } else {
                 successCount++;
