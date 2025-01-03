@@ -42,6 +42,7 @@ export function InstantNotificationForm({ onSuccess }: InstantNotificationFormPr
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    console.log("Starting notification submission process...");
 
     try {
       // Préparer les données de notification
@@ -50,13 +51,16 @@ export function InstantNotificationForm({ onSuccess }: InstantNotificationFormPr
         body: content,
         url: "/notifications",
       };
+      console.log("Notification data prepared:", notificationData);
 
       // Récupérer les souscriptions en fonction du groupe cible
+      console.log("Fetching subscriptions for target group:", targetGroup);
       const subscriptionsQuery = supabase
         .from("push_subscriptions")
         .select("subscription");
 
       if (targetGroup === "sport_specific" && selectedSport) {
+        console.log("Filtering subscriptions for sport:", selectedSport);
         const { data: userIds } = await supabase
           .from("profiles")
           .select("id")
@@ -71,21 +75,32 @@ export function InstantNotificationForm({ onSuccess }: InstantNotificationFormPr
       }
 
       const { data: subscriptions, error: subError } = await subscriptionsQuery;
-      if (subError) throw subError;
+      if (subError) {
+        console.error("Error fetching subscriptions:", subError);
+        throw subError;
+      }
+      console.log("Found subscriptions:", subscriptions?.length);
 
       // Envoyer la notification à chaque souscription
+      console.log("Starting to send notifications to all subscriptions...");
       const sendPromises = subscriptions?.map(async (sub) => {
+        console.log("Sending notification to subscription:", sub.subscription);
         const { error } = await supabase.functions.invoke("send-push-notification", {
           body: { subscription: sub.subscription, payload: notificationData },
         });
-        if (error) throw error;
+        if (error) {
+          console.error("Error sending notification:", error);
+          throw error;
+        }
       });
 
       if (sendPromises) {
         await Promise.all(sendPromises);
+        console.log("All notifications sent successfully");
       }
 
       // Enregistrer l'historique
+      console.log("Recording notification in history...");
       const { error: historyError } = await supabase
         .from("notification_history")
         .insert({
@@ -95,8 +110,12 @@ export function InstantNotificationForm({ onSuccess }: InstantNotificationFormPr
           sport: targetGroup === "sport_specific" ? selectedSport : null,
         });
 
-      if (historyError) throw historyError;
+      if (historyError) {
+        console.error("Error recording notification history:", historyError);
+        throw historyError;
+      }
 
+      console.log("Notification process completed successfully");
       toast({
         title: "Notification envoyée",
         description: "La notification a été envoyée avec succès.",
@@ -109,7 +128,7 @@ export function InstantNotificationForm({ onSuccess }: InstantNotificationFormPr
       setSelectedSport("");
       onSuccess?.();
     } catch (error) {
-      console.error("Erreur lors de l'envoi de la notification:", error);
+      console.error("Detailed error during notification sending:", error);
       toast({
         title: "Erreur",
         description: "Une erreur est survenue lors de l'envoi de la notification.",
