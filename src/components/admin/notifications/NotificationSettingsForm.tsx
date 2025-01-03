@@ -17,11 +17,15 @@ import { useToast } from "@/hooks/use-toast";
 interface NotificationSetting {
   id?: string;
   type: string;
-  notification_type: "training_reminder" | "low_participation" | "manual";
+  notification_type: "training_reminder" | "missing_players" | "custom";
   delay_hours: number;
   enabled: boolean;
   sport?: string;
-  target_group?: "all" | "sport_specific" | "registered_only";
+  target_group?: "all" | "sport_specific" | "training_registered";
+  sound_path?: string;
+  logo_path?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface NotificationSettingsFormProps {
@@ -38,7 +42,7 @@ export function NotificationSettingsForm({
   const [formData, setFormData] = useState<NotificationSetting>(
     setting || {
       type: "",
-      notification_type: "manual",
+      notification_type: "training_reminder",
       delay_hours: 24,
       enabled: true,
       target_group: "all",
@@ -125,10 +129,10 @@ export function NotificationSettingsForm({
                 <SelectItem value="training_reminder">
                   Rappel d'entraînement
                 </SelectItem>
-                <SelectItem value="low_participation">
-                  Participation faible
+                <SelectItem value="missing_players">
+                  Joueurs manquants
                 </SelectItem>
-                <SelectItem value="manual">Manuel</SelectItem>
+                <SelectItem value="custom">Personnalisé</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -164,7 +168,7 @@ export function NotificationSettingsForm({
               <SelectContent>
                 <SelectItem value="all">Tous</SelectItem>
                 <SelectItem value="sport_specific">Sport spécifique</SelectItem>
-                <SelectItem value="registered_only">
+                <SelectItem value="training_registered">
                   Inscrits uniquement
                 </SelectItem>
               </SelectContent>

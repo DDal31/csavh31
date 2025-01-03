@@ -12,11 +12,15 @@ import { Plus, Edit } from "lucide-react";
 interface NotificationSetting {
   id: string;
   type: string;
-  notification_type: "training_reminder" | "low_participation" | "manual";
+  notification_type: "training_reminder" | "missing_players" | "custom";
   delay_hours: number;
   enabled: boolean;
   sport?: string;
-  target_group?: "all" | "sport_specific" | "registered_only";
+  target_group?: "all" | "sport_specific" | "training_registered";
+  sound_path?: string;
+  logo_path?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface NotificationSettingsListProps {

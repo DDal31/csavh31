@@ -8,6 +8,20 @@ import { NotificationSettingsList } from "@/components/admin/notifications/Notif
 import { NotificationSettingsForm } from "@/components/admin/notifications/NotificationSettingsForm";
 import { Loader2 } from "lucide-react";
 
+interface NotificationSetting {
+  id: string;
+  type: string;
+  notification_type: "training_reminder" | "missing_players" | "custom";
+  delay_hours: number;
+  enabled: boolean;
+  sport?: string;
+  target_group?: "all" | "sport_specific" | "training_registered";
+  sound_path?: string;
+  logo_path?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 const AdminNotificationSettings = () => {
   const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
