@@ -69,7 +69,15 @@ Deno.serve(async (req) => {
           actions: payload.actions,
           icon: payload.icon,
           badge: payload.badge,
-          timestamp: new Date().getTime()
+          timestamp: new Date().getTime(),
+          // Safari spécifique
+          aps: {
+            alert: {
+              title: payload.title,
+              body: payload.body
+            },
+            'content-available': 1
+          }
         }
         console.log('Formatted Apple payload:', applePayload)
         const result = await webpush.sendNotification(subscription, JSON.stringify(applePayload))
@@ -110,7 +118,8 @@ Deno.serve(async (req) => {
       if (subscription.endpoint.includes('web.push.apple.com')) {
         if (pushError.body?.includes('VapidPkHashMismatch') || 
             pushError.statusCode === 410 || 
-            pushError.message?.includes('VAPID')) {
+            pushError.message?.includes('VAPID') ||
+            pushError.message?.includes('Unauthorized')) {
           return new Response(
             JSON.stringify({ 
               error: 'Apple Push Error',
