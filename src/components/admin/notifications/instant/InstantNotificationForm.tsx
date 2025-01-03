@@ -14,6 +14,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { unsubscribeFromPushNotifications, subscribeToPushNotifications } from "@/services/notifications";
 
 interface InstantNotificationFormProps {
   onSuccess?: () => void;
@@ -39,13 +40,30 @@ export function InstantNotificationForm({ onSuccess }: InstantNotificationFormPr
     },
   });
 
+  const handleRenewSubscription = async (subscription: any) => {
+    console.log("Renewing subscription for:", subscription);
+    try {
+      // Unsubscribe first
+      await unsubscribeFromPushNotifications();
+      console.log("Successfully unsubscribed");
+      
+      // Then resubscribe
+      await subscribeToPushNotifications();
+      console.log("Successfully resubscribed");
+      
+      return true;
+    } catch (error) {
+      console.error("Error renewing subscription:", error);
+      return false;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     console.log("Starting notification submission process...");
 
     try {
-      // Préparer les données de notification
       const notificationData = {
         title: title,
         body: content,
@@ -53,7 +71,6 @@ export function InstantNotificationForm({ onSuccess }: InstantNotificationFormPr
       };
       console.log("Notification data prepared:", notificationData);
 
-      // Récupérer les souscriptions en fonction du groupe cible
       console.log("Fetching subscriptions for target group:", targetGroup);
       const subscriptionsQuery = supabase
         .from("push_subscriptions")
@@ -81,25 +98,49 @@ export function InstantNotificationForm({ onSuccess }: InstantNotificationFormPr
       }
       console.log("Found subscriptions:", subscriptions?.length);
 
-      // Envoyer la notification à chaque souscription
-      console.log("Starting to send notifications to all subscriptions...");
-      const sendPromises = subscriptions?.map(async (sub) => {
-        console.log("Sending notification to subscription:", sub.subscription);
-        const { error } = await supabase.functions.invoke("send-push-notification", {
-          body: { subscription: sub.subscription, payload: notificationData },
-        });
-        if (error) {
-          console.error("Error sending notification:", error);
-          throw error;
-        }
-      });
+      let successCount = 0;
+      let failureCount = 0;
+      let renewalCount = 0;
 
-      if (sendPromises) {
-        await Promise.all(sendPromises);
-        console.log("All notifications sent successfully");
+      for (const sub of subscriptions || []) {
+        try {
+          console.log("Sending notification to subscription:", sub.subscription);
+          const response = await supabase.functions.invoke("send-push-notification", {
+            body: { subscription: sub.subscription, payload: notificationData },
+          });
+
+          if (response.error) {
+            const errorData = JSON.parse(response.error.message);
+            
+            // Check if it's a VAPID key mismatch error
+            if (errorData?.body?.includes("VapidPkHashMismatch") || 
+                (typeof errorData.body === 'string' && JSON.parse(errorData.body)?.details?.includes("VAPID key mismatch"))) {
+              console.log("VAPID key mismatch detected, attempting to renew subscription");
+              const renewed = await handleRenewSubscription(sub.subscription);
+              if (renewed) {
+                renewalCount++;
+                // Retry sending notification with renewed subscription
+                await supabase.functions.invoke("send-push-notification", {
+                  body: { subscription: sub.subscription, payload: notificationData },
+                });
+                successCount++;
+              } else {
+                failureCount++;
+              }
+            } else {
+              console.error("Error sending notification:", errorData);
+              failureCount++;
+            }
+          } else {
+            successCount++;
+          }
+        } catch (error) {
+          console.error("Error processing notification:", error);
+          failureCount++;
+        }
       }
 
-      // Enregistrer l'historique
+      // Record notification history
       console.log("Recording notification in history...");
       const { error: historyError } = await supabase
         .from("notification_history")
@@ -115,10 +156,10 @@ export function InstantNotificationForm({ onSuccess }: InstantNotificationFormPr
         throw historyError;
       }
 
-      console.log("Notification process completed successfully");
+      console.log("Notification process completed");
       toast({
         title: "Notification envoyée",
-        description: "La notification a été envoyée avec succès.",
+        description: `Envoyé avec succès: ${successCount}, Échecs: ${failureCount}${renewalCount > 0 ? `, Renouvellements: ${renewalCount}` : ''}`,
       });
 
       // Reset form
@@ -128,7 +169,7 @@ export function InstantNotificationForm({ onSuccess }: InstantNotificationFormPr
       setSelectedSport("");
       onSuccess?.();
     } catch (error) {
-      console.error("Detailed error during notification sending:", error);
+      console.error("Error during notification sending:", error);
       toast({
         title: "Erreur",
         description: "Une erreur est survenue lors de l'envoi de la notification.",
