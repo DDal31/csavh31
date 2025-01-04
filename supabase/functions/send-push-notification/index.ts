@@ -13,34 +13,34 @@ serve(async (req) => {
   }
 
   try {
-    console.log("Initializing Firebase Admin SDK...");
+    console.log("Initialisation de Firebase Admin SDK...");
     
     if (getApps().length === 0) {
       const rawPrivateKey = Deno.env.get("FIREBASE_PRIVATE_KEY");
-      console.log("Raw private key received");
+      console.log("Clé privée reçue");
       
       if (!rawPrivateKey) {
-        throw new Error("FIREBASE_PRIVATE_KEY environment variable is not set");
+        throw new Error("La variable d'environnement FIREBASE_PRIVATE_KEY n'est pas définie");
       }
 
       // Nettoyage et formatage de la clé privée
       let privateKey = rawPrivateKey;
       
-      // Si la clé est une chaîne JSON, on la parse
-      try {
-        const parsed = JSON.parse(privateKey);
-        privateKey = typeof parsed === 'string' ? parsed : rawPrivateKey;
-        console.log("Clé privée parsée depuis JSON");
-      } catch (e) {
-        console.log("La clé privée n'est pas au format JSON");
-      }
+      // Si la clé ne commence pas par -----BEGIN PRIVATE KEY-----, on suppose qu'elle est encodée
+      if (!privateKey.includes("-----BEGIN PRIVATE KEY-----")) {
+        try {
+          // Essai de décodage Base64 si nécessaire
+          privateKey = atob(privateKey);
+          console.log("Clé privée décodée depuis Base64");
+        } catch (e) {
+          console.log("La clé n'est pas en Base64, on continue avec la clé brute");
+        }
 
-      // Décodage URL si nécessaire
-      try {
-        privateKey = decodeURIComponent(privateKey);
-        console.log("Clé privée décodée URL");
-      } catch (e) {
-        console.log("La clé privée n'est pas encodée URL");
+        // Ajout des délimiteurs PEM si absents
+        if (!privateKey.includes("-----BEGIN PRIVATE KEY-----")) {
+          privateKey = `-----BEGIN PRIVATE KEY-----\n${privateKey}\n-----END PRIVATE KEY-----`;
+          console.log("Délimiteurs PEM ajoutés à la clé privée");
+        }
       }
 
       // Remplacement des \n littéraux par de vrais sauts de ligne
@@ -50,7 +50,8 @@ serve(async (req) => {
 
       console.log("Format de la clé privée:", {
         longueur: privateKey.length,
-        contientSautsLigne: privateKey.includes('\n'),
+        contientDebutPEM: privateKey.includes("-----BEGIN PRIVATE KEY-----"),
+        contientFinPEM: privateKey.includes("-----END PRIVATE KEY-----"),
         premierCaractere: privateKey.charAt(0),
         dernierCaractere: privateKey.charAt(privateKey.length - 1)
       });
@@ -72,7 +73,8 @@ serve(async (req) => {
         project_id: serviceAccount.project_id,
         client_email: serviceAccount.client_email,
         private_key_id: serviceAccount.private_key_id,
-        hasPrivateKey: !!serviceAccount.private_key
+        hasPrivateKey: !!serviceAccount.private_key,
+        privateKeyLength: serviceAccount.private_key?.length
       });
 
       try {
@@ -81,7 +83,7 @@ serve(async (req) => {
         });
         console.log("Firebase Admin SDK initialisé avec succès");
       } catch (initError) {
-        console.error("Erreur d'initialisation Firebase Admin SDK:", initError);
+        console.error("Erreur détaillée d'initialisation Firebase:", initError);
         throw new Error(`Erreur d'initialisation Firebase: ${initError.message}`);
       }
     }
