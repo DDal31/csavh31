@@ -4,13 +4,18 @@ self.addEventListener('push', event => {
     const data = event.data.json();
     console.log('Push data received:', data);
     
+    // Format payload for iOS
     const options = {
       body: data.body,
       icon: '/app-icon-192.png',
       badge: '/app-icon-192.png',
       data: data.url,
       actions: data.actions,
-      vibrate: [200, 100, 200]
+      vibrate: [200, 100, 200],
+      // iOS specific options
+      timestamp: new Date().getTime(),
+      tag: data.tag || 'default',
+      renotify: true
     };
 
     console.log('Showing notification with options:', options);

@@ -31,20 +31,31 @@ const initializeWebPushNotifications = async () => {
     return false;
   }
 
+  // Check if it's iOS
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  console.log('Is iOS device:', isIOS);
+
+  if (isIOS) {
+    // Check if the website is in standalone mode (added to home screen)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    console.log('Is standalone PWA:', isStandalone);
+
+    if (!isStandalone) {
+      console.log('iOS requires adding the site to home screen for notifications');
+      return false;
+    }
+  }
+
   const permission = await Notification.requestPermission();
   console.log('Web notification permission:', permission);
   return permission === 'granted';
 };
 
 const initializeNativePushNotifications = async () => {
-  // Request permission to use push notifications
-  // iOS will prompt user and return if they granted permission or not
-  // Android will just grant without prompting
   const result = await PushNotifications.requestPermissions();
   console.log('Push notification permission result:', result);
 
   if (result.receive === 'granted') {
-    // Register with Apple / Google to receive push via APNS/FCM
     await PushNotifications.register();
     console.log('Push notification registered');
     return true;
@@ -54,21 +65,18 @@ const initializeNativePushNotifications = async () => {
   }
 };
 
-// Add listeners for push notifications
 export const addPushNotificationListeners = () => {
   if (Capacitor.getPlatform() === 'web') {
     console.log('Web platform - no native listeners needed');
     return;
   }
 
-  // On registration success
   PushNotifications.addListener('registration', async (token) => {
     console.log('Push registration success:', token.value);
     
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        // Store the token in your database
         const { error } = await supabase
           .from('push_subscriptions')
           .upsert({
@@ -84,17 +92,14 @@ export const addPushNotificationListeners = () => {
     }
   });
 
-  // On registration error
   PushNotifications.addListener('registrationError', (error) => {
     console.error('Error on registration:', error);
   });
 
-  // On push notification received
   PushNotifications.addListener('pushNotificationReceived', (notification) => {
     console.log('Push notification received:', notification);
   });
 
-  // On push notification action clicked
   PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
     console.log('Push notification action performed:', notification);
   });
