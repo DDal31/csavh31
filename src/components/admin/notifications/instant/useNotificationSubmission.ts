@@ -2,6 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { WebPushSubscription } from "@/types/notifications";
+import { subscribeToPushNotifications } from "@/services/notifications";
 
 interface NotificationData {
   title: string;
@@ -79,9 +80,30 @@ export function useNotificationSubmission() {
             }
           });
 
-          const response = await supabase.functions.invoke("send-push-notification", {
+          let response = await supabase.functions.invoke("send-push-notification", {
             body: { subscription, payload: notificationData }
           });
+
+          // Check for VAPID key mismatch error
+          if (response.error) {
+            const errorBody = JSON.parse(response.error.message);
+            if (errorBody?.details === "VapidPkHashMismatch" || 
+                errorBody?.errorBody?.reason === "VapidPkHashMismatch") {
+              console.log("VAPID key mismatch detected, attempting to renew subscription");
+              
+              // Attempt to renew subscription
+              const newSubscription = await subscribeToPushNotifications();
+              if (newSubscription) {
+                console.log("Subscription renewed, retrying notification");
+                response = await supabase.functions.invoke("send-push-notification", {
+                  body: { 
+                    subscription: newSubscription, 
+                    payload: notificationData 
+                  }
+                });
+              }
+            }
+          }
 
           console.log("Push notification response:", response);
 
