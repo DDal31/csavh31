@@ -24,6 +24,9 @@ export function useNotificationSubmission() {
         title,
         body: content,
         url: "/notifications",
+        timestamp: new Date().getTime(),
+        icon: 'https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/site-assets/app-icon-192.png',
+        badge: 'https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/site-assets/app-icon-192.png'
       };
       console.log("Notification data prepared:", notificationData);
 
@@ -80,6 +83,7 @@ export function useNotificationSubmission() {
             }
           });
 
+          // First attempt to send notification
           let response = await supabase.functions.invoke("send-push-notification", {
             body: { subscription, payload: notificationData }
           });
@@ -87,6 +91,8 @@ export function useNotificationSubmission() {
           // Check for VAPID key mismatch error
           if (response.error) {
             const errorBody = JSON.parse(response.error.message);
+            console.log("Push notification error response:", errorBody);
+
             if (errorBody?.details === "VapidPkHashMismatch" || 
                 errorBody?.errorBody?.reason === "VapidPkHashMismatch") {
               console.log("VAPID key mismatch detected, attempting to renew subscription");
@@ -94,23 +100,28 @@ export function useNotificationSubmission() {
               // Attempt to renew subscription
               const newSubscription = await subscribeToPushNotifications();
               if (newSubscription) {
-                console.log("Subscription renewed, retrying notification");
+                console.log("Subscription renewed successfully, retrying notification");
+                
+                // Retry with new subscription
                 response = await supabase.functions.invoke("send-push-notification", {
                   body: { 
                     subscription: newSubscription, 
                     payload: notificationData 
                   }
                 });
+                
+                if (!response.error) {
+                  console.log("Notification sent successfully after subscription renewal");
+                  successCount++;
+                  continue;
+                }
               }
             }
-          }
-
-          console.log("Push notification response:", response);
-
-          if (response.error) {
+            
             console.error("Error sending notification:", response.error);
             failureCount++;
           } else {
+            console.log("Notification sent successfully");
             successCount++;
           }
         } catch (error) {
