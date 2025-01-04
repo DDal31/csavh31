@@ -101,16 +101,32 @@ serve(async (req) => {
       throw new Error("Token FCM requis dans l'objet subscription");
     }
 
-    // Envoi du message
+    // Création du message avec format compatible iOS
     const message = {
       notification: {
         title: payload.title,
         body: payload.body,
       },
-      webpush: {
-        fcm_options: {
-          link: payload.url,
+      data: {
+        url: payload.url,
+        timestamp: payload.timestamp?.toString(),
+      },
+      apns: {
+        payload: {
+          aps: {
+            alert: {
+              title: payload.title,
+              body: payload.body,
+            },
+            sound: 'default',
+            badge: 1,
+            'mutable-content': 1,
+            'content-available': 1
+          },
         },
+        fcm_options: {
+          image: payload.icon
+        }
       },
       token: subscription.fcm_token,
     };

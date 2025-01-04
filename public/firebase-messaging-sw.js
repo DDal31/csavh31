@@ -15,10 +15,19 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
   console.log('Received background message:', payload);
 
-  const notificationTitle = payload.notification.title;
+  // Gestion du format iOS
+  const notificationTitle = payload.notification?.title || payload.aps?.alert?.title;
+  const notificationBody = payload.notification?.body || payload.aps?.alert?.body;
+  
   const notificationOptions = {
-    body: payload.notification.body,
-    icon: 'https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/site-assets/app-icon-192.png'
+    body: notificationBody,
+    icon: 'https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/site-assets/app-icon-192.png',
+    badge: 'https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/site-assets/app-icon-192.png',
+    // Options spécifiques iOS
+    sound: 'default',
+    timestamp: new Date().getTime(),
+    renotify: true,
+    tag: 'default'
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
