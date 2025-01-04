@@ -38,13 +38,12 @@ Deno.serve(async (req) => {
     })
 
     // Validate subscription format
-    if (!subscription?.endpoint || 
-        (!subscription?.keys && !subscription?.token)) {
+    if (!subscription?.endpoint || !subscription?.keys?.p256dh || !subscription?.keys?.auth) {
       console.error('Invalid subscription format:', subscription)
       return new Response(
         JSON.stringify({
           error: 'Invalid subscription format',
-          details: 'Subscription must include endpoint and keys/token'
+          details: 'Subscription must include endpoint and p256dh/auth keys'
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -53,9 +52,9 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Format payload for iOS if needed
-    let notificationPayload = payload
+    // Format payload for iOS
     const isApplePush = subscription.endpoint.includes('web.push.apple.com')
+    let notificationPayload = payload
     
     if (isApplePush) {
       console.log('Formatting payload for Apple Push')
@@ -70,14 +69,15 @@ Deno.serve(async (req) => {
           sound: 'default',
           badge: 1,
         },
+        fcm_options: {
+          link: payload.url || '/notifications'
+        },
         webpush: {
           ...payload,
           timestamp: new Date().getTime(),
           icon: 'https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/site-assets/app-icon-192.png',
-          badge: 'https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/site-assets/app-icon-192.png'
-        },
-        fcm_options: {
-          link: payload.url
+          badge: 'https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/site-assets/app-icon-192.png',
+          data: payload.url || '/notifications'
         }
       }
     }
@@ -96,10 +96,7 @@ Deno.serve(async (req) => {
       })
 
       return new Response(
-        JSON.stringify({
-          success: true,
-          details: 'Notification sent successfully'
-        }),
+        JSON.stringify({ success: true }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200,
@@ -113,28 +110,17 @@ Deno.serve(async (req) => {
         body: pushError.body
       })
 
-      // Handle expired subscriptions
-      if (pushError.statusCode === 404 || pushError.statusCode === 410) {
+      // Handle VAPID key mismatch specifically
+      if (pushError.body?.includes('VAPID') || 
+          pushError.message?.includes('VAPID') ||
+          (typeof pushError.body === 'string' && 
+           JSON.parse(pushError.body)?.reason === 'VapidPkHashMismatch')) {
         return new Response(
           JSON.stringify({
-            error: 'Subscription expired',
-            details: pushError.message,
-            statusCode: pushError.statusCode
-          }),
-          {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: pushError.statusCode
-          }
-        )
-      }
-
-      // Handle VAPID configuration errors
-      if (pushError.body?.includes('VAPID') || pushError.message?.includes('VAPID')) {
-        return new Response(
-          JSON.stringify({
-            error: 'VAPID configuration error',
-            details: pushError.message,
-            statusCode: 400
+            error: 'Apple Push Error',
+            details: 'VapidPkHashMismatch',
+            statusCode: 400,
+            errorBody: { reason: 'VapidPkHashMismatch' }
           }),
           {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -143,49 +129,30 @@ Deno.serve(async (req) => {
         )
       }
 
-      // For Apple Push specific errors, try to parse and handle them
-      if (isApplePush && pushError.body) {
-        try {
-          const errorBody = typeof pushError.body === 'string' ? 
-            JSON.parse(pushError.body) : pushError.body;
-          
-          return new Response(
-            JSON.stringify({
-              error: 'Apple Push Error',
-              details: errorBody.reason || pushError.message,
-              statusCode: 400,
-              errorBody
-            }),
-            {
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-              status: 400
-            }
-          )
-        } catch (parseError) {
-          console.error('Error parsing Apple Push error:', parseError)
+      // Handle other errors
+      return new Response(
+        JSON.stringify({
+          error: 'Push notification error',
+          details: pushError.message,
+          statusCode: pushError.statusCode || 500
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: pushError.statusCode || 500
         }
-      }
-
-      throw pushError
+      )
     }
   } catch (error: any) {
-    console.error('Error in send-push-notification:', {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
-      statusCode: error.statusCode,
-      body: error.body
-    })
-
+    console.error('Error in send-push-notification:', error)
     return new Response(
       JSON.stringify({
-        error: 'Push notification error',
+        error: 'Server error',
         details: error.message,
-        statusCode: error.statusCode || 500
+        statusCode: 500
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: error.statusCode || 500
+        status: 500
       }
     )
   }
