@@ -14,9 +14,23 @@ Deno.serve(async (req) => {
     const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY')
     const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY')
 
+    console.log('Checking VAPID keys configuration...')
+    console.log('VAPID public key exists:', !!vapidPublicKey)
+    console.log('VAPID private key exists:', !!vapidPrivateKey)
+
     if (!vapidPublicKey || !vapidPrivateKey) {
       console.error('VAPID keys not configured')
-      throw new Error('VAPID keys not configured')
+      return new Response(
+        JSON.stringify({
+          error: 'Server error',
+          details: 'VAPID keys not configured',
+          statusCode: 500
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500
+        }
+      )
     }
 
     webpush.setVapidDetails(
