@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'npm:@supabase/supabase-js@2'
 import { initializeApp, cert, getApps } from 'npm:firebase-admin/app'
 import { getMessaging } from 'npm:firebase-admin/messaging'
 
@@ -16,19 +15,37 @@ serve(async (req) => {
   try {
     // Initialize Firebase Admin if not already initialized
     if (getApps().length === 0) {
-      const serviceAccount = JSON.parse(Deno.env.get('FIREBASE_SERVICE_ACCOUNT') || '{}')
+      console.log('Initializing Firebase Admin...');
+      const serviceAccount = {
+        type: "service_account",
+        project_id: Deno.env.get('FIREBASE_PROJECT_ID'),
+        private_key_id: Deno.env.get('FIREBASE_PRIVATE_KEY_ID'),
+        private_key: Deno.env.get('FIREBASE_PRIVATE_KEY')?.replace(/\\n/g, '\n'),
+        client_email: Deno.env.get('FIREBASE_CLIENT_EMAIL'),
+        client_id: Deno.env.get('FIREBASE_CLIENT_ID'),
+        auth_uri: "https://accounts.google.com/o/oauth2/auth",
+        token_uri: "https://oauth2.googleapis.com/token",
+        auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
+        client_x509_cert_url: Deno.env.get('FIREBASE_CLIENT_CERT_URL')
+      };
+
+      if (!serviceAccount.project_id) {
+        throw new Error('Firebase project_id is not configured');
+      }
+
       initializeApp({
         credential: cert(serviceAccount)
-      })
+      });
+      console.log('Firebase Admin initialized successfully');
     }
 
-    const { subscription, payload } = await req.json()
+    const { subscription, payload } = await req.json();
     console.log('Processing notification request:', {
       subscription: {
         fcm_token: subscription?.fcm_token?.substring(0, 10) + '...'
       },
       payload
-    })
+    });
 
     if (!subscription?.fcm_token) {
       return new Response(
@@ -40,7 +57,7 @@ serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 400,
         }
-      )
+      );
     }
 
     const message = {
@@ -49,10 +66,10 @@ serve(async (req) => {
         body: payload.body
       },
       token: subscription.fcm_token
-    }
+    };
 
-    const response = await getMessaging().send(message)
-    console.log('Successfully sent message:', response)
+    const response = await getMessaging().send(message);
+    console.log('Successfully sent message:', response);
 
     return new Response(
       JSON.stringify({ success: true }),
@@ -60,9 +77,9 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       }
-    )
+    );
   } catch (error) {
-    console.error('Error in send-push-notification:', error)
+    console.error('Error in send-push-notification:', error);
     return new Response(
       JSON.stringify({
         error: 'Server error',
@@ -73,6 +90,6 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500
       }
-    )
+    );
   }
 })
