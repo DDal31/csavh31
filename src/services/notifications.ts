@@ -1,133 +1,50 @@
 import { supabase } from "@/integrations/supabase/client";
-import { WebPushSubscription, SerializedPushSubscription } from "@/types/notifications";
-import { Json } from "@/integrations/supabase/types";
+import { requestNotificationPermission } from "@/config/firebase";
 
-const convertVapidKey = (base64String: string) => {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding)
-    .replace(/\-/g, '+')
-    .replace(/_/g, '/');
-
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-  return outputArray;
-};
-
-export const registerServiceWorker = async () => {
+export const subscribeToPushNotifications = async () => {
   try {
-    console.log('Registering service worker...');
-    const registration = await navigator.serviceWorker.register('/sw.js');
-    console.log('Service Worker registered:', registration);
-    return registration;
-  } catch (error) {
-    console.error('Service Worker registration failed:', error);
-    throw error;
-  }
-};
-
-export const subscribeToPushNotifications = async (): Promise<PushSubscription | null> => {
-  try {
-    console.log('Starting push notification subscription process...');
+    console.log('Starting Firebase notification subscription process...');
+    const token = await requestNotificationPermission();
     
-    const registration = await registerServiceWorker();
-    console.log('Service worker registration successful');
-    
-    await navigator.serviceWorker.ready;
-    console.log('Service worker is ready');
-    
-    let subscription = await registration.pushManager.getSubscription();
-    
-    if (subscription) {
-      console.log('Already subscribed to push notifications');
-      return subscription;
+    if (!token) {
+      throw new Error('Failed to get FCM token');
     }
 
-    const permission = await Notification.requestPermission();
-    if (permission !== 'granted') {
-      throw new Error('Notification permission denied');
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('User not authenticated');
     }
-    console.log('Notification permission granted');
 
-    const { data: { publicKey }, error: keyError } = await supabase.functions.invoke('get-vapid-key');
-    if (keyError) {
-      console.error('Error getting VAPID key:', keyError);
-      throw keyError;
-    }
-    console.log('VAPID public key retrieved successfully');
-
-    subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: convertVapidKey(publicKey)
-    });
-    console.log('Push notification subscription successful');
-
-    const serializePushSubscription = (sub: PushSubscription): SerializedPushSubscription => {
-      if (!sub.getKey) {
-        throw new Error("Invalid subscription: missing getKey method");
-      }
-
-      const p256dhKey = sub.getKey('p256dh');
-      const authKey = sub.getKey('auth');
-
-      if (!p256dhKey || !authKey) {
-        throw new Error("Invalid subscription: missing required keys");
-      }
-
-      return {
-        endpoint: sub.endpoint,
-        keys: {
-          p256dh: btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(p256dhKey)))),
-          auth: btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(authKey))))
-        }
-      };
-    };
-
-    const serializedSubscription = serializePushSubscription(subscription);
-
-    const { error: saveError } = await supabase
+    const { error } = await supabase
       .from('push_subscriptions')
       .upsert({
-        user_id: (await supabase.auth.getUser()).data.user?.id,
-        subscription: serializedSubscription as unknown as Json
+        user_id: user.id,
+        subscription: { fcm_token: token }
       });
 
-    if (saveError) {
-      console.error('Error saving subscription to database:', saveError);
-      throw saveError;
-    }
-    
-    console.log('Successfully subscribed to push notifications');
-    return subscription;
-
+    if (error) throw error;
+    console.log('Successfully subscribed to Firebase notifications');
+    return token;
   } catch (error) {
-    console.error('Error subscribing to push notifications:', error);
+    console.error('Error subscribing to notifications:', error);
     throw error;
   }
 };
 
 export const unsubscribeFromPushNotifications = async () => {
   try {
-    const registration = await navigator.serviceWorker.ready;
-    const subscription = await registration.pushManager.getSubscription();
-    
-    if (subscription) {
-      await subscription.unsubscribe();
-      
-      const { error } = await supabase
-        .from('push_subscriptions')
-        .delete()
-        .eq('subscription', subscription);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
 
-      if (error) throw error;
-      
-      console.log('Successfully unsubscribed from push notifications');
-    }
+    const { error } = await supabase
+      .from('push_subscriptions')
+      .delete()
+      .eq('user_id', user.id);
+
+    if (error) throw error;
+    console.log('Successfully unsubscribed from notifications');
   } catch (error) {
-    console.error('Error unsubscribing from push notifications:', error);
+    console.error('Error unsubscribing from notifications:', error);
     throw error;
   }
 };

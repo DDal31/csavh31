@@ -1,63 +1,40 @@
-import webpush from 'npm:web-push@3.6.6'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'npm:@supabase/supabase-js@2'
+import { initializeApp, cert, getApps } from 'npm:firebase-admin/app'
+import { getMessaging } from 'npm:firebase-admin/messaging'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-Deno.serve(async (req) => {
+serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY')
-    const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY')
-
-    console.log('Checking VAPID keys configuration...')
-    console.log('VAPID public key exists:', !!vapidPublicKey)
-    console.log('VAPID private key exists:', !!vapidPrivateKey)
-
-    if (!vapidPublicKey || !vapidPrivateKey) {
-      console.error('VAPID keys not configured')
-      return new Response(
-        JSON.stringify({
-          error: 'Server error',
-          details: 'VAPID keys not configured',
-          statusCode: 500
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500
-        }
-      )
+    // Initialize Firebase Admin if not already initialized
+    if (getApps().length === 0) {
+      const serviceAccount = JSON.parse(Deno.env.get('FIREBASE_SERVICE_ACCOUNT') || '{}')
+      initializeApp({
+        credential: cert(serviceAccount)
+      })
     }
-
-    webpush.setVapidDetails(
-      'https://kzahxvazbthyjjzugxsy.supabase.co',
-      vapidPublicKey,
-      vapidPrivateKey
-    )
 
     const { subscription, payload } = await req.json()
     console.log('Processing notification request:', {
       subscription: {
-        endpoint: subscription?.endpoint,
-        keys: subscription?.keys ? {
-          p256dh: subscription.keys.p256dh?.substring(0, 10) + '...',
-          auth: subscription.keys.auth?.substring(0, 10) + '...'
-        } : undefined
+        fcm_token: subscription?.fcm_token?.substring(0, 10) + '...'
       },
       payload
     })
 
-    // Validate subscription format
-    if (!subscription?.endpoint || !subscription?.keys?.p256dh || !subscription?.keys?.auth) {
-      console.error('Invalid subscription format:', subscription)
+    if (!subscription?.fcm_token) {
       return new Response(
         JSON.stringify({
           error: 'Invalid subscription format',
-          details: 'Subscription must include endpoint and p256dh/auth keys'
+          details: 'FCM token is required'
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -66,97 +43,25 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Format payload for iOS
-    const isApplePush = subscription.endpoint.includes('web.push.apple.com')
-    let notificationPayload = payload
-    
-    if (isApplePush) {
-      console.log('Formatting payload for Apple Push')
-      notificationPayload = {
-        aps: {
-          alert: {
-            title: payload.title,
-            body: payload.body,
-          },
-          'content-available': 1,
-          'mutable-content': 1,
-          sound: 'default',
-          badge: 1,
-        },
-        fcm_options: {
-          link: payload.url || '/notifications'
-        },
-        webpush: {
-          ...payload,
-          timestamp: new Date().getTime(),
-          icon: payload.icon || 'https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/site-assets/app-icon-192.png',
-          badge: payload.badge || 'https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/site-assets/app-icon-192.png',
-          data: payload.url || '/notifications'
-        }
-      }
+    const message = {
+      notification: {
+        title: payload.title,
+        body: payload.body
+      },
+      token: subscription.fcm_token
     }
 
-    console.log('Sending notification with payload:', notificationPayload)
+    const response = await getMessaging().send(message)
+    console.log('Successfully sent message:', response)
 
-    try {
-      const result = await webpush.sendNotification(
-        subscription,
-        JSON.stringify(notificationPayload)
-      )
-
-      console.log('Push notification sent successfully:', {
-        statusCode: result?.statusCode,
-        headers: result?.headers
-      })
-
-      return new Response(
-        JSON.stringify({ success: true }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200,
-        }
-      )
-    } catch (pushError: any) {
-      console.error('Push notification error:', {
-        name: pushError.name,
-        message: pushError.message,
-        statusCode: pushError.statusCode,
-        body: pushError.body
-      })
-
-      // Handle VAPID key mismatch specifically
-      if (pushError.body?.includes('VAPID') || 
-          pushError.message?.includes('VAPID') ||
-          (typeof pushError.body === 'string' && 
-           JSON.parse(pushError.body)?.reason === 'VapidPkHashMismatch')) {
-        return new Response(
-          JSON.stringify({
-            error: 'Apple Push Error',
-            details: 'VapidPkHashMismatch',
-            statusCode: 400,
-            errorBody: { reason: 'VapidPkHashMismatch' }
-          }),
-          {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 400
-          }
-        )
+    return new Response(
+      JSON.stringify({ success: true }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
       }
-
-      // Handle other errors
-      return new Response(
-        JSON.stringify({
-          error: 'Push notification error',
-          details: pushError.message,
-          statusCode: pushError.statusCode || 500
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: pushError.statusCode || 500
-        }
-      )
-    }
-  } catch (error: any) {
+    )
+  } catch (error) {
     console.error('Error in send-push-notification:', error)
     return new Response(
       JSON.stringify({
