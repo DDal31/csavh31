@@ -4,6 +4,10 @@ import { Capacitor } from '@capacitor/core';
 
 export const initializePushNotifications = async () => {
   try {
+    // Check if notifications are supported in this environment
+    const notificationsSupported = "Notification" in window && "serviceWorker" in navigator;
+    console.log('Notifications supported:', notificationsSupported);
+
     // Check if we're on a native platform
     const platform = Capacitor.getPlatform();
     console.log('Current platform:', platform);
