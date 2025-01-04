@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, Copy, CheckCircle } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 export function VapidKeyGenerator() {
+  const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
   const [keys, setKeys] = useState<{ publicKey: string; privateKey: string } | null>(null);
+  const [copiedKey, setCopiedKey] = useState<"public" | "private" | null>(null);
 
   const generateKeys = async () => {
     setIsGenerating(true);
@@ -26,8 +29,31 @@ export function VapidKeyGenerator() {
       setKeys(data);
     } catch (error) {
       console.error("Failed to generate VAPID keys:", error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible de générer les clés VAPID. Veuillez réessayer.",
+      });
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const copyToClipboard = async (text: string, keyType: "public" | "private") => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedKey(keyType);
+      toast({
+        title: "Copié !",
+        description: `La clé ${keyType === "public" ? "publique" : "privée"} a été copiée dans le presse-papiers.`,
+      });
+      setTimeout(() => setCopiedKey(null), 2000);
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible de copier la clé. Veuillez réessayer.",
+      });
     }
   };
 
@@ -51,13 +77,43 @@ export function VapidKeyGenerator() {
       {keys && (
         <div className="space-y-4 mt-4">
           <div>
-            <h3 className="text-sm font-medium text-gray-200 mb-1">Clé publique :</h3>
+            <div className="flex justify-between items-center mb-1">
+              <h3 className="text-sm font-medium text-gray-200">Clé publique :</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-purple-300 hover:text-white hover:bg-purple-800/50"
+                onClick={() => copyToClipboard(keys.publicKey, "public")}
+                aria-label="Copier la clé publique"
+              >
+                {copiedKey === "public" ? (
+                  <CheckCircle className="h-4 w-4" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
             <div className="p-2 bg-gray-900 rounded text-xs break-all">
               {keys.publicKey}
             </div>
           </div>
           <div>
-            <h3 className="text-sm font-medium text-gray-200 mb-1">Clé privée :</h3>
+            <div className="flex justify-between items-center mb-1">
+              <h3 className="text-sm font-medium text-gray-200">Clé privée :</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-purple-300 hover:text-white hover:bg-purple-800/50"
+                onClick={() => copyToClipboard(keys.privateKey, "private")}
+                aria-label="Copier la clé privée"
+              >
+                {copiedKey === "private" ? (
+                  <CheckCircle className="h-4 w-4" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
             <div className="p-2 bg-gray-900 rounded text-xs break-all">
               {keys.privateKey}
             </div>
