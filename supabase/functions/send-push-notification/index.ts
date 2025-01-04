@@ -17,25 +17,34 @@ serve(async (req) => {
     
     if (getApps().length === 0) {
       const rawPrivateKey = Deno.env.get("FIREBASE_PRIVATE_KEY");
-      console.log("Clé privée reçue");
+      console.log("Récupération de la clé privée...");
       
       if (!rawPrivateKey) {
         throw new Error("La variable d'environnement FIREBASE_PRIVATE_KEY n'est pas définie");
       }
 
-      // Fonction simplifiée pour nettoyer la clé privée
       const cleanPrivateKey = (key: string): string => {
         try {
-          // Supprimer les guillemets au début et à la fin
+          // Remove quotes and decode if needed
           let cleanKey = key.replace(/^["']|["']$/g, '');
           
-          // Remplacer les \n littéraux par de vrais sauts de ligne
+          // Replace literal \n with actual newlines
           cleanKey = cleanKey.replace(/\\n/g, '\n');
           
-          console.log("Format de la clé après nettoyage:", {
+          // Ensure proper PEM format
+          if (!cleanKey.includes('-----BEGIN PRIVATE KEY-----')) {
+            cleanKey = '-----BEGIN PRIVATE KEY-----\n' + cleanKey;
+          }
+          if (!cleanKey.includes('-----END PRIVATE KEY-----')) {
+            cleanKey = cleanKey + '\n-----END PRIVATE KEY-----';
+          }
+          
+          // Log key format details
+          console.log("Vérification du format de la clé:", {
             longueur: cleanKey.length,
             contientDebutPEM: cleanKey.includes("-----BEGIN PRIVATE KEY-----"),
             contientFinPEM: cleanKey.includes("-----END PRIVATE KEY-----"),
+            nombreLignes: cleanKey.split('\n').length
           });
 
           return cleanKey;
@@ -61,6 +70,17 @@ serve(async (req) => {
       };
 
       try {
+        console.log("Tentative d'initialisation de Firebase avec les informations suivantes:", {
+          project_id: serviceAccount.project_id,
+          client_email: serviceAccount.client_email,
+          private_key_length: serviceAccount.private_key?.length,
+          has_required_fields: !!(
+            serviceAccount.project_id &&
+            serviceAccount.private_key &&
+            serviceAccount.client_email
+          )
+        });
+
         initializeApp({
           credential: cert(serviceAccount),
         });
