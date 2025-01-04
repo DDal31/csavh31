@@ -17,36 +17,27 @@ serve(async (req) => {
     
     if (getApps().length === 0) {
       const rawPrivateKey = Deno.env.get("FIREBASE_PRIVATE_KEY");
-      console.log("Clé privée reçue, longueur:", rawPrivateKey?.length);
+      console.log("Clé privée reçue");
       
       if (!rawPrivateKey) {
         throw new Error("La variable d'environnement FIREBASE_PRIVATE_KEY n'est pas définie");
       }
 
-      // Fonction pour nettoyer la clé privée
+      // Fonction simplifiée pour nettoyer la clé privée
       const cleanPrivateKey = (key: string): string => {
         try {
-          // Supprimer les espaces au début et à la fin
-          let cleanKey = key.trim();
-          
-          // Si la clé est entourée de guillemets JSON, les enlever
-          if (cleanKey.startsWith('"') && cleanKey.endsWith('"')) {
-            cleanKey = cleanKey.slice(1, -1);
-          }
+          // Supprimer les guillemets au début et à la fin
+          let cleanKey = key.replace(/^["']|["']$/g, '');
           
           // Remplacer les \n littéraux par de vrais sauts de ligne
           cleanKey = cleanKey.replace(/\\n/g, '\n');
           
-          // S'assurer que les délimiteurs PEM sont présents
-          if (!cleanKey.includes('-----BEGIN PRIVATE KEY-----')) {
-            cleanKey = `-----BEGIN PRIVATE KEY-----\n${cleanKey}\n-----END PRIVATE KEY-----`;
-          }
-          
-          // Vérifier le format de base de la clé
-          if (!cleanKey.match(/-----BEGIN PRIVATE KEY-----[\s\S]+-----END PRIVATE KEY-----/)) {
-            throw new Error("Format de clé PEM invalide");
-          }
-          
+          console.log("Format de la clé après nettoyage:", {
+            longueur: cleanKey.length,
+            contientDebutPEM: cleanKey.includes("-----BEGIN PRIVATE KEY-----"),
+            contientFinPEM: cleanKey.includes("-----END PRIVATE KEY-----"),
+          });
+
           return cleanKey;
         } catch (error) {
           console.error("Erreur lors du nettoyage de la clé privée:", error);
@@ -55,13 +46,6 @@ serve(async (req) => {
       };
 
       const privateKey = cleanPrivateKey(rawPrivateKey);
-      
-      console.log("Format de la clé privée:", {
-        longueur: privateKey.length,
-        contientDebutPEM: privateKey.includes("-----BEGIN PRIVATE KEY-----"),
-        contientFinPEM: privateKey.includes("-----END PRIVATE KEY-----"),
-        nombreLignes: privateKey.split('\n').length
-      });
 
       const serviceAccount = {
         type: "service_account",
@@ -75,14 +59,6 @@ serve(async (req) => {
         auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
         client_x509_cert_url: Deno.env.get("FIREBASE_CLIENT_CERT_URL"),
       };
-
-      console.log("Configuration du compte de service:", {
-        project_id: serviceAccount.project_id,
-        client_email: serviceAccount.client_email,
-        private_key_id: serviceAccount.private_key_id,
-        hasPrivateKey: !!serviceAccount.private_key,
-        privateKeyLength: serviceAccount.private_key?.length
-      });
 
       try {
         initializeApp({
