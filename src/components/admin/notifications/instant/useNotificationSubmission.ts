@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { WebPushSubscription } from "@/types/notifications";
+import { WebPushSubscription, SerializedPushSubscription } from "@/types/notifications";
 import { subscribeToPushNotifications } from "@/services/notifications";
+import { serializeSubscription } from "@/utils/pushNotifications";
 
 interface NotificationData {
   title: string;
@@ -120,10 +121,13 @@ export function useNotificationSubmission() {
                 if (newSubscription) {
                   console.log("Subscription renewed successfully, retrying notification");
                   
+                  // Serialize the subscription before storing it
+                  const serializedSubscription = serializeSubscription(newSubscription);
+                  
                   // Update subscription in database
                   const { error: updateError } = await supabase
                     .from("push_subscriptions")
-                    .update({ subscription: newSubscription })
+                    .update({ subscription: serializedSubscription })
                     .eq("id", sub.id);
 
                   if (updateError) {
