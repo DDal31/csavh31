@@ -1,11 +1,11 @@
 import { PushNotifications } from '@capacitor/push-notifications';
 import { supabase } from '@/integrations/supabase/client';
-import { Platform } from '@capacitor/core';
+import { Capacitor } from '@capacitor/core';
 
 export const initializePushNotifications = async () => {
   try {
     // Check if we're on a native platform
-    const platform = Platform.platform;
+    const platform = Capacitor.getPlatform();
     console.log('Current platform:', platform);
 
     if (platform === 'web') {
@@ -52,7 +52,7 @@ const initializeNativePushNotifications = async () => {
 
 // Add listeners for push notifications
 export const addPushNotificationListeners = () => {
-  if (Platform.platform === 'web') {
+  if (Capacitor.getPlatform() === 'web') {
     console.log('Web platform - no native listeners needed');
     return;
   }
