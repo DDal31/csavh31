@@ -5,8 +5,9 @@ import { componentTagger } from "lovable-tagger";
 
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "::",
+    host: true, // Listen on all available network interfaces
     port: 8080,
+    strictPort: true, // Fail if port is already in use
   },
   plugins: [
     react(),
@@ -21,6 +22,16 @@ export default defineConfig(({ mode }) => ({
     outDir: 'dist',
     assetsDir: 'assets',
     emptyOutDir: true,
-    sourcemap: true
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
+  },
+  preview: {
+    port: 8080,
+    strictPort: true,
+    host: true,
   }
 }));
