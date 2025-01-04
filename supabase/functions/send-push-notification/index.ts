@@ -23,38 +23,30 @@ serve(async (req) => {
         throw new Error("La variable d'environnement FIREBASE_PRIVATE_KEY n'est pas définie");
       }
 
-      // Nettoyage initial de la clé privée
-      let privateKey = rawPrivateKey.trim();
-      console.log("Type de la clé privée:", typeof privateKey);
-      
-      // Si la clé est une chaîne JSON, essayer de la parser
-      if (privateKey.startsWith('"') || privateKey.startsWith("'")) {
-        try {
-          privateKey = JSON.parse(privateKey);
-          console.log("Clé privée extraite du JSON");
-        } catch (e) {
-          console.log("Erreur lors du parsing JSON:", e.message);
+      // Fonction pour nettoyer la clé privée
+      const cleanPrivateKey = (key: string): string => {
+        // Supprimer les guillemets au début et à la fin si présents
+        let cleanKey = key.trim().replace(/^["']|["']$/g, '');
+        
+        // Remplacer les \n littéraux par de vrais sauts de ligne
+        cleanKey = cleanKey.replace(/\\n/g, '\n');
+        
+        // Ajouter les délimiteurs PEM s'ils sont manquants
+        if (!cleanKey.includes('-----BEGIN PRIVATE KEY-----')) {
+          cleanKey = `-----BEGIN PRIVATE KEY-----\n${cleanKey}\n-----END PRIVATE KEY-----`;
         }
-      }
+        
+        return cleanKey;
+      };
 
-      // Vérifier si la clé a besoin des délimiteurs PEM
-      if (!privateKey.includes("-----BEGIN PRIVATE KEY-----")) {
-        console.log("Ajout des délimiteurs PEM manquants");
-        privateKey = `-----BEGIN PRIVATE KEY-----\n${privateKey}\n-----END PRIVATE KEY-----`;
-      }
-
-      // Remplacer les \n littéraux par de vrais sauts de ligne
-      privateKey = privateKey
-        .replace(/\\n/g, '\n')
-        .replace(/^"|"$/g, ''); // Supprime les guillemets au début et à la fin
-
-      console.log("Format final de la clé privée:", {
+      const privateKey = cleanPrivateKey(rawPrivateKey);
+      
+      console.log("Format de la clé privée:", {
         longueur: privateKey.length,
         contientDebutPEM: privateKey.includes("-----BEGIN PRIVATE KEY-----"),
         contientFinPEM: privateKey.includes("-----END PRIVATE KEY-----"),
-        premierCaractere: privateKey.charAt(0),
-        dernierCaractere: privateKey.charAt(privateKey.length - 1),
-        nombreLignes: privateKey.split('\n').length
+        nombreLignes: privateKey.split('\n').length,
+        premiereLigne: privateKey.split('\n')[0]
       });
 
       const serviceAccount = {
