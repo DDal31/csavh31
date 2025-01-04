@@ -11,10 +11,14 @@ Deno.serve(async (req) => {
   }
 
   try {
-    console.log('Generating VAPID keys...')
+    console.log('Generating new VAPID keys...')
     const vapidKeys = webpush.generateVAPIDKeys()
     
-    console.log('VAPID keys generated successfully')
+    console.log('VAPID keys generated successfully:', {
+      publicKeyLength: vapidKeys.publicKey.length,
+      privateKeyLength: vapidKeys.privateKey.length
+    })
+
     return new Response(
       JSON.stringify({
         publicKey: vapidKeys.publicKey,
