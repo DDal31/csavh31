@@ -12,16 +12,43 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const messaging = getMessaging(app);
+
+// Check if the browser supports Firebase Messaging
+const isSupported = () => {
+  if (!('Notification' in window)) {
+    console.log('Notifications not supported');
+    return false;
+  }
+  if (!('serviceWorker' in navigator)) {
+    console.log('Service workers not supported');
+    return false;
+  }
+  return true;
+};
+
+let messaging: any = null;
+try {
+  if (isSupported()) {
+    messaging = getMessaging(app);
+    console.log('Firebase Messaging initialized successfully');
+  }
+} catch (err) {
+  console.error('Error initializing Firebase Messaging:', err);
+}
 
 export const requestNotificationPermission = async () => {
   console.log('Requesting notification permission...');
   
+  if (!isSupported()) {
+    console.log('Browser does not support notifications');
+    return null;
+  }
+
   try {
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
       const token = await getToken(messaging, {
-        vapidKey: 'BEpTfcfcPXLCo6KKmODVDfZETR_YPcsQJGD8hs_eQRAInu0el6Rz3Df6_7EacaL0CGkxJqZtiB4Sb_n5RM3WpQA	'
+        vapidKey: 'BEpTfcfcPXLCo6KKmODVDfZETR_YPcsQJGD8hs_eQRAInu0el6Rz3Df6_7EacaL0CGkxJqZtiB4Sb_n5RM3WpQA'
       });
       console.log('Notification permission granted. Token:', token);
       return token;
@@ -36,6 +63,12 @@ export const requestNotificationPermission = async () => {
 
 export const onMessageListener = () =>
   new Promise((resolve) => {
+    if (!messaging) {
+      console.log('Messaging not supported');
+      resolve(null);
+      return;
+    }
+
     onMessage(messaging, (payload) => {
       console.log('Message received:', payload);
       resolve(payload);

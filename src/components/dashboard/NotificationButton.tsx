@@ -37,6 +37,10 @@ export function NotificationButton() {
       const supported = "Notification" in window && "serviceWorker" in navigator;
       setNotificationsSupported(supported);
       console.log("Notifications supported:", supported);
+      
+      if (!supported) {
+        console.log("This browser doesn't support notifications");
+      }
     };
 
     checkNotificationSupport();
@@ -47,6 +51,15 @@ export function NotificationButton() {
   }, [subscription]);
 
   const handleSubscriptionToggle = async () => {
+    if (!notificationsSupported) {
+      toast({
+        title: "Navigateur non supporté",
+        description: "Votre navigateur ne supporte pas les notifications. Veuillez utiliser un navigateur plus récent.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       if (isSubscribed) {
         await unsubscribeFromPushNotifications();
@@ -73,7 +86,10 @@ export function NotificationButton() {
     }
   };
 
-  if (!notificationsSupported) return null;
+  if (!notificationsSupported) {
+    console.log("Notifications not supported - hiding button");
+    return null;
+  }
 
   return (
     <Button
