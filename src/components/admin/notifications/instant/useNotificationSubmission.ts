@@ -15,6 +15,22 @@ export function useNotificationSubmission() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
+  const handleVapidKeyMismatch = async (subscription: WebPushSubscription) => {
+    console.log("Handling VAPID key mismatch for subscription:", subscription.endpoint);
+    try {
+      // Try to get a new subscription
+      const newSubscription = await subscribeToPushNotifications();
+      if (!newSubscription) {
+        throw new Error("Failed to renew subscription");
+      }
+      console.log("Successfully renewed subscription");
+      return newSubscription;
+    } catch (error) {
+      console.error("Error renewing subscription:", error);
+      return null;
+    }
+  };
+
   const submitNotification = async ({ title, content, targetGroup, selectedSport }: NotificationData) => {
     setIsSubmitting(true);
     console.log("Starting notification submission process...");
@@ -90,32 +106,49 @@ export function useNotificationSubmission() {
 
           // Check for VAPID key mismatch error
           if (response.error) {
-            const errorBody = JSON.parse(response.error.message);
-            console.log("Push notification error response:", errorBody);
+            let errorBody;
+            try {
+              errorBody = JSON.parse(response.error.message);
+              console.log("Push notification error response:", errorBody);
 
-            if (errorBody?.details === "VapidPkHashMismatch" || 
-                errorBody?.errorBody?.reason === "VapidPkHashMismatch") {
-              console.log("VAPID key mismatch detected, attempting to renew subscription");
-              
-              // Attempt to renew subscription
-              const newSubscription = await subscribeToPushNotifications();
-              if (newSubscription) {
-                console.log("Subscription renewed successfully, retrying notification");
+              if (errorBody?.details === "VapidPkHashMismatch" || 
+                  errorBody?.errorBody?.reason === "VapidPkHashMismatch") {
+                console.log("VAPID key mismatch detected, attempting to renew subscription");
                 
-                // Retry with new subscription
-                response = await supabase.functions.invoke("send-push-notification", {
-                  body: { 
-                    subscription: newSubscription, 
-                    payload: notificationData 
+                // Attempt to renew subscription
+                const newSubscription = await handleVapidKeyMismatch(subscription);
+                if (newSubscription) {
+                  console.log("Subscription renewed successfully, retrying notification");
+                  
+                  // Update subscription in database
+                  const { error: updateError } = await supabase
+                    .from("push_subscriptions")
+                    .update({ subscription: newSubscription })
+                    .eq("id", sub.id);
+
+                  if (updateError) {
+                    console.error("Error updating subscription:", updateError);
+                    failureCount++;
+                    continue;
                   }
-                });
-                
-                if (!response.error) {
-                  console.log("Notification sent successfully after subscription renewal");
-                  successCount++;
-                  continue;
+                  
+                  // Retry with new subscription
+                  response = await supabase.functions.invoke("send-push-notification", {
+                    body: { 
+                      subscription: newSubscription, 
+                      payload: notificationData 
+                    }
+                  });
+                  
+                  if (!response.error) {
+                    console.log("Notification sent successfully after subscription renewal");
+                    successCount++;
+                    continue;
+                  }
                 }
               }
+            } catch (parseError) {
+              console.error("Error parsing error response:", parseError);
             }
             
             console.error("Error sending notification:", response.error);
