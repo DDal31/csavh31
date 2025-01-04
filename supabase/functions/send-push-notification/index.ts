@@ -75,8 +75,8 @@ Deno.serve(async (req) => {
         webpush: {
           ...payload,
           timestamp: new Date().getTime(),
-          icon: 'https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/site-assets/app-icon-192.png',
-          badge: 'https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/site-assets/app-icon-192.png',
+          icon: payload.icon || 'https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/site-assets/app-icon-192.png',
+          badge: payload.badge || 'https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/site-assets/app-icon-192.png',
           data: payload.url || '/notifications'
         }
       }
