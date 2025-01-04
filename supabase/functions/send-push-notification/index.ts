@@ -39,25 +39,28 @@ serve(async (req) => {
     }
 
     // Parse request body
-    const { title, body, token, url } = await req.json();
-    console.log("Received notification request:", { title, body, url });
+    const { subscription, payload } = await req.json();
+    console.log("Received notification request:", { 
+      subscription: subscription ? "present" : "missing",
+      payload 
+    });
 
-    if (!token) {
-      throw new Error("FCM token is required");
+    if (!subscription?.fcm_token) {
+      throw new Error("FCM token is required in subscription object");
     }
 
     // Send message
     const message = {
       notification: {
-        title,
-        body,
+        title: payload.title,
+        body: payload.body,
       },
       webpush: {
         fcm_options: {
-          link: url,
+          link: payload.url,
         },
       },
-      token,
+      token: subscription.fcm_token,
     };
 
     console.log("Sending message:", message);

@@ -18,7 +18,7 @@ export function useNotificationSubmission() {
     console.log("Starting notification submission process...");
 
     try {
-      const notificationData = {
+      const payload = {
         title,
         body: content,
         url: "/notifications",
@@ -26,7 +26,7 @@ export function useNotificationSubmission() {
         icon: 'https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/site-assets/app-icon-192.png',
         badge: 'https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/site-assets/app-icon-192.png'
       };
-      console.log("Notification data prepared:", notificationData);
+      console.log("Notification payload prepared:", payload);
 
       const subscriptionsQuery = supabase
         .from("push_subscriptions")
@@ -68,7 +68,7 @@ export function useNotificationSubmission() {
           const response = await supabase.functions.invoke("send-push-notification", {
             body: { 
               subscription: sub.subscription,
-              payload: notificationData 
+              payload
             }
           });
 
