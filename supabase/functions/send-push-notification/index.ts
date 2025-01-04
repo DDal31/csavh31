@@ -55,7 +55,9 @@ Deno.serve(async (req) => {
 
     // Format payload for iOS if needed
     let notificationPayload = payload
-    if (subscription.endpoint.includes('web.push.apple.com')) {
+    const isApplePush = subscription.endpoint.includes('web.push.apple.com')
+    
+    if (isApplePush) {
       console.log('Formatting payload for Apple Push')
       notificationPayload = {
         aps: {
@@ -139,6 +141,29 @@ Deno.serve(async (req) => {
             status: 400
           }
         )
+      }
+
+      // For Apple Push specific errors, try to parse and handle them
+      if (isApplePush && pushError.body) {
+        try {
+          const errorBody = typeof pushError.body === 'string' ? 
+            JSON.parse(pushError.body) : pushError.body;
+          
+          return new Response(
+            JSON.stringify({
+              error: 'Apple Push Error',
+              details: errorBody.reason || pushError.message,
+              statusCode: 400,
+              errorBody
+            }),
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 400
+            }
+          )
+        } catch (parseError) {
+          console.error('Error parsing Apple Push error:', parseError)
+        }
       }
 
       throw pushError
