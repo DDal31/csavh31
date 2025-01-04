@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { subscribeToPushNotifications, unsubscribeFromPushNotifications } from "@/services/notifications";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { initializePushNotifications, addPushNotificationListeners } from "@/utils/pushNotificationsSetup";
 
 export function NotificationButton() {
   const { toast } = useToast();
@@ -33,10 +34,16 @@ export function NotificationButton() {
   });
 
   useEffect(() => {
-    const checkNotificationSupport = () => {
+    const checkNotificationSupport = async () => {
       const supported = "Notification" in window && "serviceWorker" in navigator;
       setNotificationsSupported(supported);
       console.log("Notifications supported:", supported);
+
+      if (supported) {
+        // Initialize Capacitor Push Notifications
+        await initializePushNotifications();
+        addPushNotificationListeners();
+      }
     };
 
     checkNotificationSupport();
