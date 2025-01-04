@@ -17,11 +17,15 @@ serve(async (req) => {
     
     // Initialize Firebase Admin if not already initialized
     if (getApps().length === 0) {
+      // Format the private key by replacing literal '\n' with actual line breaks
+      const privateKey = Deno.env.get("FIREBASE_PRIVATE_KEY")?.replace(/\\n/g, '\n');
+      console.log("Private key length:", privateKey?.length);
+      
       const serviceAccount = {
         type: "service_account",
         project_id: Deno.env.get("FIREBASE_PROJECT_ID"),
         private_key_id: Deno.env.get("FIREBASE_PRIVATE_KEY_ID"),
-        private_key: Deno.env.get("FIREBASE_PRIVATE_KEY")?.replace(/\\n/g, '\n'),
+        private_key: privateKey,
         client_email: Deno.env.get("FIREBASE_CLIENT_EMAIL"),
         client_id: Deno.env.get("FIREBASE_CLIENT_ID"),
         auth_uri: "https://accounts.google.com/o/oauth2/auth",
