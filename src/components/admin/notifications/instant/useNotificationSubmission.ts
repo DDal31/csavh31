@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { WebPushSubscription, SerializedPushSubscription } from "@/types/notifications";
+import { WebPushSubscription } from "@/types/notifications";
 import { subscribeToPushNotifications } from "@/services/notifications";
 import { serializeSubscription } from "@/utils/pushNotifications";
 
