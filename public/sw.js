@@ -11,8 +11,8 @@ self.addEventListener('push', event => {
     
     const options = {
       body,
-      icon: '/club-logo.png',
-      badge: '/club-logo.png',
+      icon: 'https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/site-assets/app-icon-192.png',
+      badge: 'https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/site-assets/app-icon-192.png',
       data: url,
       actions: data.actions,
       vibrate: [200, 100, 200],
