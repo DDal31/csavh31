@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Loader2, Copy, CheckCircle } from "lucide-react";
+import { Loader2, Copy, CheckCircle, ExternalLink } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 export function VapidKeyGenerator() {
@@ -57,8 +57,39 @@ export function VapidKeyGenerator() {
     }
   };
 
+  const openSupabaseSecrets = () => {
+    window.open("https://supabase.com/dashboard/project/kzahxvazbthyjjzugxsy/settings/functions", "_blank");
+  };
+
   return (
     <div className="space-y-4 p-4 bg-gray-800 rounded-lg">
+      <div className="space-y-2">
+        <h2 className="text-lg font-semibold text-white">Configuration des clés VAPID</h2>
+        <p className="text-sm text-gray-300">
+          Les clés VAPID sont nécessaires pour l'envoi des notifications push. Suivez ces étapes :
+        </p>
+        <ol className="list-decimal list-inside space-y-2 text-sm text-gray-300 ml-4">
+          <li>Générez de nouvelles clés en cliquant sur le bouton ci-dessous</li>
+          <li>Copiez les clés générées en utilisant les boutons de copie</li>
+          <li>
+            Ajoutez-les dans les secrets des fonctions Edge de Supabase :
+            <Button
+              variant="link"
+              size="sm"
+              className="text-purple-300 hover:text-purple-200 pl-2"
+              onClick={openSupabaseSecrets}
+            >
+              Ouvrir les secrets Supabase <ExternalLink className="h-4 w-4 ml-1" />
+            </Button>
+          </li>
+          <li>Dans Supabase, ajoutez deux secrets :</li>
+          <ul className="list-disc list-inside ml-4 text-gray-400">
+            <li>VAPID_PUBLIC_KEY : collez la clé publique</li>
+            <li>VAPID_PRIVATE_KEY : collez la clé privée</li>
+          </ul>
+        </ol>
+      </div>
+
       <Button 
         onClick={generateKeys}
         disabled={isGenerating}
@@ -118,9 +149,6 @@ export function VapidKeyGenerator() {
               {keys.privateKey}
             </div>
           </div>
-          <p className="text-sm text-gray-400">
-            Copiez ces clés et mettez-les à jour dans les secrets des fonctions Edge de Supabase.
-          </p>
         </div>
       )}
     </div>
