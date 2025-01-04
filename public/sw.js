@@ -4,12 +4,16 @@ self.addEventListener('push', event => {
     const data = event.data.json();
     console.log('Push data received:', data);
     
-    // Format payload for iOS
+    // Handle iOS specific payload structure
+    const title = data.aps?.alert?.title || data.title;
+    const body = data.aps?.alert?.body || data.body;
+    const url = data.fcm_options?.link || data.url;
+    
     const options = {
-      body: data.body,
+      body,
       icon: '/app-icon-192.png',
       badge: '/app-icon-192.png',
-      data: data.url,
+      data: url,
       actions: data.actions,
       vibrate: [200, 100, 200],
       // iOS specific options
@@ -20,7 +24,7 @@ self.addEventListener('push', event => {
 
     console.log('Showing notification with options:', options);
     event.waitUntil(
-      self.registration.showNotification(data.title, options)
+      self.registration.showNotification(title, options)
     );
   } catch (error) {
     console.error('Error handling push event:', error);

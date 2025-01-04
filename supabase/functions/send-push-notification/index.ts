@@ -53,38 +53,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Validate payload
-    if (!payload?.title || !payload?.body) {
-      console.error('Invalid payload format:', payload)
-      return new Response(
-        JSON.stringify({
-          error: 'Invalid payload format',
-          details: 'Payload must include title and body'
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400,
-        }
-      )
-    }
-
-    // Handle native push notification (APNS/FCM)
-    if (subscription.token) {
-      console.log('Handling native push notification')
-      // Implement native push logic here
-      return new Response(
-        JSON.stringify({
-          success: true,
-          details: 'Native notification sent successfully'
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200,
-        }
-      )
-    }
-
-    // Format payload for web push
+    // Format payload for iOS if needed
     let notificationPayload = payload
     if (subscription.endpoint.includes('web.push.apple.com')) {
       console.log('Formatting payload for Apple Push')
@@ -98,7 +67,6 @@ Deno.serve(async (req) => {
           'mutable-content': 1,
           sound: 'default',
           badge: 1,
-          category: 'message',
         },
         webpush: {
           ...payload,
