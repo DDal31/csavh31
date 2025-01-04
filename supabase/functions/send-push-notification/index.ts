@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
       payload
     })
 
-    // Validate input
+    // Validate subscription format
     if (!subscription?.endpoint || !subscription?.keys?.p256dh || !subscription?.keys?.auth) {
       console.error('Invalid subscription format:', subscription)
       return new Response(
