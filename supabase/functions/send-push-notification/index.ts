@@ -19,16 +19,28 @@ serve(async (req) => {
     if (getApps().length === 0) {
       // Get the raw private key
       const rawPrivateKey = Deno.env.get("FIREBASE_PRIVATE_KEY");
-      console.log("Raw private key received, length:", rawPrivateKey?.length);
+      console.log("Raw private key received");
       
-      // Format the private key - first decode if it's URL encoded, then replace literal \n
-      const privateKey = decodeURIComponent(rawPrivateKey || '')
+      if (!rawPrivateKey) {
+        throw new Error("FIREBASE_PRIVATE_KEY environment variable is not set");
+      }
+
+      // Format the private key - handle both URL encoded and regular format
+      let privateKey = rawPrivateKey;
+      try {
+        // Try URL decoding first in case it's URL encoded
+        privateKey = decodeURIComponent(rawPrivateKey);
+      } catch (e) {
+        console.log("Private key is not URL encoded, using raw value");
+      }
+
+      // Replace literal \n with actual newlines and clean up any extra quotes
+      privateKey = privateKey
         .replace(/\\n/g, '\n')
-        .replace(/\\"]/g, '"');
-      
-      console.log("Formatted private key length:", privateKey.length);
-      console.log("Private key starts with:", privateKey.substring(0, 27));
-      console.log("Private key ends with:", privateKey.substring(privateKey.length - 25));
+        .replace(/^"/, '')
+        .replace(/"$/, '');
+
+      console.log("Private key formatted successfully");
       
       const serviceAccount = {
         type: "service_account",
@@ -43,8 +55,9 @@ serve(async (req) => {
         client_x509_cert_url: Deno.env.get("FIREBASE_CLIENT_CERT_URL"),
       };
 
-      console.log("Service account project_id:", serviceAccount.project_id);
-      console.log("Service account client_email:", serviceAccount.client_email);
+      console.log("Service account configured with:");
+      console.log("- Project ID:", serviceAccount.project_id);
+      console.log("- Client Email:", serviceAccount.client_email);
       
       try {
         initializeApp({
