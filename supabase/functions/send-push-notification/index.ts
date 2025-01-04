@@ -29,33 +29,22 @@ serve(async (req) => {
           // Supprimer les espaces au début et à la fin
           let cleanKey = key.trim();
           
-          // Si la clé est entourée de guillemets JSON, les enlever et parser
-          if ((cleanKey.startsWith('"') && cleanKey.endsWith('"')) || 
-              (cleanKey.startsWith("'") && cleanKey.endsWith("'"))) {
-            try {
-              cleanKey = JSON.parse(cleanKey);
-            } catch (e) {
-              console.error("Erreur lors du parsing JSON de la clé:", e);
-            }
+          // Si la clé est entourée de guillemets JSON, les enlever
+          if (cleanKey.startsWith('"') && cleanKey.endsWith('"')) {
+            cleanKey = cleanKey.slice(1, -1);
           }
           
           // Remplacer les \n littéraux par de vrais sauts de ligne
           cleanKey = cleanKey.replace(/\\n/g, '\n');
           
-          // Supprimer tout caractère non-Base64 (sauf les délimiteurs PEM)
-          cleanKey = cleanKey.split('\n').map(line => {
-            if (line.includes('BEGIN') || line.includes('END')) return line;
-            return line.replace(/[^A-Za-z0-9+/=]/g, '');
-          }).join('\n');
-          
-          // Ajouter les délimiteurs PEM s'ils sont manquants
+          // S'assurer que les délimiteurs PEM sont présents
           if (!cleanKey.includes('-----BEGIN PRIVATE KEY-----')) {
             cleanKey = `-----BEGIN PRIVATE KEY-----\n${cleanKey}\n-----END PRIVATE KEY-----`;
           }
           
-          // Vérifier que la clé a le bon format
-          if (!cleanKey.match(/-----BEGIN PRIVATE KEY-----\n[A-Za-z0-9+/=\n]+\n-----END PRIVATE KEY-----/)) {
-            throw new Error("Format de clé PEM invalide après nettoyage");
+          // Vérifier le format de base de la clé
+          if (!cleanKey.match(/-----BEGIN PRIVATE KEY-----[\s\S]+-----END PRIVATE KEY-----/)) {
+            throw new Error("Format de clé PEM invalide");
           }
           
           return cleanKey;
@@ -71,9 +60,7 @@ serve(async (req) => {
         longueur: privateKey.length,
         contientDebutPEM: privateKey.includes("-----BEGIN PRIVATE KEY-----"),
         contientFinPEM: privateKey.includes("-----END PRIVATE KEY-----"),
-        nombreLignes: privateKey.split('\n').length,
-        premiereLigne: privateKey.split('\n')[0],
-        derniereLigne: privateKey.split('\n').slice(-1)[0]
+        nombreLignes: privateKey.split('\n').length
       });
 
       const serviceAccount = {
