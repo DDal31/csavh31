@@ -27,8 +27,14 @@ Deno.serve(async (req) => {
     )
 
     const { subscription, payload } = await req.json()
-    console.log('Processing notification request:', {
-      endpoint: subscription?.endpoint,
+    console.log('Received request:', {
+      subscription: {
+        endpoint: subscription?.endpoint,
+        keys: subscription?.keys ? {
+          p256dh: subscription.keys.p256dh?.substring(0, 10) + '...',
+          auth: subscription.keys.auth?.substring(0, 10) + '...'
+        } : undefined
+      },
       payload
     })
 
@@ -39,6 +45,21 @@ Deno.serve(async (req) => {
         JSON.stringify({
           error: 'Invalid subscription format',
           details: 'Subscription must include endpoint and p256dh/auth keys'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      )
+    }
+
+    // Validate payload
+    if (!payload?.title || !payload?.body) {
+      console.error('Invalid payload format:', payload)
+      return new Response(
+        JSON.stringify({
+          error: 'Invalid payload format',
+          details: 'Payload must include title and body'
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },

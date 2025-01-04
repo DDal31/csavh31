@@ -2,11 +2,6 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { WebPushSubscription } from "@/types/notifications";
-import {
-  handleApplePushError,
-  sendPushNotification,
-  renewSubscription
-} from "@/utils/pushNotifications";
 
 interface NotificationData {
   title: string;
@@ -54,11 +49,19 @@ export function useNotificationSubmission() {
       if (subError) throw subError;
       console.log("Found subscriptions:", subscriptions?.length);
 
+      if (!subscriptions?.length) {
+        toast({
+          title: "Aucun destinataire",
+          description: "Aucun utilisateur n'est inscrit aux notifications pour le moment.",
+          variant: "destructive",
+        });
+        return { success: false };
+      }
+
       let successCount = 0;
       let failureCount = 0;
-      let renewalCount = 0;
 
-      for (const sub of subscriptions || []) {
+      for (const sub of subscriptions) {
         try {
           const subscription = sub.subscription as unknown as WebPushSubscription;
           
@@ -68,49 +71,23 @@ export function useNotificationSubmission() {
             continue;
           }
 
-          const response = await sendPushNotification(subscription, notificationData);
+          console.log("Sending notification to subscription:", {
+            endpoint: subscription.endpoint,
+            keys: {
+              p256dh: subscription.keys.p256dh.substring(0, 10) + '...',
+              auth: subscription.keys.auth.substring(0, 10) + '...'
+            }
+          });
+
+          const response = await supabase.functions.invoke("send-push-notification", {
+            body: { subscription, payload: notificationData }
+          });
+
           console.log("Push notification response:", response);
 
           if (response.error) {
-            if (subscription.endpoint.includes('web.push.apple.com')) {
-              console.log("Handling Apple Push error for subscription:", sub.id);
-              const result = await handleApplePushError(
-                response.error,
-                subscription,
-                notificationData
-              );
-              
-              if (result.error) {
-                console.log("Failed to handle Apple Push error:", result.error);
-                // Try to renew the subscription
-                const renewed = await renewSubscription(subscription);
-                if (renewed) {
-                  console.log("Successfully renewed subscription");
-                  // Update the subscription in the database
-                  const { error: updateError } = await supabase
-                    .from("push_subscriptions")
-                    .update({ subscription: renewed })
-                    .eq("id", sub.id);
-                  
-                  if (!updateError) {
-                    // Retry sending the notification with the renewed subscription
-                    const retryResponse = await sendPushNotification(renewed as WebPushSubscription, notificationData);
-                    if (!retryResponse.error) {
-                      successCount++;
-                      renewalCount++;
-                      continue;
-                    }
-                  }
-                }
-                failureCount++;
-              } else {
-                successCount++;
-                renewalCount++;
-              }
-            } else {
-              console.error("Error sending notification:", response.error);
-              failureCount++;
-            }
+            console.error("Error sending notification:", response.error);
+            failureCount++;
           } else {
             successCount++;
           }
@@ -133,10 +110,11 @@ export function useNotificationSubmission() {
 
       toast({
         title: "Notification envoyée",
-        description: `Envoyé avec succès: ${successCount}, Échecs: ${failureCount}${renewalCount > 0 ? `, Renouvellements: ${renewalCount}` : ''}`,
+        description: `Envoyé avec succès: ${successCount}, Échecs: ${failureCount}`,
+        variant: successCount > 0 ? "default" : "destructive",
       });
 
-      return { success: true };
+      return { success: successCount > 0 };
     } catch (error) {
       console.error("Error during notification sending:", error);
       toast({
