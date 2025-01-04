@@ -15,9 +15,7 @@ serve(async (req) => {
   try {
     console.log("Initializing Firebase Admin SDK...");
     
-    // Initialize Firebase Admin if not already initialized
     if (getApps().length === 0) {
-      // Get the raw private key
       const rawPrivateKey = Deno.env.get("FIREBASE_PRIVATE_KEY");
       console.log("Raw private key received");
       
@@ -25,36 +23,38 @@ serve(async (req) => {
         throw new Error("FIREBASE_PRIVATE_KEY environment variable is not set");
       }
 
-      // First, try to parse the key as JSON in case it's JSON stringified
+      // Nettoyage et formatage de la clé privée
       let privateKey = rawPrivateKey;
-      try {
-        const parsed = JSON.parse(rawPrivateKey);
-        privateKey = parsed;
-        console.log("Successfully parsed private key from JSON");
-      } catch (e) {
-        console.log("Private key is not JSON stringified, using as is");
-      }
-
-      // If it's a string, handle potential URL encoding and cleanup
-      if (typeof privateKey === 'string') {
-        try {
-          privateKey = decodeURIComponent(privateKey);
-          console.log("Successfully URL decoded private key");
-        } catch (e) {
-          console.log("Private key is not URL encoded");
-        }
-
-        // Replace literal \n with actual newlines and clean up quotes
-        privateKey = privateKey
-          .replace(/\\n/g, '\n')
-          .replace(/^"/, '')
-          .replace(/"$/, '');
-      }
-
-      console.log("Private key formatted successfully");
-      console.log("Private key type:", typeof privateKey);
-      console.log("Private key length:", privateKey.length);
       
+      // Si la clé est une chaîne JSON, on la parse
+      try {
+        const parsed = JSON.parse(privateKey);
+        privateKey = typeof parsed === 'string' ? parsed : rawPrivateKey;
+        console.log("Clé privée parsée depuis JSON");
+      } catch (e) {
+        console.log("La clé privée n'est pas au format JSON");
+      }
+
+      // Décodage URL si nécessaire
+      try {
+        privateKey = decodeURIComponent(privateKey);
+        console.log("Clé privée décodée URL");
+      } catch (e) {
+        console.log("La clé privée n'est pas encodée URL");
+      }
+
+      // Remplacement des \n littéraux par de vrais sauts de ligne
+      privateKey = privateKey
+        .replace(/\\n/g, '\n')
+        .replace(/^"|"$/g, ''); // Supprime les guillemets au début et à la fin
+
+      console.log("Format de la clé privée:", {
+        longueur: privateKey.length,
+        contientSautsLigne: privateKey.includes('\n'),
+        premierCaractere: privateKey.charAt(0),
+        dernierCaractere: privateKey.charAt(privateKey.length - 1)
+      });
+
       const serviceAccount = {
         type: "service_account",
         project_id: Deno.env.get("FIREBASE_PROJECT_ID"),
@@ -68,34 +68,36 @@ serve(async (req) => {
         client_x509_cert_url: Deno.env.get("FIREBASE_CLIENT_CERT_URL"),
       };
 
-      console.log("Service account configured with:");
-      console.log("- Project ID:", serviceAccount.project_id);
-      console.log("- Client Email:", serviceAccount.client_email);
-      console.log("- Private Key ID:", serviceAccount.private_key_id);
-      
+      console.log("Configuration du compte de service:", {
+        project_id: serviceAccount.project_id,
+        client_email: serviceAccount.client_email,
+        private_key_id: serviceAccount.private_key_id,
+        hasPrivateKey: !!serviceAccount.private_key
+      });
+
       try {
         initializeApp({
           credential: cert(serviceAccount),
         });
-        console.log("Firebase Admin SDK initialized successfully");
+        console.log("Firebase Admin SDK initialisé avec succès");
       } catch (initError) {
-        console.error("Error initializing Firebase Admin SDK:", initError);
-        throw new Error(`Firebase initialization error: ${initError.message}`);
+        console.error("Erreur d'initialisation Firebase Admin SDK:", initError);
+        throw new Error(`Erreur d'initialisation Firebase: ${initError.message}`);
       }
     }
 
     // Parse request body
     const { subscription, payload } = await req.json();
-    console.log("Received notification request:", { 
-      subscription: subscription ? "present" : "missing",
+    console.log("Requête reçue:", { 
+      subscription: subscription ? "présent" : "manquant",
       payload 
     });
 
     if (!subscription?.fcm_token) {
-      throw new Error("FCM token is required in subscription object");
+      throw new Error("Token FCM requis dans l'objet subscription");
     }
 
-    // Send message
+    // Envoi du message
     const message = {
       notification: {
         title: payload.title,
@@ -109,9 +111,9 @@ serve(async (req) => {
       token: subscription.fcm_token,
     };
 
-    console.log("Sending message:", message);
+    console.log("Envoi du message:", message);
     const response = await getMessaging().send(message);
-    console.log("Successfully sent message:", response);
+    console.log("Message envoyé avec succès:", response);
 
     return new Response(
       JSON.stringify({ success: true, messageId: response }),
@@ -123,7 +125,7 @@ serve(async (req) => {
       },
     )
   } catch (error) {
-    console.error("Error sending notification:", error);
+    console.error("Erreur lors de l'envoi de la notification:", error);
     return new Response(
       JSON.stringify({ 
         error: error.message,
