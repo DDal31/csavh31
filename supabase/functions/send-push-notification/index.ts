@@ -6,7 +6,6 @@ const corsHeaders = {
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -80,7 +79,8 @@ Deno.serve(async (req) => {
           },
           'content-available': 1,
           'mutable-content': 1,
-          sound: 'default'
+          sound: 'default',
+          badge: 1
         },
         webpush: {
           ...payload,
