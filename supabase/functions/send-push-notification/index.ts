@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
     )
 
     const { subscription, payload } = await req.json()
-    console.log('Received request:', {
+    console.log('Processing notification request:', {
       subscription: {
         endpoint: subscription?.endpoint,
         keys: subscription?.keys ? {
@@ -71,6 +71,8 @@ Deno.serve(async (req) => {
         webpush: {
           ...payload,
           timestamp: new Date().getTime(),
+          icon: 'https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/site-assets/app-icon-192.png',
+          badge: 'https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/site-assets/app-icon-192.png'
         },
         fcm_options: {
           link: payload.url
@@ -80,28 +82,68 @@ Deno.serve(async (req) => {
 
     console.log('Sending notification with payload:', notificationPayload)
 
-    const result = await webpush.sendNotification(
-      subscription,
-      JSON.stringify(notificationPayload)
-    )
+    try {
+      const result = await webpush.sendNotification(
+        subscription,
+        JSON.stringify(notificationPayload)
+      )
 
-    console.log('Push notification sent successfully:', {
-      statusCode: result?.statusCode,
-      headers: result?.headers
-    })
+      console.log('Push notification sent successfully:', {
+        statusCode: result?.statusCode,
+        headers: result?.headers
+      })
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        details: 'Notification sent successfully'
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
+      return new Response(
+        JSON.stringify({
+          success: true,
+          details: 'Notification sent successfully'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      )
+    } catch (pushError: any) {
+      console.error('Push notification error:', {
+        name: pushError.name,
+        message: pushError.message,
+        statusCode: pushError.statusCode,
+        body: pushError.body
+      })
+
+      // Handle expired subscriptions
+      if (pushError.statusCode === 404 || pushError.statusCode === 410) {
+        return new Response(
+          JSON.stringify({
+            error: 'Subscription expired',
+            details: pushError.message,
+            statusCode: pushError.statusCode
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: pushError.statusCode
+          }
+        )
       }
-    )
 
-  } catch (error) {
+      // Handle VAPID configuration errors
+      if (pushError.body?.includes('VAPID') || pushError.message?.includes('VAPID')) {
+        return new Response(
+          JSON.stringify({
+            error: 'VAPID configuration error',
+            details: pushError.message,
+            statusCode: 400
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 400
+          }
+        )
+      }
+
+      throw pushError
+    }
+  } catch (error: any) {
     console.error('Error in send-push-notification:', {
       name: error.name,
       message: error.message,
@@ -109,36 +151,6 @@ Deno.serve(async (req) => {
       statusCode: error.statusCode,
       body: error.body
     })
-
-    // Handle subscription expiration
-    if (error.statusCode === 404 || error.statusCode === 410) {
-      return new Response(
-        JSON.stringify({
-          error: 'Subscription expired',
-          details: error.message,
-          statusCode: error.statusCode
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: error.statusCode
-        }
-      )
-    }
-
-    // Handle VAPID errors
-    if (error.body?.includes('VAPID') || error.message?.includes('VAPID')) {
-      return new Response(
-        JSON.stringify({
-          error: 'VAPID configuration error',
-          details: error.message,
-          statusCode: error.statusCode || 400
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: error.statusCode || 400
-        }
-      )
-    }
 
     return new Response(
       JSON.stringify({
