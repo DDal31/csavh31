@@ -1,29 +1,62 @@
 import { PushNotifications } from '@capacitor/push-notifications';
 import { supabase } from '@/integrations/supabase/client';
+import { Platform } from '@capacitor/core';
 
 export const initializePushNotifications = async () => {
   try {
-    // Request permission to use push notifications
-    // iOS will prompt user and return if they granted permission or not
-    // Android will just grant without prompting
-    const result = await PushNotifications.requestPermissions();
-    
-    console.log('Push notification permission result:', result);
+    // Check if we're on a native platform
+    const platform = Platform.platform;
+    console.log('Current platform:', platform);
 
-    if (result.receive === 'granted') {
-      // Register with Apple / Google to receive push via APNS/FCM
-      await PushNotifications.register();
-      console.log('Push notification registered');
+    if (platform === 'web') {
+      console.log('Using web push notifications');
+      return await initializeWebPushNotifications();
     } else {
-      console.log('Push notification permission denied');
+      console.log('Using native push notifications');
+      return await initializeNativePushNotifications();
     }
   } catch (error) {
     console.error('Error initializing push notifications:', error);
+    throw error;
+  }
+};
+
+const initializeWebPushNotifications = async () => {
+  if (!('Notification' in window)) {
+    console.log('Web Notifications not supported');
+    return false;
+  }
+
+  const permission = await Notification.requestPermission();
+  console.log('Web notification permission:', permission);
+  return permission === 'granted';
+};
+
+const initializeNativePushNotifications = async () => {
+  // Request permission to use push notifications
+  // iOS will prompt user and return if they granted permission or not
+  // Android will just grant without prompting
+  const result = await PushNotifications.requestPermissions();
+  console.log('Push notification permission result:', result);
+
+  if (result.receive === 'granted') {
+    // Register with Apple / Google to receive push via APNS/FCM
+    await PushNotifications.register();
+    console.log('Push notification registered');
+    return true;
+  } else {
+    console.log('Push notification permission denied');
+    return false;
   }
 };
 
 // Add listeners for push notifications
 export const addPushNotificationListeners = () => {
+  if (Platform.platform === 'web') {
+    console.log('Web platform - no native listeners needed');
+    return;
+  }
+
   // On registration success
   PushNotifications.addListener('registration', async (token) => {
     console.log('Push registration success:', token.value);

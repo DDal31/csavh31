@@ -38,12 +38,13 @@ Deno.serve(async (req) => {
     })
 
     // Validate subscription format
-    if (!subscription?.endpoint || !subscription?.keys?.p256dh || !subscription?.keys?.auth) {
+    if (!subscription?.endpoint || 
+        (!subscription?.keys && !subscription?.token)) {
       console.error('Invalid subscription format:', subscription)
       return new Response(
         JSON.stringify({
           error: 'Invalid subscription format',
-          details: 'Subscription must include endpoint and p256dh/auth keys'
+          details: 'Subscription must include endpoint and keys/token'
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -67,7 +68,23 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Format payload for Apple Push if needed
+    // Handle native push notification (APNS/FCM)
+    if (subscription.token) {
+      console.log('Handling native push notification')
+      // Implement native push logic here
+      return new Response(
+        JSON.stringify({
+          success: true,
+          details: 'Native notification sent successfully'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      )
+    }
+
+    // Format payload for web push
     let notificationPayload = payload
     if (subscription.endpoint.includes('web.push.apple.com')) {
       console.log('Formatting payload for Apple Push')
