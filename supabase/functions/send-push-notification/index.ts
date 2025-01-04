@@ -17,9 +17,18 @@ serve(async (req) => {
     
     // Initialize Firebase Admin if not already initialized
     if (getApps().length === 0) {
-      // Format the private key by replacing literal '\n' with actual line breaks
-      const privateKey = Deno.env.get("FIREBASE_PRIVATE_KEY")?.replace(/\\n/g, '\n');
-      console.log("Private key length:", privateKey?.length);
+      // Get the raw private key
+      const rawPrivateKey = Deno.env.get("FIREBASE_PRIVATE_KEY");
+      console.log("Raw private key received, length:", rawPrivateKey?.length);
+      
+      // Format the private key - first decode if it's URL encoded, then replace literal \n
+      const privateKey = decodeURIComponent(rawPrivateKey || '')
+        .replace(/\\n/g, '\n')
+        .replace(/\\"]/g, '"');
+      
+      console.log("Formatted private key length:", privateKey.length);
+      console.log("Private key starts with:", privateKey.substring(0, 27));
+      console.log("Private key ends with:", privateKey.substring(privateKey.length - 25));
       
       const serviceAccount = {
         type: "service_account",
@@ -35,11 +44,17 @@ serve(async (req) => {
       };
 
       console.log("Service account project_id:", serviceAccount.project_id);
+      console.log("Service account client_email:", serviceAccount.client_email);
       
-      initializeApp({
-        credential: cert(serviceAccount),
-      });
-      console.log("Firebase Admin SDK initialized successfully");
+      try {
+        initializeApp({
+          credential: cert(serviceAccount),
+        });
+        console.log("Firebase Admin SDK initialized successfully");
+      } catch (initError) {
+        console.error("Error initializing Firebase Admin SDK:", initError);
+        throw new Error(`Firebase initialization error: ${initError.message}`);
+      }
     }
 
     // Parse request body
