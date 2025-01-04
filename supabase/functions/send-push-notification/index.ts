@@ -25,22 +25,35 @@ serve(async (req) => {
         throw new Error("FIREBASE_PRIVATE_KEY environment variable is not set");
       }
 
-      // Format the private key - handle both URL encoded and regular format
+      // First, try to parse the key as JSON in case it's JSON stringified
       let privateKey = rawPrivateKey;
       try {
-        // Try URL decoding first in case it's URL encoded
-        privateKey = decodeURIComponent(rawPrivateKey);
+        const parsed = JSON.parse(rawPrivateKey);
+        privateKey = parsed;
+        console.log("Successfully parsed private key from JSON");
       } catch (e) {
-        console.log("Private key is not URL encoded, using raw value");
+        console.log("Private key is not JSON stringified, using as is");
       }
 
-      // Replace literal \n with actual newlines and clean up any extra quotes
-      privateKey = privateKey
-        .replace(/\\n/g, '\n')
-        .replace(/^"/, '')
-        .replace(/"$/, '');
+      // If it's a string, handle potential URL encoding and cleanup
+      if (typeof privateKey === 'string') {
+        try {
+          privateKey = decodeURIComponent(privateKey);
+          console.log("Successfully URL decoded private key");
+        } catch (e) {
+          console.log("Private key is not URL encoded");
+        }
+
+        // Replace literal \n with actual newlines and clean up quotes
+        privateKey = privateKey
+          .replace(/\\n/g, '\n')
+          .replace(/^"/, '')
+          .replace(/"$/, '');
+      }
 
       console.log("Private key formatted successfully");
+      console.log("Private key type:", typeof privateKey);
+      console.log("Private key length:", privateKey.length);
       
       const serviceAccount = {
         type: "service_account",
@@ -58,6 +71,7 @@ serve(async (req) => {
       console.log("Service account configured with:");
       console.log("- Project ID:", serviceAccount.project_id);
       console.log("- Client Email:", serviceAccount.client_email);
+      console.log("- Private Key ID:", serviceAccount.private_key_id);
       
       try {
         initializeApp({
