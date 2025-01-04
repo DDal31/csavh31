@@ -75,16 +75,20 @@ Deno.serve(async (req) => {
         aps: {
           alert: {
             title: payload.title,
-            body: payload.body
+            body: payload.body,
           },
           'content-available': 1,
           'mutable-content': 1,
           sound: 'default',
-          badge: 1
+          badge: 1,
+          category: 'message',
         },
         webpush: {
           ...payload,
-          timestamp: new Date().getTime()
+          timestamp: new Date().getTime(),
+        },
+        fcm_options: {
+          link: payload.url
         }
       }
     }
