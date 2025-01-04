@@ -6,6 +6,7 @@ import { subscribeToPushNotifications, unsubscribeFromPushNotifications } from "
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { initializePushNotifications, addPushNotificationListeners } from "@/utils/pushNotificationsSetup";
+import { VapidKeyGenerator } from "@/components/admin/notifications/VapidKeyGenerator";
 
 export function NotificationButton() {
   const { toast } = useToast();
@@ -83,23 +84,27 @@ export function NotificationButton() {
   if (!notificationsSupported) return null;
 
   return (
-    <Button
-      onClick={handleSubscriptionToggle}
-      variant="outline"
-      className="flex items-center gap-2 w-full sm:w-auto"
-      aria-label={isSubscribed ? "Désactiver les notifications" : "Activer les notifications"}
-    >
-      {isSubscribed ? (
-        <>
-          <BellOff className="h-4 w-4" />
-          Désactiver les notifications
-        </>
-      ) : (
-        <>
-          <Bell className="h-4 w-4" />
-          Activer les notifications
-        </>
-      )}
-    </Button>
+    <div className="space-y-4">
+      <Button
+        onClick={handleSubscriptionToggle}
+        variant="outline"
+        className="flex items-center gap-2 w-full sm:w-auto"
+        aria-label={isSubscribed ? "Désactiver les notifications" : "Activer les notifications"}
+      >
+        {isSubscribed ? (
+          <>
+            <BellOff className="h-4 w-4" />
+            Désactiver les notifications
+          </>
+        ) : (
+          <>
+            <Bell className="h-4 w-4" />
+            Activer les notifications
+          </>
+        )}
+      </Button>
+
+      <VapidKeyGenerator />
+    </div>
   );
 }
