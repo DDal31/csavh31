@@ -2,13 +2,13 @@ import { initializeApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
-  measurementId: "YOUR_MEASUREMENT_ID"
+  apiKey: "AIzaSyCikvgzPhOwUymoB5LrX2LgT1_8T8Pq9tc",
+  authDomain: "csavh31.firebaseapp.com",
+  projectId: "csavh31",
+  storageBucket: "csavh31.firebasestorage.app",
+  messagingSenderId: "917694935396",
+  appId: "1:917694935396:web:2f39c9de2754ca65d28a71",
+  measurementId: "G-CVDSC1ZV03"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -21,7 +21,7 @@ export const requestNotificationPermission = async () => {
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
       const token = await getToken(messaging, {
-        vapidKey: 'YOUR_VAPID_KEY'
+        vapidKey: 'BEpTfcfcPXLCo6KKmODVDfZETR_YPcsQJGD8hs_eQRAInu0el6Rz3Df6_7EacaL0CGkxJqZtiB4Sb_n5RM3WpQA	'
       });
       console.log('Notification permission granted. Token:', token);
       return token;
