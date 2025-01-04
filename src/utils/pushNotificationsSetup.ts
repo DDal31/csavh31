@@ -31,8 +31,9 @@ const initializeWebPushNotifications = async () => {
     return false;
   }
 
-  // Check if it's iOS
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  // Check if it's iOS using a more reliable method
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.platform) || 
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   console.log('Is iOS device:', isIOS);
 
   if (isIOS) {
