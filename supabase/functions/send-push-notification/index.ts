@@ -23,38 +23,9 @@ serve(async (req) => {
         throw new Error("La variable d'environnement FIREBASE_PRIVATE_KEY n'est pas définie");
       }
 
-      const cleanPrivateKey = (key: string): string => {
-        try {
-          // Remove quotes and decode if needed
-          let cleanKey = key.replace(/^["']|["']$/g, '');
-          
-          // Replace literal \n with actual newlines
-          cleanKey = cleanKey.replace(/\\n/g, '\n');
-          
-          // Ensure proper PEM format
-          if (!cleanKey.includes('-----BEGIN PRIVATE KEY-----')) {
-            cleanKey = '-----BEGIN PRIVATE KEY-----\n' + cleanKey;
-          }
-          if (!cleanKey.includes('-----END PRIVATE KEY-----')) {
-            cleanKey = cleanKey + '\n-----END PRIVATE KEY-----';
-          }
-          
-          // Log key format details
-          console.log("Vérification du format de la clé:", {
-            longueur: cleanKey.length,
-            contientDebutPEM: cleanKey.includes("-----BEGIN PRIVATE KEY-----"),
-            contientFinPEM: cleanKey.includes("-----END PRIVATE KEY-----"),
-            nombreLignes: cleanKey.split('\n').length
-          });
-
-          return cleanKey;
-        } catch (error) {
-          console.error("Erreur lors du nettoyage de la clé privée:", error);
-          throw error;
-        }
-      };
-
-      const privateKey = cleanPrivateKey(rawPrivateKey);
+      // Simplification du nettoyage de la clé privée
+      const privateKey = rawPrivateKey.replace(/\\n/g, '\n');
+      console.log("Clé privée formatée avec succès");
 
       const serviceAccount = {
         type: "service_account",
@@ -70,17 +41,7 @@ serve(async (req) => {
       };
 
       try {
-        console.log("Tentative d'initialisation de Firebase avec les informations suivantes:", {
-          project_id: serviceAccount.project_id,
-          client_email: serviceAccount.client_email,
-          private_key_length: serviceAccount.private_key?.length,
-          has_required_fields: !!(
-            serviceAccount.project_id &&
-            serviceAccount.private_key &&
-            serviceAccount.client_email
-          )
-        });
-
+        console.log("Tentative d'initialisation de Firebase...");
         initializeApp({
           credential: cert(serviceAccount),
         });
