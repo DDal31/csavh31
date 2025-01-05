@@ -61,24 +61,25 @@ serve(async (req) => {
 
     console.log("Found trainings:", trainings);
 
+    // Get all notification settings that are enabled
+    const { data: settings, error: settingsError } = await supabaseClient
+      .from('notification_settings')
+      .select('*')
+      .eq('enabled', true);
+
+    if (settingsError) {
+      console.error("Error fetching notification settings:", settingsError);
+      throw settingsError;
+    }
+
+    console.log("Found notification settings:", settings);
+
     // Process each training
     for (const training of trainings) {
-      const trainingDate = new Date(training.date + 'T' + training.start_time)
-      const hoursUntilTraining = Math.round((trainingDate.getTime() - now.getTime()) / (1000 * 60 * 60))
+      const trainingDateTime = new Date(`${training.date}T${training.start_time}`);
+      const hoursUntilTraining = (trainingDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
       
-      console.log(`Processing training ${training.id} at ${trainingDate}, ${hoursUntilTraining} hours until start`);
-
-      // Get notification settings
-      const { data: settings } = await supabaseClient
-        .from('notification_settings')
-        .select('*')
-        .eq('enabled', true)
-        .eq('sport', training.type);
-
-      if (!settings || settings.length === 0) {
-        console.log("No notification settings found for sport:", training.type);
-        continue;
-      }
+      console.log(`Processing training ${training.id} at ${trainingDateTime}, ${hoursUntilTraining} hours until start`);
 
       // Count players and referees
       const players = training.registrations?.filter(reg => 
@@ -91,20 +92,34 @@ serve(async (req) => {
 
       console.log(`Training has ${players.length} players and ${referees.length} referees`);
 
+      // Process each notification setting
       for (const setting of settings) {
+        // Skip if setting is not for this sport
+        if (setting.sport && setting.sport !== training.type) {
+          console.log(`Skipping setting ${setting.id} - wrong sport type (${setting.sport} vs ${training.type})`);
+          continue;
+        }
+
         let shouldSendNotification = false;
         let notificationPayload = null;
 
-        if (setting.notification_type === 'training_reminder' && 
-            Math.abs(hoursUntilTraining - setting.delay_hours) < 1) {
-          shouldSendNotification = true;
-          notificationPayload = {
-            title: setting.notification_title || `Rappel d'entraînement ${training.type}`,
-            body: setting.notification_text || `Rappel: vous avez un entraînement de ${training.type} ${formatRelativeTime(hoursUntilTraining)}`,
-          };
-        } else if (setting.notification_type === 'missing_players' && 
-                   hoursUntilTraining > 0 &&
-                   players.length < (setting.min_players || 6)) {
+        // Check if we should send a training reminder
+        if (setting.notification_type === 'training_reminder') {
+          const hourDifference = Math.abs(hoursUntilTraining - setting.delay_hours);
+          console.log(`Training reminder check: ${hourDifference} hours difference (target: ${setting.delay_hours})`);
+          
+          if (hourDifference < 1) {
+            shouldSendNotification = true;
+            notificationPayload = {
+              title: setting.notification_title || `Rappel d'entraînement ${training.type}`,
+              body: setting.notification_text || `Rappel: vous avez un entraînement de ${training.type} ${formatRelativeTime(hoursUntilTraining)}`,
+            };
+          }
+        }
+        // Check if we should send a missing players notification
+        else if (setting.notification_type === 'missing_players' && 
+                 hoursUntilTraining > 0 &&
+                 players.length < (setting.min_players || 6)) {
           shouldSendNotification = true;
           notificationPayload = {
             title: setting.notification_title || `Manque de joueurs - ${training.type}`,
@@ -147,6 +162,17 @@ serve(async (req) => {
 
                 await messaging.send(message);
                 console.log("Notification sent successfully");
+
+                // Log notification in history
+                await supabaseClient
+                  .from('notification_history')
+                  .insert({
+                    title: notificationPayload.title,
+                    content: notificationPayload.body,
+                    target_group: 'all',
+                    sport: training.type,
+                  });
+
               } catch (error) {
                 console.error("Error sending notification:", error);
                 if (error.code === 'messaging/registration-token-not-registered') {
@@ -185,7 +211,7 @@ serve(async (req) => {
 function formatRelativeTime(hours: number): string {
   if (hours === 24) return "demain";
   if (hours === 48) return "après-demain";
-  if (hours < 24) return `dans ${hours} heures`;
+  if (hours < 24) return `dans ${Math.round(hours)} heures`;
   return `dans ${Math.round(hours/24)} jours`;
 }
 
