@@ -1,32 +1,24 @@
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Bell, BellOff, Info } from "lucide-react";
+import { NotificationTypeSelector } from "./form/NotificationTypeSelector";
+import { NotificationContentFields } from "./form/NotificationContentFields";
+import { NotificationSettingsFields } from "./form/NotificationSettingsFields";
 
 interface NotificationSetting {
   id?: string;
-  type: string;
   notification_type: "training_reminder" | "missing_players" | "custom";
   delay_hours: number;
   enabled: boolean;
   sport?: string;
-  target_group?: "all" | "sport_specific" | "training_registered";
-  sound_path?: string;
-  logo_path?: string;
-  created_at?: string;
-  updated_at?: string;
+  min_players?: number;
+  notification_text?: string;
+  notification_title?: string;
 }
 
 interface NotificationSettingsFormProps {
@@ -42,16 +34,29 @@ export function NotificationSettingsForm({
 }: NotificationSettingsFormProps) {
   const [formData, setFormData] = useState<NotificationSetting>(
     setting || {
-      type: "",
       notification_type: "training_reminder",
       delay_hours: 24,
       enabled: true,
-      target_group: "all",
+      sport: "",
+      notification_text: "",
+      notification_title: "",
     }
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  const { data: sports } = useQuery({
+    queryKey: ["sports"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sports")
+        .select("*")
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,7 +108,7 @@ export function NotificationSettingsForm({
       aria-label="Formulaire de paramètres de notification"
     >
       <div className="flex items-center gap-3 mb-6">
-        {setting?.enabled ? (
+        {formData.enabled ? (
           <Bell className="h-6 w-6 text-primary" aria-hidden="true" />
         ) : (
           <BellOff className="h-6 w-6 text-gray-400" aria-hidden="true" />
@@ -114,129 +119,34 @@ export function NotificationSettingsForm({
       </div>
 
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="type" className="text-gray-200">
-              Type de Notification
-              <span className="text-red-400 ml-1" aria-hidden="true">*</span>
-            </Label>
-            <Input
-              id="type"
-              value={formData.type}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, type: e.target.value }))
-              }
-              required
-              aria-required="true"
-              className="bg-gray-800 border-gray-700 text-white"
-              placeholder="Ex: Rappel d'entraînement"
-            />
-          </div>
+        <NotificationTypeSelector
+          value={formData.notification_type}
+          onChange={(value) => {
+            setFormData((prev) => ({
+              ...prev,
+              notification_type: value as typeof formData.notification_type,
+              min_players: value === "missing_players" ? 4 : undefined,
+            }));
+          }}
+        />
 
-          <div className="space-y-2">
-            <Label htmlFor="notification_type" className="text-gray-200">
-              Catégorie
-              <span className="text-red-400 ml-1" aria-hidden="true">*</span>
-            </Label>
-            <Select
-              value={formData.notification_type}
-              onValueChange={(value: any) =>
-                setFormData((prev) => ({ ...prev, notification_type: value }))
-              }
-            >
-              <SelectTrigger 
-                id="notification_type"
-                className="bg-gray-800 border-gray-700 text-white"
-              >
-                <SelectValue placeholder="Sélectionnez une catégorie" />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-700">
-                <SelectItem value="training_reminder" className="text-white">
-                  Rappel d'entraînement
-                </SelectItem>
-                <SelectItem value="missing_players" className="text-white">
-                  Joueurs manquants
-                </SelectItem>
-                <SelectItem value="custom" className="text-white">
-                  Personnalisé
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <NotificationSettingsFields
+          sport={formData.sport || ""}
+          onSportChange={(value) => setFormData((prev) => ({ ...prev, sport: value }))}
+          delayHours={formData.delay_hours}
+          onDelayHoursChange={(value) => setFormData((prev) => ({ ...prev, delay_hours: value }))}
+          minPlayers={formData.min_players}
+          onMinPlayersChange={(value) => setFormData((prev) => ({ ...prev, min_players: value }))}
+          showMinPlayers={formData.notification_type === "missing_players"}
+          sports={sports}
+        />
 
-          <div className="space-y-2">
-            <Label htmlFor="delay_hours" className="text-gray-200">
-              Délai (heures)
-              <span className="text-red-400 ml-1" aria-hidden="true">*</span>
-            </Label>
-            <Input
-              id="delay_hours"
-              type="number"
-              min="0"
-              value={formData.delay_hours}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  delay_hours: parseInt(e.target.value),
-                }))
-              }
-              required
-              aria-required="true"
-              className="bg-gray-800 border-gray-700 text-white"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="target_group" className="text-gray-200">
-              Groupe Cible
-              <span className="text-red-400 ml-1" aria-hidden="true">*</span>
-            </Label>
-            <Select
-              value={formData.target_group}
-              onValueChange={(value: any) =>
-                setFormData((prev) => ({ ...prev, target_group: value }))
-              }
-            >
-              <SelectTrigger 
-                id="target_group"
-                className="bg-gray-800 border-gray-700 text-white"
-              >
-                <SelectValue placeholder="Sélectionnez un groupe cible" />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-700">
-                <SelectItem value="all" className="text-white">
-                  Tous
-                </SelectItem>
-                <SelectItem value="sport_specific" className="text-white">
-                  Sport spécifique
-                </SelectItem>
-                <SelectItem value="training_registered" className="text-white">
-                  Inscrits uniquement
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {formData.target_group === "sport_specific" && (
-            <div className="space-y-2">
-              <Label htmlFor="sport" className="text-gray-200">
-                Sport
-                <span className="text-red-400 ml-1" aria-hidden="true">*</span>
-              </Label>
-              <Input
-                id="sport"
-                value={formData.sport || ""}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, sport: e.target.value }))
-                }
-                required
-                aria-required="true"
-                className="bg-gray-800 border-gray-700 text-white"
-                placeholder="Ex: Goalball"
-              />
-            </div>
-          )}
-        </div>
+        <NotificationContentFields
+          notificationText={formData.notification_text || ""}
+          onNotificationTextChange={(value) => setFormData((prev) => ({ ...prev, notification_text: value }))}
+          notificationTitle={formData.notification_title || ""}
+          onNotificationTitleChange={(value) => setFormData((prev) => ({ ...prev, notification_title: value }))}
+        />
 
         <div className="flex items-center space-x-3 py-4">
           <Switch

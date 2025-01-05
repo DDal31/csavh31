@@ -159,6 +159,9 @@ export type Database = {
           enabled: boolean | null
           id: string
           logo_path: string | null
+          min_players: number | null
+          notification_text: string | null
+          notification_title: string | null
           notification_type:
             | Database["public"]["Enums"]["notification_type"]
             | null
@@ -174,6 +177,9 @@ export type Database = {
           enabled?: boolean | null
           id?: string
           logo_path?: string | null
+          min_players?: number | null
+          notification_text?: string | null
+          notification_title?: string | null
           notification_type?:
             | Database["public"]["Enums"]["notification_type"]
             | null
@@ -189,6 +195,9 @@ export type Database = {
           enabled?: boolean | null
           id?: string
           logo_path?: string | null
+          min_players?: number | null
+          notification_text?: string | null
+          notification_title?: string | null
           notification_type?:
             | Database["public"]["Enums"]["notification_type"]
             | null
