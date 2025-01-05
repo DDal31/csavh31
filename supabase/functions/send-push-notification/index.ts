@@ -23,14 +23,16 @@ serve(async (req) => {
         throw new Error("La variable d'environnement FIREBASE_PRIVATE_KEY n'est pas définie");
       }
 
-      // Properly format the private key by:
-      // 1. Removing any surrounding quotes
-      // 2. Converting escaped newlines to actual newlines
-      // 3. Ensuring proper PEM format
-      const privateKey = rawPrivateKey
-        .replace(/"/g, '')
-        .replace(/\\n/g, '\n')
-        .trim();
+      // Ensure the private key is in the correct PEM format
+      let privateKey = rawPrivateKey;
+      if (!privateKey.startsWith('-----BEGIN PRIVATE KEY-----')) {
+        privateKey = `-----BEGIN PRIVATE KEY-----\n${
+          privateKey
+            .replace(/"/g, '')
+            .replace(/\\n/g, '\n')
+            .trim()
+        }\n-----END PRIVATE KEY-----`;
+      }
 
       console.log("Clé privée formatée avec succès");
 
