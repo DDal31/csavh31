@@ -63,10 +63,23 @@ export function NotificationSettingsForm({
     setIsSubmitting(true);
 
     try {
+      console.log("Submitting notification settings:", formData);
+      
+      // Prepare the data to match the database schema
+      const notificationData = {
+        notification_type: formData.notification_type,
+        delay_hours: formData.delay_hours,
+        enabled: formData.enabled,
+        sport: formData.sport,
+        min_players: formData.min_players,
+        notification_text: formData.notification_text,
+        notification_title: formData.notification_title
+      };
+
       if (setting?.id) {
         const { error } = await supabase
           .from("notification_settings")
-          .update(formData)
+          .update(notificationData)
           .eq("id", setting.id);
 
         if (error) throw error;
@@ -77,7 +90,7 @@ export function NotificationSettingsForm({
       } else {
         const { error } = await supabase
           .from("notification_settings")
-          .insert([formData]);
+          .insert([notificationData]);
 
         if (error) throw error;
         toast({
