@@ -29,7 +29,7 @@ export function TrainingForm({ training, onSuccess, onCancel }: TrainingFormProp
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      type: training?.type || "",
+      type: training?.type || "goalball", // Set default to "goalball" instead of empty string
       otherTypeDetails: training?.other_type_details || "",
       date: training ? new Date(training.date) : undefined,
       startTime: training?.start_time.slice(0, 5) || "09:00",
