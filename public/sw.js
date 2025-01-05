@@ -5,7 +5,7 @@ self.addEventListener('push', event => {
     console.log('Push data received:', data);
     
     // Si la notification vient de Firebase, on ne l'affiche pas en double
-    if (data.notification_source === 'firebase') {
+    if (data.source === 'firebase') {
       console.log('Notification from Firebase, skipping display');
       return;
     }

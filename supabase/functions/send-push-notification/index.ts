@@ -56,9 +56,9 @@ serve(async (req) => {
         body: payload.body,
       },
       data: {
-        url: payload.url,
-        timestamp: payload.timestamp?.toString(),
-        notification_source: 'firebase', // Utilisation d'une clé valide
+        url: payload.url || '',
+        timestamp: payload.timestamp?.toString() || '',
+        source: 'firebase', // Clé personnalisée valide pour FCM
       },
       apns: {
         payload: {
