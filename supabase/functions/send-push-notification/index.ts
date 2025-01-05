@@ -16,25 +16,12 @@ serve(async (req) => {
     console.log("Initialisation de Firebase Admin SDK...");
     
     if (getApps().length === 0) {
-      const rawPrivateKey = Deno.env.get("FIREBASE_PRIVATE_KEY");
+      const privateKey = Deno.env.get("FIREBASE_PRIVATE_KEY");
       console.log("Récupération de la clé privée...");
       
-      if (!rawPrivateKey) {
+      if (!privateKey) {
         throw new Error("La variable d'environnement FIREBASE_PRIVATE_KEY n'est pas définie");
       }
-
-      // Ensure the private key is in the correct PEM format
-      let privateKey = rawPrivateKey;
-      if (!privateKey.startsWith('-----BEGIN PRIVATE KEY-----')) {
-        privateKey = `-----BEGIN PRIVATE KEY-----\n${
-          privateKey
-            .replace(/"/g, '')
-            .replace(/\\n/g, '\n')
-            .trim()
-        }\n-----END PRIVATE KEY-----`;
-      }
-
-      console.log("Clé privée formatée avec succès");
 
       const serviceAccount = {
         type: "service_account",
