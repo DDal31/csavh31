@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import webpush from 'npm:web-push@3.6.6'
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { initializeApp, cert, getApps } from 'npm:firebase-admin/app';
+import { getMessaging } from 'npm:firebase-admin/messaging';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,17 +19,23 @@ serve(async (req) => {
   )
 
   try {
-    // Configure web-push with VAPID keys
-    webpush.setVapidDetails(
-      'mailto:your-email@example.com',
-      Deno.env.get('VAPID_PUBLIC_KEY') ?? '',
-      Deno.env.get('VAPID_PRIVATE_KEY') ?? ''
-    )
+    // Initialize Firebase Admin if not already initialized
+    if (getApps().length === 0) {
+      const serviceAccountJson = Deno.env.get("FIREBASE_SERVICE_ACCOUNT");
+      if (!serviceAccountJson) {
+        throw new Error("FIREBASE_SERVICE_ACCOUNT not configured");
+      }
+      const serviceAccount = JSON.parse(serviceAccountJson);
+      initializeApp({
+        credential: cert(serviceAccount)
+      });
+    }
 
-    // Get upcoming trainings
+    // Get upcoming trainings for the next 7 days
     const now = new Date()
-    const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
-    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000)
+    const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+
+    console.log("Fetching trainings between:", now.toISOString(), "and", sevenDaysFromNow.toISOString());
 
     const { data: trainings, error: trainingsError } = await supabaseClient
       .from('trainings')
@@ -38,64 +45,118 @@ serve(async (req) => {
         date,
         start_time,
         registrations (
-          user_id
+          user_id,
+          profiles (
+            club_role
+          )
         )
       `)
       .gte('date', now.toISOString().split('T')[0])
-      .lte('date', oneWeekFromNow.toISOString().split('T')[0])
+      .lte('date', sevenDaysFromNow.toISOString().split('T')[0])
 
-    if (trainingsError) throw trainingsError
+    if (trainingsError) {
+      console.error("Error fetching trainings:", trainingsError);
+      throw trainingsError;
+    }
+
+    console.log("Found trainings:", trainings);
 
     // Process each training
     for (const training of trainings) {
-      const trainingDate = new Date(training.date)
-      const daysUntilTraining = Math.ceil((trainingDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+      const trainingDate = new Date(training.date + 'T' + training.start_time)
+      const hoursUntilTraining = Math.round((trainingDate.getTime() - now.getTime()) / (1000 * 60 * 60))
       
-      // Get subscriptions for registered users
-      const { data: subscriptions, error: subscriptionsError } = await supabaseClient
-        .from('push_subscriptions')
-        .select('subscription')
-        .in('user_id', training.registrations.map(r => r.user_id))
+      console.log(`Processing training ${training.id} at ${trainingDate}, ${hoursUntilTraining} hours until start`);
 
-      if (subscriptionsError) throw subscriptionsError
+      // Get notification settings
+      const { data: settings } = await supabaseClient
+        .from('notification_settings')
+        .select('*')
+        .eq('enabled', true)
+        .eq('sport', training.type);
 
-      // Prepare notification content
-      let notificationPayload
-      if (daysUntilTraining <= 1) {
-        // Reminder notification
-        notificationPayload = {
-          title: 'Rappel d\'entraînement',
-          body: `Vous avez un entraînement de ${training.type} demain à ${training.start_time}`,
-          url: `/training/${training.id}`,
-        }
-      } else if (daysUntilTraining <= 7 && training.registrations.length < 4) {
-        // Low participation notification
-        notificationPayload = {
-          title: 'Participation faible',
-          body: `L'entraînement de ${training.type} du ${training.date} manque de participants`,
-          url: `/training/${training.id}`,
-          actions: [
-            {
-              action: 'register',
-              title: 'S\'inscrire'
-            }
-          ]
-        }
+      if (!settings || settings.length === 0) {
+        console.log("No notification settings found for sport:", training.type);
+        continue;
       }
 
-      // Send notifications if needed
-      if (notificationPayload) {
-        for (const { subscription } of subscriptions) {
-          try {
-            await webpush.sendNotification(subscription, JSON.stringify(notificationPayload))
-          } catch (error) {
-            console.error('Error sending notification:', error)
-            // If subscription is invalid, remove it
-            if (error.statusCode === 410) {
-              await supabaseClient
-                .from('push_subscriptions')
-                .delete()
-                .eq('subscription', subscription)
+      // Count players and referees
+      const players = training.registrations?.filter(reg => 
+        ["joueur", "joueur-entraineur", "joueur-arbitre", "les-trois"].includes(reg.profiles?.club_role)
+      ) || [];
+      
+      const referees = training.registrations?.filter(reg => 
+        ["arbitre", "joueur-arbitre", "entraineur-arbitre", "les-trois"].includes(reg.profiles?.club_role)
+      ) || [];
+
+      console.log(`Training has ${players.length} players and ${referees.length} referees`);
+
+      for (const setting of settings) {
+        let shouldSendNotification = false;
+        let notificationPayload = null;
+
+        if (setting.notification_type === 'training_reminder' && 
+            Math.abs(hoursUntilTraining - setting.delay_hours) < 1) {
+          shouldSendNotification = true;
+          notificationPayload = {
+            title: setting.notification_title || `Rappel d'entraînement ${training.type}`,
+            body: setting.notification_text || `Rappel: vous avez un entraînement de ${training.type} ${formatRelativeTime(hoursUntilTraining)}`,
+          };
+        } else if (setting.notification_type === 'missing_players' && 
+                   hoursUntilTraining > 0 &&
+                   players.length < (setting.min_players || 6)) {
+          shouldSendNotification = true;
+          notificationPayload = {
+            title: setting.notification_title || `Manque de joueurs - ${training.type}`,
+            body: setting.notification_text || 
+                  `Il manque des joueurs pour l'entraînement de ${training.type} du ${formatDate(training.date)} (${players.length}/${setting.min_players || 6} joueurs)`,
+          };
+        }
+
+        if (shouldSendNotification && notificationPayload) {
+          console.log("Preparing to send notification:", notificationPayload);
+
+          // Get all users with push subscriptions
+          const { data: subscriptions } = await supabaseClient
+            .from('push_subscriptions')
+            .select('subscription');
+
+          if (!subscriptions || subscriptions.length === 0) {
+            console.log("No push subscriptions found");
+            continue;
+          }
+
+          console.log(`Sending notifications to ${subscriptions.length} subscribers`);
+
+          // Send notifications via Firebase
+          const messaging = getMessaging();
+          for (const { subscription } of subscriptions) {
+            if (subscription?.fcm_token) {
+              try {
+                const message = {
+                  notification: {
+                    ...notificationPayload,
+                  },
+                  data: {
+                    url: `/training/${training.id}`,
+                    timestamp: now.getTime().toString(),
+                    source: 'firebase',
+                  },
+                  token: subscription.fcm_token,
+                };
+
+                await messaging.send(message);
+                console.log("Notification sent successfully");
+              } catch (error) {
+                console.error("Error sending notification:", error);
+                if (error.code === 'messaging/registration-token-not-registered') {
+                  // Remove invalid token
+                  await supabaseClient
+                    .from('push_subscriptions')
+                    .delete()
+                    .eq('subscription->fcm_token', subscription.fcm_token);
+                }
+              }
             }
           }
         }
@@ -110,12 +171,28 @@ serve(async (req) => {
       },
     )
   } catch (error) {
+    console.error("Error in send-training-notifications:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
+        status: 500,
       },
     )
   }
 })
+
+function formatRelativeTime(hours: number): string {
+  if (hours === 24) return "demain";
+  if (hours === 48) return "après-demain";
+  if (hours < 24) return `dans ${hours} heures`;
+  return `dans ${Math.round(hours/24)} jours`;
+}
+
+function formatDate(date: string): string {
+  return new Date(date).toLocaleDateString('fr-FR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long'
+  });
+}
