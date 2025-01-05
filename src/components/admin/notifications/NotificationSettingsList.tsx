@@ -8,7 +8,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Plus, Edit } from "lucide-react";
-import { VapidKeyGenerator } from "./VapidKeyGenerator";
 
 interface NotificationSetting {
   id: string;
@@ -47,11 +46,6 @@ export function NotificationSettingsList({
           <Plus className="h-4 w-4" />
           Ajouter
         </Button>
-      </div>
-
-      <div className="mb-8">
-        <h3 className="text-lg font-semibold text-white mb-4">Clés VAPID</h3>
-        <VapidKeyGenerator />
       </div>
 
       <div className="overflow-x-auto">
