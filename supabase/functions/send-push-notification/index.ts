@@ -58,7 +58,7 @@ serve(async (req) => {
       data: {
         url: payload.url,
         timestamp: payload.timestamp?.toString(),
-        from: 'firebase', // Ajout de l'indicateur
+        notification_source: 'firebase', // Utilisation d'une clé valide
       },
       apns: {
         payload: {
