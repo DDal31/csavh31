@@ -18,7 +18,6 @@ interface NotificationSetting {
   sport?: string;
   min_players?: number;
   notification_text?: string;
-  notification_title?: string;
 }
 
 interface NotificationSettingsFormProps {
@@ -39,7 +38,6 @@ export function NotificationSettingsForm({
       enabled: true,
       sport: "",
       notification_text: "",
-      notification_title: "",
     }
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,6 +56,19 @@ export function NotificationSettingsForm({
     },
   });
 
+  const generateNotificationTitle = (type: string, sport: string) => {
+    switch (type) {
+      case "training_reminder":
+        return `Rappel Entrainement ${sport}`;
+      case "missing_players":
+        return `Manque de joueurs - Entrainement ${sport}`;
+      case "custom":
+        return "Notification personnalisée";
+      default:
+        return "Notification";
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -67,13 +78,14 @@ export function NotificationSettingsForm({
       
       // Prepare the data to match the database schema
       const notificationData = {
+        type: formData.notification_type, // Required field for the database
         notification_type: formData.notification_type,
         delay_hours: formData.delay_hours,
         enabled: formData.enabled,
         sport: formData.sport,
         min_players: formData.min_players,
         notification_text: formData.notification_text,
-        notification_title: formData.notification_title
+        notification_title: generateNotificationTitle(formData.notification_type, formData.sport || "")
       };
 
       if (setting?.id) {
@@ -90,7 +102,7 @@ export function NotificationSettingsForm({
       } else {
         const { error } = await supabase
           .from("notification_settings")
-          .insert([notificationData]);
+          .insert(notificationData);
 
         if (error) throw error;
         toast({
@@ -157,8 +169,6 @@ export function NotificationSettingsForm({
         <NotificationContentFields
           notificationText={formData.notification_text || ""}
           onNotificationTextChange={(value) => setFormData((prev) => ({ ...prev, notification_text: value }))}
-          notificationTitle={formData.notification_title || ""}
-          onNotificationTitleChange={(value) => setFormData((prev) => ({ ...prev, notification_title: value }))}
         />
 
         <div className="flex items-center space-x-3 py-4">
