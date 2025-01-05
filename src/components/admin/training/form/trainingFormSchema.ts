@@ -1,10 +1,7 @@
 import * as z from "zod";
-import type { Database } from "@/integrations/supabase/types";
-
-type TrainingType = Database["public"]["Enums"]["training_type"];
 
 export const formSchema = z.object({
-  type: z.string(),
+  type: z.enum(["goalball", "torball", "other", "showdown"]),
   otherTypeDetails: z.string().optional(),
   date: z.date({
     required_error: "Une date est requise",
@@ -15,6 +12,14 @@ export const formSchema = z.object({
   endTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, {
     message: "Format d'heure invalide (HH:MM)",
   }),
+}).refine((data) => {
+  if (data.type === "other" && !data.otherTypeDetails) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Veuillez préciser le type d'entraînement",
+  path: ["otherTypeDetails"],
 }).refine((data) => {
   const [startHour, startMinute] = data.startTime.split(":").map(Number);
   const [endHour, endMinute] = data.endTime.split(":").map(Number);

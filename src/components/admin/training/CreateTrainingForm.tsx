@@ -22,7 +22,7 @@ export function CreateTrainingForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      type: "",
+      type: "goalball", // Set a default value that matches the enum
       otherTypeDetails: "",
       startTime: "09:00",
       endTime: "10:30",
@@ -56,7 +56,12 @@ export function CreateTrainingForm() {
         description: "L'entraînement a été ajouté avec succès.",
       });
 
-      form.reset();
+      form.reset({
+        type: "goalball", // Reset to default value
+        otherTypeDetails: "",
+        startTime: "09:00",
+        endTime: "10:30",
+      });
     } catch (error) {
       console.error("Error creating training:", error);
       toast({
