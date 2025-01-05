@@ -16,31 +16,17 @@ serve(async (req) => {
     console.log("Initialisation de Firebase Admin SDK...");
     
     if (getApps().length === 0) {
-      const privateKey = Deno.env.get("FIREBASE_PRIVATE_KEY");
-      console.log("Récupération de la clé privée...");
+      const serviceAccountJson = Deno.env.get("FIREBASE_SERVICE_ACCOUNT");
+      console.log("Récupération du service account...");
       
-      if (!privateKey) {
-        throw new Error("La variable d'environnement FIREBASE_PRIVATE_KEY n'est pas définie");
+      if (!serviceAccountJson) {
+        throw new Error("La variable d'environnement FIREBASE_SERVICE_ACCOUNT n'est pas définie");
       }
 
-      // Format the private key by replacing literal \n with actual newlines
-      const formattedPrivateKey = privateKey.replace(/\\n/g, '\n');
-      console.log("Clé privée formatée");
-
-      const serviceAccount = {
-        type: "service_account",
-        project_id: Deno.env.get("FIREBASE_PROJECT_ID"),
-        private_key_id: Deno.env.get("FIREBASE_PRIVATE_KEY_ID"),
-        private_key: formattedPrivateKey,
-        client_email: Deno.env.get("FIREBASE_CLIENT_EMAIL"),
-        client_id: Deno.env.get("FIREBASE_CLIENT_ID"),
-        auth_uri: "https://accounts.google.com/o/oauth2/auth",
-        token_uri: "https://oauth2.googleapis.com/token",
-        auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
-        client_x509_cert_url: Deno.env.get("FIREBASE_CLIENT_CERT_URL"),
-      };
-
       try {
+        const serviceAccount = JSON.parse(serviceAccountJson);
+        console.log("Service account parsé avec succès");
+        
         console.log("Tentative d'initialisation de Firebase...");
         initializeApp({
           credential: cert(serviceAccount),
