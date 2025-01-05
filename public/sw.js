@@ -4,6 +4,12 @@ self.addEventListener('push', event => {
     const data = event.data.json();
     console.log('Push data received:', data);
     
+    // Si la notification vient de Firebase, on ne l'affiche pas en double
+    if (data.from === 'firebase') {
+      console.log('Notification from Firebase, skipping display');
+      return;
+    }
+    
     // Handle iOS specific payload structure
     const title = data.aps?.alert?.title || data.title;
     const body = data.aps?.alert?.body || data.body;

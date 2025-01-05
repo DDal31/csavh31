@@ -49,7 +49,7 @@ serve(async (req) => {
       throw new Error("Token FCM requis dans l'objet subscription");
     }
 
-    // Création du message avec format compatible iOS
+    // Création du message avec format compatible iOS et indicateur Firebase
     const message = {
       notification: {
         title: payload.title,
@@ -58,6 +58,7 @@ serve(async (req) => {
       data: {
         url: payload.url,
         timestamp: payload.timestamp?.toString(),
+        from: 'firebase', // Ajout de l'indicateur
       },
       apns: {
         payload: {
