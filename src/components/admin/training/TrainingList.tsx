@@ -5,8 +5,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlayerRefereePanel } from "./PlayerRefereePanel";
 import { UserPlus, PencilIcon, Trash2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import type { Training } from "@/types/training";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 type TrainingListProps = {
   trainings: Training[];
@@ -16,6 +29,34 @@ type TrainingListProps = {
 
 export function TrainingList({ trainings, onAddClick, onEditClick }: TrainingListProps) {
   const [selectedTraining, setSelectedTraining] = useState<Training | null>(null);
+  const { toast } = useToast();
+
+  const handleDelete = async (trainingId: string) => {
+    try {
+      console.log("Deleting training:", trainingId);
+      const { error } = await supabase
+        .from("trainings")
+        .delete()
+        .eq("id", trainingId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Entraînement supprimé",
+        description: "L'entraînement a été supprimé avec succès.",
+      });
+
+      // Reload the page to refresh the list
+      window.location.reload();
+    } catch (error) {
+      console.error("Error deleting training:", error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la suppression de l'entraînement.",
+      });
+    }
+  };
 
   if (trainings.length === 0) {
     return (
@@ -69,14 +110,36 @@ export function TrainingList({ trainings, onAddClick, onEditClick }: TrainingLis
                 >
                   <PencilIcon className="w-5 h-5" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
-                  aria-label={`Supprimer l'entraînement du ${formatTrainingDate(training.date)}`}
-                >
-                  <Trash2 className="w-5 h-5" />
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                      aria-label={`Supprimer l'entraînement du ${formatTrainingDate(training.date)}`}
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Cette action est irréversible. Cela supprimera définitivement l'entraînement
+                        du {formatTrainingDate(training.date)} et toutes les inscriptions associées.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Annuler</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => handleDelete(training.id)}
+                        className="bg-red-500 hover:bg-red-600"
+                      >
+                        Supprimer
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </CardHeader>
             <CardContent>
