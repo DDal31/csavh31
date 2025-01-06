@@ -15,77 +15,77 @@ const AdminTemplates = lazy(() => import("@/pages/AdminTemplates"));
 export const AdminSettingsRoutes = () => {
   return (
     <>
-      <Route
-        path="presentation"
+      <Route 
+        path="settings/presentation" 
         element={
           <ProtectedRoute requireAdmin>
             <AdminPresentation />
           </ProtectedRoute>
-        }
+        } 
       />
-      <Route
-        path="contacts"
+      <Route 
+        path="settings/contacts" 
         element={
           <ProtectedRoute requireAdmin>
             <AdminContacts />
           </ProtectedRoute>
-        }
+        } 
       />
-      <Route
-        path="news"
+      <Route 
+        path="settings/news" 
         element={
           <ProtectedRoute requireAdmin>
             <AdminNews />
           </ProtectedRoute>
-        }
+        } 
       />
-      <Route
-        path="sports-teams"
+      <Route 
+        path="settings/sports-teams" 
         element={
           <ProtectedRoute requireAdmin>
             <AdminSportsTeams />
           </ProtectedRoute>
-        }
+        } 
       />
-      <Route
-        path="document-types"
+      <Route 
+        path="settings/document-types" 
         element={
           <ProtectedRoute requireAdmin>
             <AdminDocumentTypes />
           </ProtectedRoute>
-        }
+        } 
       />
-      <Route
-        path="attendance-sheets"
+      <Route 
+        path="settings/attendance-sheets" 
         element={
           <ProtectedRoute requireAdmin>
             <AdminAttendanceSheets />
           </ProtectedRoute>
-        }
+        } 
       />
-      <Route
-        path="site"
+      <Route 
+        path="settings/site" 
         element={
           <ProtectedRoute requireAdmin>
             <AdminSiteSettings />
           </ProtectedRoute>
-        }
+        } 
       />
-      <Route
-        path="notifications"
+      <Route 
+        path="settings/notifications" 
         element={
           <ProtectedRoute requireAdmin>
             <AdminNotificationSettings />
           </ProtectedRoute>
-        }
+        } 
       />
-      <Route
-        path="templates"
+      <Route 
+        path="settings/templates" 
         element={
           <ProtectedRoute requireAdmin>
             <AdminTemplates />
           </ProtectedRoute>
-        }
+        } 
       />
     </>
   );

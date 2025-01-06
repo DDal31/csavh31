@@ -9,9 +9,9 @@ import { AdminSettingsRoutes } from "./adminSettingsRoutes";
 export const AdminRoutes = () => {
   return (
     <>
-      <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+      <Route path="admin" element={<Navigate to="/admin/dashboard" replace />} />
       <Route
-        path="/admin/dashboard"
+        path="admin/dashboard"
         element={
           <ProtectedRoute requireAdmin>
             <AdminDashboard />
@@ -19,7 +19,7 @@ export const AdminRoutes = () => {
         }
       />
       <Route
-        path="/admin/users"
+        path="admin/users"
         element={
           <ProtectedRoute requireAdmin>
             <AdminUsers />
@@ -27,7 +27,7 @@ export const AdminRoutes = () => {
         }
       />
       <Route
-        path="/admin/users/:userId/edit"
+        path="admin/users/:userId/edit"
         element={
           <ProtectedRoute requireAdmin>
             <AdminUserEdit />
@@ -35,14 +35,16 @@ export const AdminRoutes = () => {
         }
       />
       <Route
-        path="/admin/settings"
+        path="admin/settings"
         element={
           <ProtectedRoute requireAdmin>
             <AdminSettings />
           </ProtectedRoute>
         }
       />
-      <Route path="/admin/settings/*" element={<AdminSettingsRoutes />} />
+      <Route path="admin/*">
+        <AdminSettingsRoutes />
+      </Route>
     </>
   );
 };
