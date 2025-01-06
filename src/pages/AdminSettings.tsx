@@ -4,21 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  Loader2, 
-  FileText, 
-  Mail, 
-  Newspaper, 
-  Users, 
-  ListCollapse, 
-  FileStack, 
-  FileSpreadsheet, 
-  Settings,
-  Bell,
-  Palette 
-} from "lucide-react";
-
-// ... keep existing code (imports and initial part of component)
+import { Settings, Bell, Loader2 } from "lucide-react";
 
 const AdminSettings = () => {
   const navigate = useNavigate();
@@ -57,49 +43,7 @@ const AdminSettings = () => {
 
   const settingsTiles = [
     {
-      title: "Modifier Présentation",
-      icon: FileText,
-      route: "/admin/settings/presentation",
-      bgColor: "bg-blue-600 hover:bg-blue-700",
-      ariaLabel: "Modifier la page de présentation"
-    },
-    {
-      title: "Modifier Contacts",
-      icon: Users,
-      route: "/admin/settings/contacts",
-      bgColor: "bg-green-600 hover:bg-green-700",
-      ariaLabel: "Gérer les contacts du bureau"
-    },
-    {
-      title: "Gestion des Actualités",
-      icon: Newspaper,
-      route: "/admin/settings/news",
-      bgColor: "bg-purple-600 hover:bg-purple-700",
-      ariaLabel: "Gérer les actualités"
-    },
-    {
-      title: "Gestion des Sports et Équipes",
-      icon: ListCollapse,
-      route: "/admin/settings/sports-teams",
-      bgColor: "bg-indigo-600 hover:bg-indigo-700",
-      ariaLabel: "Gérer les sports et les équipes"
-    },
-    {
-      title: "Types de Documents",
-      icon: FileStack,
-      route: "/admin/settings/document-types",
-      bgColor: "bg-teal-600 hover:bg-teal-700",
-      ariaLabel: "Gérer les types de documents"
-    },
-    {
-      title: "Télécharger une feuille de présence",
-      icon: FileSpreadsheet,
-      route: "/admin/settings/attendance-sheets",
-      bgColor: "bg-violet-600 hover:bg-violet-700",
-      ariaLabel: "Télécharger les feuilles de présence"
-    },
-    {
-      title: "Modifier en-tête, pieds de page et icône",
+      title: "Configuration du Site",
       icon: Settings,
       route: "/admin/settings/site",
       bgColor: "bg-pink-600 hover:bg-pink-700",
@@ -111,13 +55,6 @@ const AdminSettings = () => {
       route: "/admin/settings/notifications",
       bgColor: "bg-yellow-600 hover:bg-yellow-700",
       ariaLabel: "Configurer les notifications"
-    },
-    {
-      title: "Templates",
-      icon: Palette,
-      route: "/admin/settings/templates",
-      bgColor: "bg-orange-600 hover:bg-orange-700",
-      ariaLabel: "Choisir le template du site"
     }
   ];
 
@@ -147,7 +84,7 @@ const AdminSettings = () => {
             </button>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {settingsTiles.map((tile) => (
               <Card 
                 key={tile.title}
