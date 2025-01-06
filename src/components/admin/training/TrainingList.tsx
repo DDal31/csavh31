@@ -1,91 +1,189 @@
+import { useState } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Plus, Bell } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PlayerRefereePanel } from "./PlayerRefereePanel";
+import { UserPlus, PencilIcon, Trash2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import type { Training } from "@/types/training";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
-interface TrainingListProps {
+type TrainingListProps = {
   trainings: Training[];
   onAddClick: () => void;
   onEditClick: (training: Training) => void;
-}
+};
 
 export function TrainingList({ trainings, onAddClick, onEditClick }: TrainingListProps) {
-  const navigate = useNavigate();
+  const [selectedTraining, setSelectedTraining] = useState<Training | null>(null);
+  const { toast } = useToast();
 
-  const handleNotificationClick = (training: Training) => {
-    navigate(`/admin/trainings/${training.id}/notify`, {
-      state: { training }
-    });
+  const handleDelete = async (trainingId: string) => {
+    try {
+      console.log("Deleting training:", trainingId);
+      const { error } = await supabase
+        .from("trainings")
+        .delete()
+        .eq("id", trainingId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Entraînement supprimé",
+        description: "L'entraînement a été supprimé avec succès.",
+      });
+
+      // Reload the page to refresh the list
+      window.location.reload();
+    } catch (error) {
+      console.error("Error deleting training:", error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la suppression de l'entraînement.",
+      });
+    }
+  };
+
+  if (trainings.length === 0) {
+    return (
+      <div className="text-center text-gray-400">
+        Aucun entraînement disponible pour le moment.
+      </div>
+    );
+  }
+
+  const formatTrainingDate = (date: string) => {
+    return format(new Date(date), "EEEE d MMMM yyyy", { locale: fr });
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-white">Gestion des entraînements</h1>
-        <Button 
-          onClick={onAddClick}
-          className="bg-white/10 hover:bg-white/20 text-white"
-          aria-label="Ajouter un entraînement"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Ajouter
+      <div className="flex justify-end">
+        <Button onClick={onAddClick} className="bg-purple-600 hover:bg-purple-700">
+          <UserPlus className="w-4 h-4 mr-2" />
+          Ajouter un entraînement
         </Button>
       </div>
 
-      {trainings.length === 0 ? (
-        <p className="text-center text-gray-400">Aucun entraînement n'a été créé.</p>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {trainings.map((training) => (
-            <div
-              key={training.id}
-              className="bg-gray-800/50 backdrop-blur-lg rounded-xl p-6 space-y-4"
-            >
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-xl font-semibold text-white">
-                    {training.type === 'other' 
-                      ? training.other_type_details 
-                      : training.type.charAt(0).toUpperCase() + training.type.slice(1)}
-                  </h3>
-                  <p className="text-gray-400">
-                    {format(new Date(training.date), "EEEE d MMMM yyyy", { locale: fr })}
-                  </p>
-                  <p className="text-gray-400">
-                    {training.start_time.slice(0, 5)} - {training.end_time.slice(0, 5)}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handleNotificationClick(training)}
-                    className="text-white hover:text-white hover:bg-white/20"
-                    aria-label="Envoyer une notification"
-                  >
-                    <Bell className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => onEditClick(training)}
-                    className="text-white hover:text-white hover:bg-white/20"
-                  >
-                    Modifier
-                  </Button>
-                </div>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {trainings.map((training) => (
+          <Card 
+            key={training.id} 
+            className="bg-gray-800 border-gray-700 hover:bg-gray-700 transition-colors"
+          >
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-xl font-bold text-white">
+                {training.type === 'other' 
+                  ? training.other_type_details || 'Événement' 
+                  : training.type.charAt(0).toUpperCase() + training.type.slice(1)}
+              </CardTitle>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setSelectedTraining(training)}
+                  className="text-white hover:bg-gray-600"
+                  aria-label={`Ajouter joueur/arbitre pour l'entraînement du ${formatTrainingDate(training.date)}`}
+                >
+                  <UserPlus className="w-5 h-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onEditClick(training)}
+                  className="text-white hover:bg-gray-600"
+                  aria-label={`Modifier l'entraînement du ${formatTrainingDate(training.date)}`}
+                >
+                  <PencilIcon className="w-5 h-5" />
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                      aria-label={`Supprimer l'entraînement du ${formatTrainingDate(training.date)}`}
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Cette action est irréversible. Cela supprimera définitivement l'entraînement
+                        du {formatTrainingDate(training.date)} et toutes les inscriptions associées.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Annuler</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => handleDelete(training.id)}
+                        className="bg-red-500 hover:bg-red-600"
+                      >
+                        Supprimer
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
-              
-              <div className="mt-4">
-                <p className="text-sm text-gray-400">
-                  {training.registrations?.length || 0} participant(s)
+            </CardHeader>
+            <CardContent>
+              <div className="text-gray-300 space-y-2">
+                <p>
+                  {formatTrainingDate(training.date)}
                 </p>
+                <p>
+                  {training.start_time.slice(0, 5)} - {training.end_time.slice(0, 5)}
+                </p>
+                {training.registrations && training.registrations.length > 0 && (
+                  <div className="flex items-center space-x-2 mt-2">
+                    <p>
+                      {training.registrations.length} participant{training.registrations.length > 1 ? 's' : ''} inscrit{training.registrations.length > 1 ? 's' : ''}
+                    </p>
+                    <div className="flex -space-x-2">
+                      {training.registrations.slice(0, 3).map((registration) => (
+                        <Avatar key={registration.user_id} className="w-6 h-6 border-2 border-gray-800">
+                          <AvatarFallback className="text-xs">
+                            {registration.profiles.first_name[0]}{registration.profiles.last_name[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                      ))}
+                      {training.registrations.length > 3 && (
+                        <Avatar className="w-6 h-6 border-2 border-gray-800 bg-gray-700">
+                          <AvatarFallback className="text-xs">
+                            +{training.registrations.length - 3}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <PlayerRefereePanel
+        training={selectedTraining}
+        isOpen={!!selectedTraining}
+        onClose={() => setSelectedTraining(null)}
+      />
     </div>
   );
 }

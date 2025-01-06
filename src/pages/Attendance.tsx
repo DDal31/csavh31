@@ -46,6 +46,7 @@ const Attendance = () => {
               id,
               user_id,
               created_at,
+              training_id,
               profiles (
                 first_name,
                 last_name,
@@ -69,7 +70,7 @@ const Attendance = () => {
         });
 
         console.log("Filtered trainings:", filteredTrainings);
-        setTrainings(filteredTrainings as Training[]);
+        setTrainings(filteredTrainings);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import type { Training } from "@/types/training";
 
 export function useTrainings() {
@@ -57,6 +57,7 @@ export function useTrainings() {
               id,
               user_id,
               created_at,
+              training_id,
               profiles (
                 first_name,
                 last_name,
@@ -71,7 +72,7 @@ export function useTrainings() {
         if (trainingsError) throw trainingsError;
 
         console.log("Fetched trainings:", trainingsData);
-        setTrainings(trainingsData as Training[]);
+        setTrainings(trainingsData);
 
         // Fetch user's current registrations
         const { data: registrations, error: registrationsError } = await supabase

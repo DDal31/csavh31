@@ -2,7 +2,7 @@ import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { format } from "date-fns";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,7 +22,7 @@ export function CreateTrainingForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      type: "goalball",
+      type: "goalball", // Set a default value that matches the enum
       otherTypeDetails: "",
       startTime: "09:00",
       endTime: "10:30",
@@ -57,7 +57,7 @@ export function CreateTrainingForm() {
       });
 
       form.reset({
-        type: "goalball",
+        type: "goalball", // Reset to default value
         otherTypeDetails: "",
         startTime: "09:00",
         endTime: "10:30",
@@ -82,12 +82,7 @@ export function CreateTrainingForm() {
           <TrainingTypeField form={form} />
           <TrainingDateField form={form} />
           <TrainingTimeFields form={form} />
-          <Button 
-            type="submit" 
-            className="w-full" 
-            disabled={isLoading}
-            aria-label={isLoading ? "Création en cours..." : "Créer l'entraînement"}
-          >
+          <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? "Création en cours..." : "Créer l'entraînement"}
           </Button>
         </form>
