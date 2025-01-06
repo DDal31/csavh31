@@ -24,6 +24,11 @@ export function useTemplates() {
 
       console.log("Templates data:", data);
 
+      if (!data) {
+        setTemplates([]);
+        return;
+      }
+
       const convertedTemplates = data.map(template => ({
         ...template,
         color_scheme: typeof template.color_scheme === 'string' 

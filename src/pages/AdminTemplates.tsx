@@ -11,6 +11,8 @@ export default function AdminTemplates() {
   const navigate = useNavigate();
   const { loading, templates, selectedTemplate, handleTemplateChange } = useTemplates();
 
+  console.log("AdminTemplates rendering, loading:", loading, "templates:", templates);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900">
