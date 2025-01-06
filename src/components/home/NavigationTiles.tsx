@@ -10,69 +10,40 @@ export const NavigationTiles = () => {
       title: "Espace Membre",
       icon: User,
       route: "/login",
-      bgColor: "bg-primary hover:bg-primary/90",
+      bgColor: "bg-blue-600 hover:bg-blue-700",
       ariaLabel: "Accéder à l'espace membre",
-      description: "Connectez-vous à votre espace personnel pour accéder à vos informations et documents"
     },
     {
       title: "Contact",
       icon: Mail,
       route: "/contact",
-      bgColor: "bg-primary hover:bg-primary/90",
+      bgColor: "bg-purple-600 hover:bg-purple-700",
       ariaLabel: "Nous contacter",
-      description: "Envoyez-nous un message ou trouvez nos coordonnées de contact"
     },
   ];
 
   return (
-    <nav 
-      className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-4xl mx-auto p-4" 
-      aria-label="Navigation principale"
-    >
+    <div className="grid grid-cols-2 gap-2 sm:gap-4 w-full">
       {tiles.map((tile) => (
         <Card
           key={tile.title}
-          className={`
-            ${tile.bgColor} 
-            border-none 
-            cursor-pointer 
-            transform 
-            transition-all 
-            duration-300 
-            hover:scale-105 
-            focus-visible:ring-2 
-            focus-visible:ring-offset-2
-            focus-visible:ring-white 
-            focus-visible:outline-none
-            shadow-lg
-            group
-          `}
+          className={`${tile.bgColor} border-none cursor-pointer transform transition-all duration-300 hover:scale-105 focus-within:ring-2 focus-within:ring-white min-w-[100px]`}
           onClick={() => navigate(tile.route)}
-          role="link"
+          role="button"
           aria-label={tile.ariaLabel}
           tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              navigate(tile.route);
-            }
-          }}
         >
-          <CardHeader className="text-center p-8">
+          <CardHeader className="text-center p-2 sm:p-6">
             <tile.icon
-              className="w-16 h-16 mx-auto mb-6 text-white transition-transform group-hover:scale-110"
+              className="w-6 h-6 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-4 text-white"
               aria-hidden="true"
             />
-            <CardTitle className="text-2xl font-bold text-white mb-4">
+            <CardTitle className="text-xs sm:text-lg font-bold text-white">
               {tile.title}
             </CardTitle>
-            <p className="text-gray-100 mt-2">
-              {tile.description}
-            </p>
-            <span className="sr-only">{`${tile.ariaLabel} - ${tile.description}`}</span>
           </CardHeader>
         </Card>
       ))}
-    </nav>
+    </div>
   );
 };

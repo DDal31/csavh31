@@ -119,126 +119,6 @@ export type Database = {
           },
         ]
       }
-      notification_history: {
-        Row: {
-          content: string
-          created_at: string | null
-          id: string
-          sent_at: string | null
-          sport: string | null
-          target_group: string
-          title: string
-          updated_at: string | null
-        }
-        Insert: {
-          content: string
-          created_at?: string | null
-          id?: string
-          sent_at?: string | null
-          sport?: string | null
-          target_group: string
-          title: string
-          updated_at?: string | null
-        }
-        Update: {
-          content?: string
-          created_at?: string | null
-          id?: string
-          sent_at?: string | null
-          sport?: string | null
-          target_group?: string
-          title?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      notification_settings: {
-        Row: {
-          created_at: string
-          delay_hours: number
-          enabled: boolean | null
-          id: string
-          logo_path: string | null
-          min_players: number | null
-          notification_text: string | null
-          notification_title: string | null
-          notification_type:
-            | Database["public"]["Enums"]["notification_type"]
-            | null
-          sound_path: string | null
-          sport: string | null
-          target_group: Database["public"]["Enums"]["target_group"] | null
-          type: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          delay_hours: number
-          enabled?: boolean | null
-          id?: string
-          logo_path?: string | null
-          min_players?: number | null
-          notification_text?: string | null
-          notification_title?: string | null
-          notification_type?:
-            | Database["public"]["Enums"]["notification_type"]
-            | null
-          sound_path?: string | null
-          sport?: string | null
-          target_group?: Database["public"]["Enums"]["target_group"] | null
-          type: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          delay_hours?: number
-          enabled?: boolean | null
-          id?: string
-          logo_path?: string | null
-          min_players?: number | null
-          notification_text?: string | null
-          notification_title?: string | null
-          notification_type?:
-            | Database["public"]["Enums"]["notification_type"]
-            | null
-          sound_path?: string | null
-          sport?: string | null
-          target_group?: Database["public"]["Enums"]["target_group"] | null
-          type?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      notification_templates: {
-        Row: {
-          content: string
-          created_at: string
-          id: string
-          sport: string | null
-          title: string
-          type: string
-          updated_at: string
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          id?: string
-          sport?: string | null
-          title: string
-          type: string
-          updated_at?: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          id?: string
-          sport?: string | null
-          title?: string
-          type?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       pages_content: {
         Row: {
           content: string
@@ -305,30 +185,6 @@ export type Database = {
           sport?: string
           team?: string
           updated_at?: string
-        }
-        Relationships: []
-      }
-      push_subscriptions: {
-        Row: {
-          created_at: string
-          id: string
-          subscription: Json
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          subscription: Json
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          subscription?: Json
-          updated_at?: string
-          user_id?: string
         }
         Relationships: []
       }
@@ -472,51 +328,12 @@ export type Database = {
           },
         ]
       }
-      template_settings: {
-        Row: {
-          color_scheme: Json
-          created_at: string
-          description: string | null
-          id: string
-          is_active: boolean | null
-          layout_config: Json
-          name: string
-          style: Database["public"]["Enums"]["template_style"]
-          updated_at: string
-        }
-        Insert: {
-          color_scheme: Json
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          layout_config: Json
-          name: string
-          style: Database["public"]["Enums"]["template_style"]
-          updated_at?: string
-        }
-        Update: {
-          color_scheme?: Json
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          layout_config?: Json
-          name?: string
-          style?: Database["public"]["Enums"]["template_style"]
-          updated_at?: string
-        }
-        Relationships: []
-      }
       trainings: {
         Row: {
           created_at: string
           date: string
           end_time: string
           id: string
-          notification_day_before: string | null
-          notification_missing_players: string | null
-          notification_week_before: string | null
           other_type_details: string | null
           start_time: string
           type: Database["public"]["Enums"]["training_type"]
@@ -526,9 +343,6 @@ export type Database = {
           date: string
           end_time: string
           id?: string
-          notification_day_before?: string | null
-          notification_missing_players?: string | null
-          notification_week_before?: string | null
           other_type_details?: string | null
           start_time: string
           type: Database["public"]["Enums"]["training_type"]
@@ -538,9 +352,6 @@ export type Database = {
           date?: string
           end_time?: string
           id?: string
-          notification_day_before?: string | null
-          notification_missing_players?: string | null
-          notification_week_before?: string | null
           other_type_details?: string | null
           start_time?: string
           type?: Database["public"]["Enums"]["training_type"]
@@ -624,18 +435,10 @@ export type Database = {
         | "photo"
       document_type_status: "active" | "archived"
       news_status: "draft" | "published" | "archived"
-      notification_type: "training_reminder" | "missing_players" | "custom"
       site_role: "member" | "admin"
       social_media_platform: "twitter" | "facebook" | "instagram"
       sport_type: "goalball" | "torball" | "both"
-      target_group: "all" | "sport_specific" | "training_registered"
       team_type: "loisir" | "d1_masculine" | "d1_feminine"
-      template_style:
-        | "default"
-        | "modern"
-        | "minimal"
-        | "playful"
-        | "professional"
       training_type: "goalball" | "torball" | "other" | "showdown"
     }
     CompositeTypes: {

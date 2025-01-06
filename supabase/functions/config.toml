@@ -1,7 +1,0 @@
-project_id = "kzahxvazbthyjjzugxsy"
-
-[functions.get-vapid-key]
-verify_jwt = true
-
-[functions.send-training-notifications]
-verify_jwt = false

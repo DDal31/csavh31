@@ -4,18 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  Settings, 
-  Bell, 
-  Loader2,
-  FileText,
-  Users,
-  Newspaper,
-  ListCollapse,
-  FileStack,
-  FileSpreadsheet,
-  Palette
-} from "lucide-react";
+import { Loader2, FileText, Mail, Newspaper, Users, ListCollapse, FileStack, FileSpreadsheet, Settings } from "lucide-react";
 
 const AdminSettings = () => {
   const navigate = useNavigate();
@@ -53,20 +42,6 @@ const AdminSettings = () => {
   }, [navigate]);
 
   const settingsTiles = [
-    {
-      title: "Configuration du Site",
-      icon: Settings,
-      route: "/admin/settings/site",
-      bgColor: "bg-pink-600 hover:bg-pink-700",
-      ariaLabel: "Modifier l'apparence du site"
-    },
-    {
-      title: "Configuration des Notifications",
-      icon: Bell,
-      route: "/admin/settings/notifications",
-      bgColor: "bg-yellow-600 hover:bg-yellow-700",
-      ariaLabel: "Configurer les notifications"
-    },
     {
       title: "Modifier Présentation",
       icon: FileText,
@@ -110,11 +85,11 @@ const AdminSettings = () => {
       ariaLabel: "Télécharger les feuilles de présence"
     },
     {
-      title: "Templates",
-      icon: Palette,
-      route: "/admin/settings/templates",
-      bgColor: "bg-orange-600 hover:bg-orange-700",
-      ariaLabel: "Choisir le template du site"
+      title: "Modifier en-tête, pieds de page et icône",
+      icon: Settings,
+      route: "/admin/settings/site",
+      bgColor: "bg-pink-600 hover:bg-pink-700",
+      ariaLabel: "Modifier l'apparence du site"
     }
   ];
 
@@ -144,7 +119,7 @@ const AdminSettings = () => {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {settingsTiles.map((tile) => (
               <Card 
                 key={tile.title}

@@ -29,7 +29,7 @@ export function TrainingForm({ training, onSuccess, onCancel }: TrainingFormProp
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      type: training?.type || "goalball",
+      type: training?.type || "",
       otherTypeDetails: training?.other_type_details || "",
       date: training ? new Date(training.date) : undefined,
       startTime: training?.start_time.slice(0, 5) || "09:00",
@@ -54,18 +54,6 @@ export function TrainingForm({ training, onSuccess, onCancel }: TrainingFormProp
         return;
       }
 
-      // Get the current session to verify authentication
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !session) {
-        console.error("Authentication error:", sessionError);
-        toast({
-          variant: "destructive",
-          title: "Erreur d'authentification",
-          description: "Vous devez être connecté pour créer un entraînement.",
-        });
-        return;
-      }
-
       const trainingData = {
         type: values.type as TrainingType,
         other_type_details: values.otherTypeDetails || null,
@@ -76,25 +64,21 @@ export function TrainingForm({ training, onSuccess, onCancel }: TrainingFormProp
 
       console.log("Submitting training data:", trainingData);
 
-      const { data, error } = isEditing 
+      const { error } = isEditing 
         ? await supabase
             .from("trainings")
             .update(trainingData)
             .eq("id", training.id)
-            .select()
         : await supabase
             .from("trainings")
-            .insert(trainingData)
-            .select();
+            .insert(trainingData);
 
       if (error) {
         console.error("Error submitting training:", error);
         throw error;
       }
 
-      console.log("Training submission response:", data);
       console.log(`Training ${isEditing ? "updated" : "created"} successfully`);
-      
       toast({
         title: `Entraînement ${isEditing ? "modifié" : "créé"}`,
         description: `L'entraînement a été ${isEditing ? "modifié" : "ajouté"} avec succès.`,
