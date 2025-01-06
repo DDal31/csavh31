@@ -1,7 +1,7 @@
 import * as z from "zod";
 
 export const formSchema = z.object({
-  type: z.enum(["goalball", "torball", "other"]),
+  type: z.enum(["goalball", "torball", "other", "showdown"]),
   otherTypeDetails: z.string().optional(),
   date: z.date({
     required_error: "Une date est requise",
