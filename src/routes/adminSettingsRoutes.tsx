@@ -16,7 +16,7 @@ export const AdminSettingsRoutes = () => {
   return (
     <>
       <Route
-        path="/admin/settings/presentation"
+        path="presentation"
         element={
           <ProtectedRoute requireAdmin>
             <AdminPresentation />
@@ -24,7 +24,7 @@ export const AdminSettingsRoutes = () => {
         }
       />
       <Route
-        path="/admin/settings/contacts"
+        path="contacts"
         element={
           <ProtectedRoute requireAdmin>
             <AdminContacts />
@@ -32,7 +32,7 @@ export const AdminSettingsRoutes = () => {
         }
       />
       <Route
-        path="/admin/settings/news"
+        path="news"
         element={
           <ProtectedRoute requireAdmin>
             <AdminNews />
@@ -40,7 +40,7 @@ export const AdminSettingsRoutes = () => {
         }
       />
       <Route
-        path="/admin/settings/sports-teams"
+        path="sports-teams"
         element={
           <ProtectedRoute requireAdmin>
             <AdminSportsTeams />
@@ -48,7 +48,7 @@ export const AdminSettingsRoutes = () => {
         }
       />
       <Route
-        path="/admin/settings/document-types"
+        path="document-types"
         element={
           <ProtectedRoute requireAdmin>
             <AdminDocumentTypes />
@@ -56,7 +56,7 @@ export const AdminSettingsRoutes = () => {
         }
       />
       <Route
-        path="/admin/settings/attendance-sheets"
+        path="attendance-sheets"
         element={
           <ProtectedRoute requireAdmin>
             <AdminAttendanceSheets />
@@ -64,7 +64,7 @@ export const AdminSettingsRoutes = () => {
         }
       />
       <Route
-        path="/admin/settings/site"
+        path="site"
         element={
           <ProtectedRoute requireAdmin>
             <AdminSiteSettings />
@@ -72,7 +72,7 @@ export const AdminSettingsRoutes = () => {
         }
       />
       <Route
-        path="/admin/settings/notifications"
+        path="notifications"
         element={
           <ProtectedRoute requireAdmin>
             <AdminNotificationSettings />
@@ -80,7 +80,7 @@ export const AdminSettingsRoutes = () => {
         }
       />
       <Route
-        path="/admin/settings/templates"
+        path="templates"
         element={
           <ProtectedRoute requireAdmin>
             <AdminTemplates />
