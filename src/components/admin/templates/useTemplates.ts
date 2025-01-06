@@ -1,29 +1,28 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { Template } from "./types";
 
 export function useTemplates() {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
 
-  useEffect(() => {
-    fetchTemplates();
-  }, []);
-
   const fetchTemplates = async () => {
     try {
-      setLoading(true);
+      console.log("Fetching templates...");
       const { data, error } = await supabase
         .from("template_settings")
         .select("*")
         .order("created_at");
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching templates:", error);
+        throw error;
+      }
+
+      console.log("Templates data:", data);
 
       const convertedTemplates = data.map(template => ({
         ...template,
@@ -34,7 +33,7 @@ export function useTemplates() {
           ? JSON.parse(template.layout_config)
           : template.layout_config,
         style: template.style as Template['style']
-      })) as Template[];
+      }));
       
       setTemplates(convertedTemplates);
       
@@ -43,7 +42,7 @@ export function useTemplates() {
         setSelectedTemplate(activeTemplate.id);
       }
     } catch (error) {
-      console.error("Erreur lors de la récupération des templates:", error);
+      console.error("Error fetching templates:", error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les templates",
@@ -54,9 +53,14 @@ export function useTemplates() {
     }
   };
 
+  useEffect(() => {
+    fetchTemplates();
+  }, []);
+
   const handleTemplateChange = async (templateId: string) => {
     try {
       setLoading(true);
+      console.log("Updating template:", templateId);
 
       const { error: updateError } = await supabase
         .from("template_settings")
@@ -80,7 +84,7 @@ export function useTemplates() {
 
       await fetchTemplates();
     } catch (error) {
-      console.error("Erreur lors de la mise à jour du template:", error);
+      console.error("Error updating template:", error);
       toast({
         title: "Erreur",
         description: "Impossible de mettre à jour le template",

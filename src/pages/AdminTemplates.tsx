@@ -13,8 +13,14 @@ export default function AdminTemplates() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-white" />
+      <div className="min-h-screen bg-gray-900">
+        <Navbar />
+        <main className="container mx-auto px-4 py-8">
+          <div className="flex justify-center items-center min-h-[50vh]">
+            <Loader2 className="h-8 w-8 animate-spin text-white" />
+          </div>
+        </main>
+        <Footer />
       </div>
     );
   }
@@ -36,19 +42,23 @@ export default function AdminTemplates() {
             <h1 className="text-2xl font-bold text-white">Templates</h1>
           </div>
 
-          <RadioGroup
-            value={selectedTemplate}
-            onValueChange={handleTemplateChange}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6"
-          >
-            {templates.map((template) => (
-              <TemplateCard
-                key={template.id}
-                template={template}
-                selectedTemplate={selectedTemplate}
-              />
-            ))}
-          </RadioGroup>
+          {templates && templates.length > 0 ? (
+            <RadioGroup
+              value={selectedTemplate}
+              onValueChange={handleTemplateChange}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6"
+            >
+              {templates.map((template) => (
+                <TemplateCard
+                  key={template.id}
+                  template={template}
+                  selectedTemplate={selectedTemplate}
+                />
+              ))}
+            </RadioGroup>
+          ) : (
+            <p className="text-white text-center">Aucun template disponible</p>
+          )}
         </div>
       </main>
       <Footer />
