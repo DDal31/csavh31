@@ -19,27 +19,36 @@ const AdminContacts = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        console.log("Checking authentication and admin rights...");
         const { data: { session } } = await supabase.auth.getSession();
+        
         if (!session) {
+          console.log("No session found, redirecting to login");
           navigate("/login");
           return;
         }
 
-        const { data: profile } = await supabase
+        const { data: profile, error } = await supabase
           .from("profiles")
           .select("site_role")
           .eq("id", session.user.id)
           .single();
 
+        if (error) {
+          console.error("Error fetching profile:", error);
+          throw error;
+        }
+
         if (!profile || profile.site_role !== "admin") {
-          console.log("Accès non autorisé : l'utilisateur n'est pas admin");
+          console.log("User is not admin, redirecting to dashboard");
           navigate("/dashboard");
           return;
         }
 
+        console.log("Auth check passed, user is admin");
         setLoading(false);
       } catch (error) {
-        console.error("Erreur lors de la vérification des droits admin:", error);
+        console.error("Error during auth check:", error);
         navigate("/dashboard");
       }
     };
