@@ -1,17 +1,15 @@
-import { FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import type { UseFormReturn } from "react-hook-form";
-import type { z } from "zod";
-import { formSchema } from "./trainingFormSchema";
 
 interface NotificationFieldsProps {
-  form: UseFormReturn<z.infer<typeof formSchema>>;
+  form: UseFormReturn<any>;
 }
 
 export function NotificationFields({ form }: NotificationFieldsProps) {
   return (
-    <div className="space-y-4" role="group" aria-label="Personnalisation des notifications">
-      <h3 className="text-lg font-semibold text-white mb-4">Personnalisation des notifications</h3>
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold text-white mb-4">Notifications automatiques</h3>
       
       <FormField
         control={form.control}
@@ -23,15 +21,12 @@ export function NotificationFields({ form }: NotificationFieldsProps) {
             </FormLabel>
             <FormControl>
               <Textarea
-                placeholder="Rappel : entraînement de {sport} prévu dans une semaine"
-                className="bg-gray-800 border-gray-700 text-white resize-none"
+                placeholder="Rappel : entraînement prévu dans une semaine"
+                className="bg-gray-700 border-gray-600 text-white resize-none min-h-[100px]"
                 {...field}
-                aria-label="Message de notification une semaine avant l'entraînement"
               />
             </FormControl>
-            <FormDescription className="text-gray-400">
-              Laissez vide pour utiliser le message par défaut
-            </FormDescription>
+            <FormMessage />
           </FormItem>
         )}
       />
@@ -42,19 +37,16 @@ export function NotificationFields({ form }: NotificationFieldsProps) {
         render={({ field }) => (
           <FormItem>
             <FormLabel className="text-white">
-              Message si manque de joueurs
+              Message si moins de 6 joueurs une semaine avant
             </FormLabel>
             <FormControl>
               <Textarea
-                placeholder="Il manque des joueurs pour l'entraînement de {sport}. Pensez à vous inscrire !"
-                className="bg-gray-800 border-gray-700 text-white resize-none"
+                placeholder="Il manque des joueurs pour l'entraînement, pensez à vous inscrire !"
+                className="bg-gray-700 border-gray-600 text-white resize-none min-h-[100px]"
                 {...field}
-                aria-label="Message de notification en cas de manque de joueurs"
               />
             </FormControl>
-            <FormDescription className="text-gray-400">
-              Envoyé une semaine avant si moins de 6 joueurs
-            </FormDescription>
+            <FormMessage />
           </FormItem>
         )}
       />
@@ -65,19 +57,16 @@ export function NotificationFields({ form }: NotificationFieldsProps) {
         render={({ field }) => (
           <FormItem>
             <FormLabel className="text-white">
-              Message la veille
+              Message la veille de l'entraînement
             </FormLabel>
             <FormControl>
               <Textarea
-                placeholder="Rappel : entraînement de {sport} demain"
-                className="bg-gray-800 border-gray-700 text-white resize-none"
+                placeholder="Rappel : entraînement prévu demain"
+                className="bg-gray-700 border-gray-600 text-white resize-none min-h-[100px]"
                 {...field}
-                aria-label="Message de notification la veille de l'entraînement"
               />
             </FormControl>
-            <FormDescription className="text-gray-400">
-              Envoyé un jour avant, quel que soit le nombre de joueurs
-            </FormDescription>
+            <FormMessage />
           </FormItem>
         )}
       />
