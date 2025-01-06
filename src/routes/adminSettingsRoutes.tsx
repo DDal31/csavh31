@@ -36,3 +36,6 @@ export const adminSettingsRoutes = [
     element: <AdminInstantNotifications />,
   },
 ];
+
+// Make sure both the component and routes array are exported
+export default AdminSettingsRoutes;
