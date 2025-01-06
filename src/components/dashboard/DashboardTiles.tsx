@@ -1,100 +1,94 @@
-import { Card } from "@/components/ui/card";
-import {
-  Users,
-  Calendar,
-  Bell,
-  FileText,
-  Settings,
-  Mail,
-  Newspaper,
-  Phone,
-} from "lucide-react";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { User, Activity, Calendar, Shield, Key, FileText } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface DashboardTilesProps {
-  onTileClick: (path: string) => void;
-  isAdmin?: boolean;
+  isAdmin: boolean;
 }
 
-export const DashboardTiles = ({ onTileClick, isAdmin }: DashboardTilesProps) => {
+export function DashboardTiles({ isAdmin }: DashboardTilesProps) {
+  const navigate = useNavigate();
+  
   const tiles = [
     {
-      title: "Utilisateurs",
-      icon: Users,
-      path: "/admin/users",
-      description: "Gérer les utilisateurs",
-      adminOnly: true,
+      title: "Mon Profil",
+      icon: User,
+      route: "/profile",
+      bgColor: "bg-blue-600 hover:bg-blue-700",
+      ariaLabel: "Accéder à votre profil personnel"
     },
     {
-      title: "Entraînements",
+      title: "Inscription Entraînement",
+      icon: Activity,
+      route: "/training",
+      bgColor: "bg-green-600 hover:bg-green-700",
+      ariaLabel: "Gérer vos inscriptions aux entraînements"
+    },
+    {
+      title: "Présence",
       icon: Calendar,
-      path: "/admin/trainings",
-      description: "Gérer les entraînements",
-      adminOnly: true,
+      route: "/attendance",
+      bgColor: "bg-orange-600 hover:bg-orange-700",
+      ariaLabel: "Consulter les présences aux entraînements"
     },
     {
-      title: "Notifications",
-      icon: Bell,
-      path: "/admin/notifications",
-      description: "Gérer les notifications",
-      adminOnly: true,
-    },
-    {
-      title: "Documents",
+      title: "Mes Documents",
       icon: FileText,
-      path: "/admin/documents",
-      description: "Gérer les documents",
-      adminOnly: true,
+      route: "/documents",
+      bgColor: "bg-purple-600 hover:bg-purple-700",
+      ariaLabel: "Gérer vos documents personnels"
     },
     {
-      title: "Paramètres",
-      icon: Settings,
-      path: "/admin/settings",
-      description: "Paramètres du site",
-      adminOnly: true,
-    },
-    {
-      title: "Newsletter",
-      icon: Mail,
-      path: "/admin/newsletter",
-      description: "Gérer la newsletter",
-      adminOnly: true,
-    },
-    {
-      title: "Actualités",
-      icon: Newspaper,
-      path: "/admin/news",
-      description: "Gérer les actualités",
-      adminOnly: true,
-    },
-    {
-      title: "Contacts",
-      icon: Phone,
-      path: "/admin/contacts",
-      description: "Gérer les contacts",
-      adminOnly: true,
-    },
+      title: "Changer le mot de passe",
+      icon: Key,
+      route: "/change-password",
+      bgColor: "bg-indigo-600 hover:bg-indigo-700",
+      ariaLabel: "Modifier votre mot de passe"
+    }
   ];
 
-  const filteredTiles = isAdmin ? tiles : tiles.filter((tile) => !tile.adminOnly);
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {filteredTiles.map((tile) => {
-        const Icon = tile.icon;
-        return (
-          <Card
-            key={tile.path}
-            className="p-6 bg-gray-800 border-gray-700 hover:bg-gray-700 transition-colors cursor-pointer"
-            onClick={() => onTileClick(tile.path)}
-          >
-            <div className="flex flex-col items-center text-center space-y-4">
-              <Icon className="h-12 w-12 text-blue-500" />
-              <h2 className="text-xl font-semibold text-white">{tile.title}</h2>
-              <p className="text-gray-400">{tile.description}</p>
-            </div>
-          </Card>
-        );
-      })}
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+      {tiles.map((tile) => (
+        <Card 
+          key={tile.title}
+          className={`${tile.bgColor} border-none cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl focus-within:ring-2 focus-within:ring-white`}
+          onClick={() => navigate(tile.route)}
+          role="button"
+          aria-label={tile.ariaLabel}
+          tabIndex={0}
+        >
+          <CardHeader className="text-center p-4 sm:p-6">
+            <tile.icon 
+              className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-4 text-white" 
+              aria-hidden="true"
+            />
+            <CardTitle className="text-sm sm:text-lg font-bold text-white">
+              {tile.title}
+            </CardTitle>
+          </CardHeader>
+        </Card>
+      ))}
+      
+      {isAdmin && (
+        <Card 
+          className="bg-red-600 hover:bg-red-700 border-none cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl focus-within:ring-2 focus-within:ring-white"
+          onClick={() => navigate("/admin")}
+          role="button"
+          aria-label="Accéder au tableau de bord administrateur"
+          tabIndex={0}
+        >
+          <CardHeader className="text-center p-4 sm:p-6">
+            <Shield 
+              className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-4 text-white" 
+              aria-hidden="true"
+            />
+            <CardTitle className="text-sm sm:text-lg font-bold text-white">
+              Espace Admin
+            </CardTitle>
+          </CardHeader>
+        </Card>
+      )}
     </div>
   );
-};
+}

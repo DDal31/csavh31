@@ -6,10 +6,7 @@ export type Training = {
   start_time: string;
   end_time: string;
   created_at: string;
-  notification_week_before: string | null;
-  notification_missing_players: string | null;
-  notification_day_before: string | null;
-  registrations?: {
+  registrations: {
     id: string;
     user_id: string;
     created_at: string;
