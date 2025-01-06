@@ -14,8 +14,11 @@ import {
   FileStack, 
   FileSpreadsheet, 
   Settings,
-  Bell 
+  Bell,
+  Palette 
 } from "lucide-react";
+
+// ... keep existing code (imports and initial part of component)
 
 const AdminSettings = () => {
   const navigate = useNavigate();
@@ -108,6 +111,13 @@ const AdminSettings = () => {
       route: "/admin/settings/notifications",
       bgColor: "bg-yellow-600 hover:bg-yellow-700",
       ariaLabel: "Configurer les notifications"
+    },
+    {
+      title: "Templates",
+      icon: Palette,
+      route: "/admin/settings/templates",
+      bgColor: "bg-orange-600 hover:bg-orange-700",
+      ariaLabel: "Choisir le template du site"
     }
   ];
 

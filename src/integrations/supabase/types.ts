@@ -472,6 +472,42 @@ export type Database = {
           },
         ]
       }
+      template_settings: {
+        Row: {
+          color_scheme: Json
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          layout_config: Json
+          name: string
+          style: Database["public"]["Enums"]["template_style"]
+          updated_at: string
+        }
+        Insert: {
+          color_scheme: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          layout_config: Json
+          name: string
+          style: Database["public"]["Enums"]["template_style"]
+          updated_at?: string
+        }
+        Update: {
+          color_scheme?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          layout_config?: Json
+          name?: string
+          style?: Database["public"]["Enums"]["template_style"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       trainings: {
         Row: {
           created_at: string
@@ -594,6 +630,12 @@ export type Database = {
       sport_type: "goalball" | "torball" | "both"
       target_group: "all" | "sport_specific" | "training_registered"
       team_type: "loisir" | "d1_masculine" | "d1_feminine"
+      template_style:
+        | "default"
+        | "modern"
+        | "minimal"
+        | "playful"
+        | "professional"
       training_type: "goalball" | "torball" | "other" | "showdown"
     }
     CompositeTypes: {
