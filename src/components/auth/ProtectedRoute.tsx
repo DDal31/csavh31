@@ -11,7 +11,7 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
   const location = useLocation();
 
-  const { data: session } = useQuery({
+  const { data: session, isLoading: isSessionLoading } = useQuery({
     queryKey: ["session"],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -19,7 +19,7 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
     },
   });
 
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile, isLoading: isProfileLoading } = useQuery({
     queryKey: ["profile", session?.user?.id],
     enabled: !!session?.user?.id,
     queryFn: async () => {
@@ -40,25 +40,27 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
     },
   });
 
-  if (!session) {
-    console.log("No session found, redirecting to login");
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  if (isLoading) {
+  // Afficher le loader pendant le chargement de la session ou du profil
+  if (isSessionLoading || (session && isProfileLoading)) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div className="flex justify-center items-center min-h-screen bg-gray-900">
         <Loader2 className="h-8 w-8 animate-spin text-white" />
       </div>
     );
   }
 
-  // Vérification explicite du rôle admin
-  if (requireAdmin) {
+  // Rediriger vers la page de connexion si pas de session
+  if (!session) {
+    console.log("No session found, redirecting to login");
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // Vérification du rôle admin
+  if (requireAdmin && profile) {
     console.log("Checking admin role. Profile:", profile);
-    console.log("Site role:", profile?.site_role);
+    console.log("Site role:", profile.site_role);
     
-    if (!profile || profile.site_role !== "admin") {
+    if (profile.site_role !== "admin") {
       console.log("User is not admin, redirecting to dashboard");
       return <Navigate to="/dashboard" replace />;
     }
