@@ -10,7 +10,6 @@ import type { Database } from "@/integrations/supabase/types";
 import { TrainingTypeField } from "./form/TrainingTypeField";
 import { TrainingDateField } from "./form/TrainingDateField";
 import { TrainingTimeFields } from "./form/TrainingTimeFields";
-import { NotificationFields } from "./form/NotificationFields";
 import { formSchema } from "./form/trainingFormSchema";
 import * as z from "zod";
 
@@ -27,9 +26,6 @@ export function CreateTrainingForm() {
       otherTypeDetails: "",
       startTime: "09:00",
       endTime: "10:30",
-      notificationWeekBefore: "",
-      notificationMissingPlayers: "",
-      notificationDayBefore: "",
     },
   });
 
@@ -43,9 +39,6 @@ export function CreateTrainingForm() {
         date: format(values.date, "yyyy-MM-dd"),
         start_time: values.startTime,
         end_time: values.endTime,
-        notification_week_before: values.notificationWeekBefore || null,
-        notification_missing_players: values.notificationMissingPlayers || null,
-        notification_day_before: values.notificationDayBefore || null,
       };
 
       console.log("Submitting training data:", trainingData);
@@ -68,9 +61,6 @@ export function CreateTrainingForm() {
         otherTypeDetails: "",
         startTime: "09:00",
         endTime: "10:30",
-        notificationWeekBefore: "",
-        notificationMissingPlayers: "",
-        notificationDayBefore: "",
       });
     } catch (error) {
       console.error("Error creating training:", error);
@@ -92,7 +82,6 @@ export function CreateTrainingForm() {
           <TrainingTypeField form={form} />
           <TrainingDateField form={form} />
           <TrainingTimeFields form={form} />
-          <NotificationFields form={form} />
           <Button 
             type="submit" 
             className="w-full" 
