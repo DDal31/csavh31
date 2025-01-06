@@ -1,7 +1,7 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, ShieldAlert } from "lucide-react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -11,15 +11,22 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
   const location = useLocation();
 
-  const { data: session, isLoading: isSessionLoading } = useQuery({
+  const { data: session, isLoading: isSessionLoading, isError: isSessionError } = useQuery({
     queryKey: ["session"],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error("Error fetching session:", error);
+        throw error;
+      }
+      console.log("Session data:", session);
       return session;
     },
+    retry: 1,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  const { data: profile, isLoading: isProfileLoading } = useQuery({
+  const { data: profile, isLoading: isProfileLoading, isError: isProfileError } = useQuery({
     queryKey: ["profile", session?.user?.id],
     enabled: !!session?.user?.id,
     queryFn: async () => {
@@ -38,13 +45,30 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
       console.log("Profile data:", data);
       return data;
     },
+    retry: 1,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  // Afficher le loader pendant le chargement de la session ou du profil
+  // Afficher le loader pendant le chargement initial
   if (isSessionLoading || (session && isProfileLoading)) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-900">
-        <Loader2 className="h-8 w-8 animate-spin text-white" />
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-white mx-auto mb-4" />
+          <p className="text-white">Chargement en cours...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Gérer les erreurs de session ou de profil
+  if (isSessionError || isProfileError) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gray-900">
+        <div className="text-center">
+          <ShieldAlert className="h-8 w-8 text-red-500 mx-auto mb-4" />
+          <p className="text-white">Une erreur est survenue lors de la vérification des accès.</p>
+        </div>
       </div>
     );
   }
