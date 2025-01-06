@@ -19,6 +19,7 @@ import AdminSettings from "@/pages/AdminSettings";
 import AdminSiteSettings from "@/pages/AdminSiteSettings";
 import AdminNotificationSettings from "@/pages/AdminNotificationSettings";
 import AdminInstantNotifications from "@/pages/AdminInstantNotifications";
+import AdminTrainingNotification from "@/pages/AdminTrainingNotification";
 
 export const AdminRoutes = () => {
   return (
@@ -117,6 +118,14 @@ export const AdminRoutes = () => {
         element={
           <ProtectedRoute requireAdmin>
             <AdminTrainings />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/trainings/notification"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminTrainingNotification />
           </ProtectedRoute>
         }
       />

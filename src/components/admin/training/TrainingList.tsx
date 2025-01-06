@@ -4,9 +4,10 @@ import { fr } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlayerRefereePanel } from "./PlayerRefereePanel";
-import { UserPlus, PencilIcon, Trash2 } from "lucide-react";
+import { UserPlus, PencilIcon, Trash2, Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +30,7 @@ type TrainingListProps = {
 export function TrainingList({ trainings, onAddClick, onEditClick }: TrainingListProps) {
   const [selectedTraining, setSelectedTraining] = useState<Training | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleDelete = async (trainingId: string) => {
     try {
@@ -45,7 +47,6 @@ export function TrainingList({ trainings, onAddClick, onEditClick }: TrainingLis
         description: "L'entraînement a été supprimé avec succès.",
       });
 
-      // Reload the page to refresh the list
       window.location.reload();
     } catch (error) {
       console.error("Error deleting training:", error);
@@ -55,6 +56,11 @@ export function TrainingList({ trainings, onAddClick, onEditClick }: TrainingLis
         description: "Une erreur est survenue lors de la suppression de l'entraînement.",
       });
     }
+  };
+
+  const handleNotificationClick = (training: Training) => {
+    const formattedDate = format(new Date(training.date), "EEEE d MMMM yyyy", { locale: fr });
+    navigate(`/admin/settings/notifications/instant?title=${training.type} - Entrainement du ${formattedDate}&trainingId=${training.id}`);
   };
 
   if (trainings.length === 0) {
@@ -91,6 +97,15 @@ export function TrainingList({ trainings, onAddClick, onEditClick }: TrainingLis
                   : training.type.charAt(0).toUpperCase() + training.type.slice(1)}
               </CardTitle>
               <div className="flex items-center space-x-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleNotificationClick(training)}
+                  className="text-yellow-500 hover:text-yellow-400 hover:bg-yellow-500/20"
+                  aria-label={`Envoyer une notification pour l'entraînement du ${formatTrainingDate(training.date)}`}
+                >
+                  <Bell className="w-5 h-5" />
+                </Button>
                 <Button
                   variant="ghost"
                   size="icon"
