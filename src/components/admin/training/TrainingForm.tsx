@@ -3,13 +3,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { format } from "date-fns";
 import { ArrowLeft } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { supabase } from "@/integrations/supabase/client";
 import { AccessibleTrainingTypeField } from "./form/AccessibleTrainingTypeField";
 import { AccessibleTrainingDateField } from "./form/AccessibleTrainingDateField";
 import { AccessibleTrainingTimeFields } from "./form/AccessibleTrainingTimeFields";
+import { NotificationFields } from "./form/NotificationFields";
 import { formSchema } from "./form/trainingFormSchema";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -34,6 +35,9 @@ export function TrainingForm({ training, onSuccess, onCancel }: TrainingFormProp
       date: training ? new Date(training.date) : undefined,
       startTime: training?.start_time.slice(0, 5) || "09:00",
       endTime: training?.end_time.slice(0, 5) || "10:30",
+      notificationWeekBefore: training?.notification_week_before || "",
+      notificationMissingPlayers: training?.notification_missing_players || "",
+      notificationDayBefore: training?.notification_day_before || "",
     },
   });
 
@@ -54,7 +58,6 @@ export function TrainingForm({ training, onSuccess, onCancel }: TrainingFormProp
         return;
       }
 
-      // Get the current session to verify authentication
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !session) {
         console.error("Authentication error:", sessionError);
@@ -72,6 +75,9 @@ export function TrainingForm({ training, onSuccess, onCancel }: TrainingFormProp
         date: format(values.date, "yyyy-MM-dd"),
         start_time: values.startTime,
         end_time: values.endTime,
+        notification_week_before: values.notificationWeekBefore || null,
+        notification_missing_players: values.notificationMissingPlayers || null,
+        notification_day_before: values.notificationDayBefore || null,
       };
 
       console.log("Submitting training data:", trainingData);
@@ -138,6 +144,7 @@ export function TrainingForm({ training, onSuccess, onCancel }: TrainingFormProp
             <AccessibleTrainingTypeField form={form} />
             <AccessibleTrainingDateField form={form} />
             <AccessibleTrainingTimeFields form={form} />
+            <NotificationFields form={form} />
             
             <Button 
               type="submit" 
