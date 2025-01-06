@@ -60,7 +60,7 @@ export function TrainingList({ trainings, onAddClick, onEditClick }: TrainingLis
 
   const handleNotificationClick = (training: Training) => {
     const formattedDate = format(new Date(training.date), "EEEE d MMMM yyyy", { locale: fr });
-    navigate(`/admin/settings/notifications/instant?title=${training.type} - Entrainement du ${formattedDate}&trainingId=${training.id}`);
+    navigate(`/admin/trainings/notification?title=${training.type} - Entrainement du ${formattedDate}&trainingId=${training.id}`);
   };
 
   if (trainings.length === 0) {
