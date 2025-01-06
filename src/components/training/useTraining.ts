@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import type { Training } from "@/types/training";
 
 export function useTraining(trainingId: string | undefined) {
@@ -24,7 +24,6 @@ export function useTraining(trainingId: string | undefined) {
               id,
               user_id,
               created_at,
-              training_id,
               profiles (
                 first_name,
                 last_name,

@@ -46,7 +46,6 @@ const Attendance = () => {
               id,
               user_id,
               created_at,
-              training_id,
               profiles (
                 first_name,
                 last_name,
