@@ -80,3 +80,5 @@ export const adminRoutes = [
   },
   ...adminSettingsRoutes,
 ];
+
+export default adminRoutes;

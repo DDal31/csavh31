@@ -25,3 +25,14 @@ export const AdminSettingsRoutes = () => {
     </>
   );
 };
+
+export const adminSettingsRoutes = [
+  {
+    path: "settings/notifications",
+    element: <AdminNotificationSettings />,
+  },
+  {
+    path: "settings/notifications/instant",
+    element: <AdminInstantNotifications />,
+  },
+];

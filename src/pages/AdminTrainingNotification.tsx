@@ -53,15 +53,14 @@ export default function AdminTrainingNotification() {
   const form = useForm<NotificationForm>({
     resolver: zodResolver(notificationSchema),
     defaultValues: {
-      title: `Entraînement de ${training.type} du ${format(new Date(training.date), "d MMMM yyyy", { locale: fr })}`,
+      title: `Entraînement de ${training.type === 'other' ? training.other_type_details || 'sport' : training.type} du ${format(new Date(training.date), "d MMMM yyyy", { locale: fr })}`,
       type: "reminder",
-      sport: training.type === "other" ? "multi" : training.type,
+      sport: training.type === "other" ? "multi" : (training.type === "showdown" ? "multi" : training.type),
     },
   });
 
   const onSubmit = async (data: NotificationForm) => {
     try {
-      // TODO: Implement notification sending logic
       console.log("Sending notification:", data);
       
       toast({

@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { PublicRoutes } from "@/routes/publicRoutes";
 import { MemberRoutes } from "@/routes/memberRoutes";
-import { AdminRoutes } from "@/routes/adminRoutes";
+import { adminRoutes } from "@/routes/adminRoutes";
 import { AdminSettingsRoutes } from "@/routes/adminSettingsRoutes";
 import { ErrorBoundary } from "react-error-boundary";
 
@@ -39,7 +39,13 @@ function App() {
             <Route>
               <Route>{PublicRoutes()}</Route>
               <Route>{MemberRoutes()}</Route>
-              <Route>{AdminRoutes()}</Route>
+              {adminRoutes.map((route) => (
+                <Route
+                  key={route.path}
+                  path={`/admin/${route.path}`}
+                  element={route.element}
+                />
+              ))}
               <Route>{AdminSettingsRoutes()}</Route>
             </Route>
           </Routes>
