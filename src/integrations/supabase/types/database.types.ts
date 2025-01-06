@@ -1,14 +1,11 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+import type { Json } from './json.types'
+import type { TrainingsTable } from './tables/trainings.types'
+// Import other table types as needed
 
 export interface Database {
   public: {
     Tables: {
+      trainings: TrainingsTable
       site_settings: {
         Row: {
           id: string
@@ -264,64 +261,6 @@ export interface Database {
           updated_at?: string
         }
       }
-      trainings: {
-        Row: {
-          created_at: string
-          date: string
-          end_time: string
-          id: string
-          other_type_details: string | null
-          start_time: string
-          type: Database["public"]["Enums"]["training_type"]
-        }
-        Insert: {
-          created_at?: string
-          date: string
-          end_time: string
-          id?: string
-          other_type_details?: string | null
-          start_time: string
-          type: Database["public"]["Enums"]["training_type"]
-        }
-        Update: {
-          created_at?: string
-          date?: string
-          end_time?: string
-          id?: string
-          other_type_details?: string | null
-          start_time?: string
-          type?: Database["public"]["Enums"]["training_type"]
-        }
-      }
-      user_documents: {
-        Row: {
-          document_type: Database["public"]["Enums"]["document_type"]
-          file_name: string
-          file_path: string
-          id: string
-          uploaded_at: string
-          uploaded_by: string
-          user_id: string
-        }
-        Insert: {
-          document_type: Database["public"]["Enums"]["document_type"]
-          file_name: string
-          file_path: string
-          id?: string
-          uploaded_at?: string
-          uploaded_by: string
-          user_id: string
-        }
-        Update: {
-          document_type?: Database["public"]["Enums"]["document_type"]
-          file_name?: string
-          file_path?: string
-          id?: string
-          uploaded_at?: string
-          uploaded_by?: string
-          user_id?: string
-        }
-      }
     }
     Views: {
       [_ in never]: never
@@ -345,3 +284,5 @@ export interface Database {
     }
   }
 }
+
+export type { Json } from './json.types'
