@@ -7,111 +7,119 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Edit } from "lucide-react";
+import { Plus } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
-interface NotificationSetting {
+interface NotificationHistory {
   id: string;
-  notification_type: "training_reminder" | "missing_players" | "custom";
-  delay_hours: number;
-  enabled: boolean;
+  title: string;
+  content: string;
+  target_group: string;
   sport?: string;
-  min_players?: number;
-  notification_text?: string;
-  notification_title?: string;
+  sent_at: string;
 }
 
 interface NotificationSettingsListProps {
-  settings: NotificationSetting[];
   onAddClick: () => void;
-  onEditClick: (setting: NotificationSetting) => void;
 }
 
 export function NotificationSettingsList({
-  settings,
   onAddClick,
-  onEditClick,
 }: NotificationSettingsListProps) {
-  const getNotificationTypeLabel = (type: string) => {
-    switch (type) {
-      case "training_reminder":
-        return "Rappel d'entraînement";
-      case "missing_players":
-        return "Joueurs manquants";
-      case "custom":
-        return "Personnalisé";
-      default:
-        return type;
-    }
-  };
+  const { data: notifications, isLoading } = useQuery({
+    queryKey: ["notification-history"],
+    queryFn: async () => {
+      console.log("Fetching notification history...");
+      const { data, error } = await supabase
+        .from("notification_history")
+        .select("*")
+        .order("sent_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching notification history:", error);
+        throw error;
+      }
+
+      console.log("Notification history fetched:", data);
+      return data as NotificationHistory[];
+    },
+  });
 
   return (
     <div className="bg-gray-800 rounded-lg shadow-lg p-6 border border-purple-500/20">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold text-white">Paramètres de Notification</h2>
+        <h1 className="text-xl font-semibold text-white">
+          Historique des Notifications
+        </h1>
         <Button 
           onClick={onAddClick} 
           className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2"
-          aria-label="Ajouter un nouveau paramètre de notification"
+          aria-label="Créer une nouvelle notification"
         >
-          <Plus className="h-4 w-4" />
-          Ajouter
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          Nouvelle Notification
         </Button>
       </div>
 
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-b border-purple-500/20">
-              <TableHead className="text-purple-300">Type</TableHead>
-              <TableHead className="text-purple-300">Sport</TableHead>
-              <TableHead className="text-purple-300">Délai (heures)</TableHead>
-              <TableHead className="text-purple-300">Min. Joueurs</TableHead>
-              <TableHead className="text-purple-300">Statut</TableHead>
-              <TableHead className="text-purple-300">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {settings.map((setting) => (
-              <TableRow 
-                key={setting.id}
-                className="border-b border-purple-500/10 hover:bg-purple-900/20"
-              >
-                <TableCell className="text-gray-300">
-                  {getNotificationTypeLabel(setting.notification_type)}
-                </TableCell>
-                <TableCell className="text-gray-300">{setting.sport || "Tous"}</TableCell>
-                <TableCell className="text-gray-300">{setting.delay_hours}</TableCell>
-                <TableCell className="text-gray-300">
-                  {setting.min_players || "-"}
-                </TableCell>
-                <TableCell>
-                  <span
-                    className={`px-2 py-1 rounded text-sm ${
-                      setting.enabled
-                        ? "bg-green-900/20 text-green-400"
-                        : "bg-red-900/20 text-red-400"
-                    }`}
-                  >
-                    {setting.enabled ? "Activé" : "Désactivé"}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onEditClick(setting)}
-                    className="text-purple-300 hover:text-white hover:bg-purple-800/50 flex items-center gap-2"
-                    aria-label={`Modifier le paramètre ${setting.notification_type}`}
-                  >
-                    <Edit className="h-4 w-4" />
-                    Modifier
-                  </Button>
-                </TableCell>
+      {isLoading ? (
+        <div 
+          className="flex justify-center items-center py-8"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
+          <span className="sr-only">Chargement de l'historique des notifications...</span>
+        </div>
+      ) : !notifications?.length ? (
+        <div 
+          className="text-center py-8 text-gray-400"
+          aria-live="polite"
+        >
+          Aucune notification n'a été envoyée pour le moment.
+        </div>
+      ) : (
+        <div className="overflow-x-auto" role="region" aria-label="Historique des notifications envoyées">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-b border-purple-500/20">
+                <TableHead className="text-purple-300">Date d'envoi</TableHead>
+                <TableHead className="text-purple-300">Titre</TableHead>
+                <TableHead className="text-purple-300">Contenu</TableHead>
+                <TableHead className="text-purple-300">Groupe cible</TableHead>
+                <TableHead className="text-purple-300">Sport</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {notifications.map((notification) => (
+                <TableRow 
+                  key={notification.id}
+                  className="border-b border-purple-500/10 hover:bg-purple-900/20"
+                >
+                  <TableCell className="text-gray-300">
+                    {new Date(notification.sent_at).toLocaleDateString('fr-FR', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </TableCell>
+                  <TableCell className="text-gray-300">{notification.title}</TableCell>
+                  <TableCell className="text-gray-300 max-w-md">
+                    <div className="truncate" title={notification.content}>
+                      {notification.content}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-gray-300">{notification.target_group}</TableCell>
+                  <TableCell className="text-gray-300">{notification.sport || "Tous"}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   );
 }
