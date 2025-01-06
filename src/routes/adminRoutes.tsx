@@ -42,9 +42,14 @@ export const AdminRoutes = () => {
           </ProtectedRoute>
         }
       />
-      <Route path="admin/*">
-        <AdminSettingsRoutes />
-      </Route>
+      <Route
+        path="admin/settings/*"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminSettingsRoutes />
+          </ProtectedRoute>
+        }
+      />
     </>
   );
 };

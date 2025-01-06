@@ -1,6 +1,5 @@
 import { Route } from "react-router-dom";
 import { lazy } from "react";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 const AdminPresentation = lazy(() => import("@/pages/AdminPresentation"));
 const AdminContacts = lazy(() => import("@/pages/AdminContacts"));
@@ -15,78 +14,15 @@ const AdminTemplates = lazy(() => import("@/pages/AdminTemplates"));
 export const AdminSettingsRoutes = () => {
   return (
     <>
-      <Route 
-        path="settings/presentation" 
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminPresentation />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="settings/contacts" 
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminContacts />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="settings/news" 
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminNews />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="settings/sports-teams" 
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminSportsTeams />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="settings/document-types" 
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminDocumentTypes />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="settings/attendance-sheets" 
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminAttendanceSheets />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="settings/site" 
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminSiteSettings />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="settings/notifications" 
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminNotificationSettings />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="settings/templates" 
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminTemplates />
-          </ProtectedRoute>
-        } 
-      />
+      <Route path="presentation" element={<AdminPresentation />} />
+      <Route path="contacts" element={<AdminContacts />} />
+      <Route path="news" element={<AdminNews />} />
+      <Route path="sports-teams" element={<AdminSportsTeams />} />
+      <Route path="document-types" element={<AdminDocumentTypes />} />
+      <Route path="attendance-sheets" element={<AdminAttendanceSheets />} />
+      <Route path="site" element={<AdminSiteSettings />} />
+      <Route path="notifications" element={<AdminNotificationSettings />} />
+      <Route path="templates" element={<AdminTemplates />} />
     </>
   );
 };
