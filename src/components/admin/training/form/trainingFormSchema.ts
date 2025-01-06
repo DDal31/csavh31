@@ -12,6 +12,9 @@ export const formSchema = z.object({
   endTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, {
     message: "Format d'heure invalide (HH:MM)",
   }),
+  notificationWeekBefore: z.string().optional(),
+  notificationMissingPlayers: z.string().optional(),
+  notificationDayBefore: z.string().optional(),
 }).refine((data) => {
   if (data.type === "other" && !data.otherTypeDetails) {
     return false;
