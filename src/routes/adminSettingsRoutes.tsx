@@ -1,5 +1,6 @@
+import { Route } from "react-router-dom";
 import { lazy } from "react";
-import { RouteObject } from "react-router-dom";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 const AdminPresentation = lazy(() => import("@/pages/AdminPresentation"));
 const AdminContacts = lazy(() => import("@/pages/AdminContacts"));
@@ -11,41 +12,81 @@ const AdminSiteSettings = lazy(() => import("@/pages/AdminSiteSettings"));
 const AdminNotificationSettings = lazy(() => import("@/pages/AdminNotificationSettings"));
 const AdminTemplates = lazy(() => import("@/pages/AdminTemplates"));
 
-export const adminSettingsRoutes: RouteObject[] = [
-  {
-    path: "presentation",
-    element: <AdminPresentation />,
-  },
-  {
-    path: "contacts",
-    element: <AdminContacts />,
-  },
-  {
-    path: "news",
-    element: <AdminNews />,
-  },
-  {
-    path: "sports-teams",
-    element: <AdminSportsTeams />,
-  },
-  {
-    path: "document-types",
-    element: <AdminDocumentTypes />,
-  },
-  {
-    path: "attendance-sheets",
-    element: <AdminAttendanceSheets />,
-  },
-  {
-    path: "site",
-    element: <AdminSiteSettings />,
-  },
-  {
-    path: "notifications",
-    element: <AdminNotificationSettings />,
-  },
-  {
-    path: "templates",
-    element: <AdminTemplates />,
-  },
-];
+export const AdminSettingsRoutes = () => {
+  return (
+    <>
+      <Route
+        path="/admin/settings/presentation"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminPresentation />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/settings/contacts"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminContacts />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/settings/news"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminNews />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/settings/sports-teams"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminSportsTeams />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/settings/document-types"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminDocumentTypes />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/settings/attendance-sheets"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminAttendanceSheets />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/settings/site"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminSiteSettings />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/settings/notifications"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminNotificationSettings />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/settings/templates"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminTemplates />
+          </ProtectedRoute>
+        }
+      />
+    </>
+  );
+};

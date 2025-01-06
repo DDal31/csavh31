@@ -10,23 +10,42 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
+interface ColorScheme {
+  primary: string;
+  background: string;
+  card: string;
+  muted: string;
+}
+
+interface LayoutConfig {
+  tileLayout: string;
+  logoPosition: string;
+}
+
 interface Template {
   id: string;
   name: string;
   description: string;
-  style: string;
-  color_scheme: {
-    primary: string;
-    background: string;
-    card: string;
-    muted: string;
-  };
-  layout_config: {
-    tileLayout: string;
-    logoPosition: string;
-  };
+  style: "default" | "modern" | "minimal" | "playful" | "professional";
+  color_scheme: ColorScheme;
+  layout_config: LayoutConfig;
   is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
+
+// Helper function to convert database response to Template type
+const convertToTemplate = (data: any): Template => {
+  return {
+    ...data,
+    color_scheme: typeof data.color_scheme === 'string' 
+      ? JSON.parse(data.color_scheme)
+      : data.color_scheme,
+    layout_config: typeof data.layout_config === 'string'
+      ? JSON.parse(data.layout_config)
+      : data.layout_config
+  };
+};
 
 const AdminTemplates = () => {
   const navigate = useNavigate();
@@ -75,8 +94,11 @@ const AdminTemplates = () => {
 
       if (error) throw error;
 
-      setTemplates(data);
-      const activeTemplate = data.find(t => t.is_active);
+      // Convert the data to Template type
+      const convertedTemplates = data.map(convertToTemplate);
+      setTemplates(convertedTemplates);
+      
+      const activeTemplate = convertedTemplates.find(t => t.is_active);
       if (activeTemplate) {
         setSelectedTemplate(activeTemplate.id);
       }
@@ -182,7 +204,6 @@ const AdminTemplates = () => {
                         <p className="text-gray-400">{template.description}</p>
                       </div>
 
-                      {/* Preview du template */}
                       <div 
                         className="aspect-video rounded-lg p-4 flex items-center justify-center"
                         style={{ 
