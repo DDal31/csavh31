@@ -35,11 +35,12 @@ export function useNotificationSubmission() {
       if (targetGroup === "sport_specific" && selectedSport) {
         console.log("Filtering subscriptions for sport:", selectedSport);
         
-        // Get users who either practice the specific sport or have it as part of their multiple sports
+        // Get users who practice the specific sport
+        // Using LIKE with word boundaries to match exact sport names
         const { data: userIds } = await supabase
           .from("profiles")
           .select("id")
-          .or(`sport.eq.${selectedSport},sport.ilike.%${selectedSport}%`);
+          .or(`sport.eq.${selectedSport},sport.ilike.% ${selectedSport}%,sport.ilike.%${selectedSport} %,sport.eq.both`);
         
         if (userIds) {
           console.log("Found users practicing sport:", userIds.length);
