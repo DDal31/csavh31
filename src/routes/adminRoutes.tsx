@@ -1,5 +1,5 @@
 import { lazy } from "react";
-import adminSettingsRoutes from "./adminSettingsRoutes";
+import { adminSettingsRoutes } from "./adminSettingsRoutes";
 
 const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
 const AdminUsers = lazy(() => import("@/pages/AdminUsers"));
@@ -7,7 +7,7 @@ const AdminUserEdit = lazy(() => import("@/pages/AdminUserEdit"));
 const AdminTrainings = lazy(() => import("@/pages/AdminTrainings"));
 const AdminTrainingNotification = lazy(() => import("@/pages/AdminTrainingNotification"));
 
-const adminRoutes = [
+export const adminRoutes = [
   {
     path: "dashboard",
     element: <AdminDashboard />,

@@ -3,7 +3,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import AdminNotificationSettings from "@/pages/AdminNotificationSettings";
 import AdminInstantNotifications from "@/pages/AdminInstantNotifications";
 
-const adminSettingsRoutes = [
+export const adminSettingsRoutes = [
   {
     path: "/admin/settings/notifications",
     element: (
@@ -21,5 +21,3 @@ const adminSettingsRoutes = [
     ),
   },
 ];
-
-export default adminSettingsRoutes;
