@@ -70,7 +70,7 @@ const Attendance = () => {
         });
 
         console.log("Filtered trainings:", filteredTrainings);
-        setTrainings(filteredTrainings);
+        setTrainings(filteredTrainings as Training[]);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {

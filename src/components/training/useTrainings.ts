@@ -72,7 +72,7 @@ export function useTrainings() {
         if (trainingsError) throw trainingsError;
 
         console.log("Fetched trainings:", trainingsData);
-        setTrainings(trainingsData);
+        setTrainings(trainingsData as Training[]);
 
         // Fetch user's current registrations
         const { data: registrations, error: registrationsError } = await supabase
