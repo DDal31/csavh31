@@ -16,20 +16,26 @@ export function useTemplates() {
       setError(null);
       console.log("Fetching templates...");
       
-      const { data, error } = await supabase
+      const { data, error: fetchError } = await supabase
         .from("template_settings")
         .select("*")
         .order("created_at");
 
-      if (error) {
-        console.error("Error fetching templates:", error);
-        setError(error);
+      if (fetchError) {
+        console.error("Error fetching templates:", fetchError);
+        setError(fetchError);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les templates. Veuillez réessayer.",
+          variant: "destructive",
+        });
         return;
       }
 
       console.log("Templates data:", data);
 
-      if (!data) {
+      if (!data || data.length === 0) {
+        console.log("No templates found");
         setTemplates([]);
         return;
       }
@@ -52,8 +58,13 @@ export function useTemplates() {
         setSelectedTemplate(activeTemplate.id);
       }
     } catch (error) {
-      console.error("Error fetching templates:", error);
+      console.error("Error in fetchTemplates:", error);
       setError(error as Error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors du chargement des templates",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -73,14 +84,20 @@ export function useTemplates() {
         .update({ is_active: false })
         .neq("id", "placeholder");
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error("Error deactivating templates:", updateError);
+        throw updateError;
+      }
 
       const { error: activateError } = await supabase
         .from("template_settings")
         .update({ is_active: true })
         .eq("id", templateId);
 
-      if (activateError) throw activateError;
+      if (activateError) {
+        console.error("Error activating template:", activateError);
+        throw activateError;
+      }
 
       setSelectedTemplate(templateId);
       toast({
@@ -90,7 +107,7 @@ export function useTemplates() {
 
       await fetchTemplates();
     } catch (error) {
-      console.error("Error updating template:", error);
+      console.error("Error in handleTemplateChange:", error);
       toast({
         title: "Erreur",
         description: "Impossible de mettre à jour le template",
@@ -106,6 +123,7 @@ export function useTemplates() {
     error,
     templates,
     selectedTemplate,
-    handleTemplateChange
+    handleTemplateChange,
+    refetch: fetchTemplates
   };
 }
