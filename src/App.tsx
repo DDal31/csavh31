@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { PublicRoutes } from "@/routes/publicRoutes";
 import { MemberRoutes } from "@/routes/memberRoutes";
 import { AdminRoutes } from "@/routes/adminRoutes";
-import { AdminSettingsRoutes } from "@/routes/adminSettingsRoutes";
+import AdminSettingsRoutes from "@/routes/adminSettingsRoutes";
 import { ErrorBoundary } from "react-error-boundary";
 
 const queryClient = new QueryClient({
