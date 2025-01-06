@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { PublicRoutes } from "@/routes/publicRoutes";
@@ -39,6 +39,7 @@ function App() {
             <Route>
               <Route>{PublicRoutes()}</Route>
               <Route>{MemberRoutes()}</Route>
+              <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
               {adminRoutes.map((route) => (
                 <Route
                   key={route.path}
