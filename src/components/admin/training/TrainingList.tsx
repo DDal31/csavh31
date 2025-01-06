@@ -4,9 +4,10 @@ import { fr } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlayerRefereePanel } from "./PlayerRefereePanel";
-import { UserPlus, PencilIcon, Trash2 } from "lucide-react";
+import { UserPlus, PencilIcon, Trash2, Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +20,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import type { Training } from "@/types/training";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 type TrainingListProps = {
   trainings: Training[];
@@ -30,6 +30,7 @@ type TrainingListProps = {
 export function TrainingList({ trainings, onAddClick, onEditClick }: TrainingListProps) {
   const [selectedTraining, setSelectedTraining] = useState<Training | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleDelete = async (trainingId: string) => {
     try {
@@ -56,6 +57,12 @@ export function TrainingList({ trainings, onAddClick, onEditClick }: TrainingLis
         description: "Une erreur est survenue lors de la suppression de l'entraînement.",
       });
     }
+  };
+
+  const handleNotificationClick = (training: Training) => {
+    navigate(`/admin/trainings/${training.id}/notify`, {
+      state: { training }
+    });
   };
 
   if (trainings.length === 0) {
@@ -92,6 +99,15 @@ export function TrainingList({ trainings, onAddClick, onEditClick }: TrainingLis
                   : training.type.charAt(0).toUpperCase() + training.type.slice(1)}
               </CardTitle>
               <div className="flex items-center space-x-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleNotificationClick(training)}
+                  className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/20"
+                  aria-label="Envoyer une notification pour cet entraînement"
+                >
+                  <Bell className="w-5 h-5" />
+                </Button>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -151,27 +167,9 @@ export function TrainingList({ trainings, onAddClick, onEditClick }: TrainingLis
                   {training.start_time.slice(0, 5)} - {training.end_time.slice(0, 5)}
                 </p>
                 {training.registrations && training.registrations.length > 0 && (
-                  <div className="flex items-center space-x-2 mt-2">
-                    <p>
-                      {training.registrations.length} participant{training.registrations.length > 1 ? 's' : ''} inscrit{training.registrations.length > 1 ? 's' : ''}
-                    </p>
-                    <div className="flex -space-x-2">
-                      {training.registrations.slice(0, 3).map((registration) => (
-                        <Avatar key={registration.user_id} className="w-6 h-6 border-2 border-gray-800">
-                          <AvatarFallback className="text-xs">
-                            {registration.profiles.first_name[0]}{registration.profiles.last_name[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                      ))}
-                      {training.registrations.length > 3 && (
-                        <Avatar className="w-6 h-6 border-2 border-gray-800 bg-gray-700">
-                          <AvatarFallback className="text-xs">
-                            +{training.registrations.length - 3}
-                          </AvatarFallback>
-                        </Avatar>
-                      )}
-                    </div>
-                  </div>
+                  <p className="text-sm">
+                    {training.registrations.length} participant{training.registrations.length > 1 ? 's' : ''} inscrit{training.registrations.length > 1 ? 's' : ''}
+                  </p>
                 )}
               </div>
             </CardContent>

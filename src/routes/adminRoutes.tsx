@@ -1,181 +1,82 @@
-import { Route, Navigate } from "react-router-dom";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import AdminDashboard from "@/pages/AdminDashboard";
-import AdminUsers from "@/pages/AdminUsers";
-import AdminUserEdit from "@/pages/AdminUserEdit";
-import AdminNews from "@/pages/AdminNews";
-import AdminNewsCreate from "@/pages/AdminNewsCreate";
-import AdminNewsEdit from "@/pages/AdminNewsEdit";
-import AdminPresentation from "@/pages/AdminPresentation";
-import AdminContacts from "@/pages/AdminContacts";
-import AdminSportsTeams from "@/pages/AdminSportsTeams";
-import AdminSportCreate from "@/pages/AdminSportCreate";
-import AdminTeamCreate from "@/pages/AdminTeamCreate";
-import AdminTrainings from "@/pages/AdminTrainings";
-import AdminDocuments from "@/pages/AdminDocuments";
-import AdminDocumentTypes from "@/pages/AdminDocumentTypes";
-import AdminAttendanceSheets from "@/pages/AdminAttendanceSheets";
-import AdminSettings from "@/pages/AdminSettings";
-import AdminSiteSettings from "@/pages/AdminSiteSettings";
-import AdminNotificationSettings from "@/pages/AdminNotificationSettings";
-import AdminInstantNotifications from "@/pages/AdminInstantNotifications";
+import { lazy } from "react";
+import { adminSettingsRoutes } from "./adminSettingsRoutes";
 
-export const AdminRoutes = () => {
-  return (
-    <>
-      <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-      <Route
-        path="/admin/dashboard"
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/users"
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminUsers />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/users/:userId/edit"
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminUserEdit />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/news"
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminNews />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/news/create"
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminNewsCreate />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/news/:id"
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminNewsEdit />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/presentation"
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminPresentation />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/contacts"
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminContacts />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/sports"
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminSportsTeams />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/sports/create"
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminSportCreate />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/teams/create"
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminTeamCreate />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/trainings"
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminTrainings />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/documents"
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminDocuments />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/document-types"
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminDocumentTypes />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/attendance"
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminAttendanceSheets />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/settings"
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminSettings />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/settings/site"
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminSiteSettings />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/settings/notifications"
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminNotificationSettings />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/settings/notifications/instant"
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminInstantNotifications />
-          </ProtectedRoute>
-        }
-      />
-    </>
-  );
-};
+const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
+const AdminTrainings = lazy(() => import("@/pages/AdminTrainings"));
+const AdminUsers = lazy(() => import("@/pages/AdminUsers"));
+const AdminUserEdit = lazy(() => import("@/pages/AdminUserEdit"));
+const AdminNews = lazy(() => import("@/pages/AdminNews"));
+const AdminNewsCreate = lazy(() => import("@/pages/AdminNewsCreate"));
+const AdminNewsEdit = lazy(() => import("@/pages/AdminNewsEdit"));
+const AdminDocuments = lazy(() => import("@/pages/AdminDocuments"));
+const AdminDocumentTypes = lazy(() => import("@/pages/AdminDocumentTypes"));
+const AdminContacts = lazy(() => import("@/pages/AdminContacts"));
+const AdminAttendanceSheets = lazy(() => import("@/pages/AdminAttendanceSheets"));
+const AdminNotificationSettings = lazy(() => import("@/pages/AdminNotificationSettings"));
+const AdminNotificationTemplates = lazy(() => import("@/pages/AdminNotificationTemplates"));
+const AdminInstantNotifications = lazy(() => import("@/pages/AdminInstantNotifications"));
+const AdminTrainingNotification = lazy(() => import("@/pages/AdminTrainingNotification"));
+
+export const adminRoutes = [
+  {
+    path: "dashboard",
+    element: <AdminDashboard />,
+  },
+  {
+    path: "trainings",
+    element: <AdminTrainings />,
+  },
+  {
+    path: "trainings/:trainingId/notify",
+    element: <AdminTrainingNotification />,
+  },
+  {
+    path: "users",
+    element: <AdminUsers />,
+  },
+  {
+    path: "users/:userId/edit",
+    element: <AdminUserEdit />,
+  },
+  {
+    path: "news",
+    element: <AdminNews />,
+  },
+  {
+    path: "news/create",
+    element: <AdminNewsCreate />,
+  },
+  {
+    path: "news/:newsId/edit",
+    element: <AdminNewsEdit />,
+  },
+  {
+    path: "documents",
+    element: <AdminDocuments />,
+  },
+  {
+    path: "document-types",
+    element: <AdminDocumentTypes />,
+  },
+  {
+    path: "contacts",
+    element: <AdminContacts />,
+  },
+  {
+    path: "attendance-sheets",
+    element: <AdminAttendanceSheets />,
+  },
+  {
+    path: "notification-settings",
+    element: <AdminNotificationSettings />,
+  },
+  {
+    path: "notification-templates",
+    element: <AdminNotificationTemplates />,
+  },
+  {
+    path: "instant-notifications",
+    element: <AdminInstantNotifications />,
+  },
+  ...adminSettingsRoutes,
+];
