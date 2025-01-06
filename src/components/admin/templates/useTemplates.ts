@@ -6,12 +6,16 @@ import { Template } from "./types";
 export function useTemplates() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
 
   const fetchTemplates = async () => {
     try {
+      setLoading(true);
+      setError(null);
       console.log("Fetching templates...");
+      
       const { data, error } = await supabase
         .from("template_settings")
         .select("*")
@@ -19,7 +23,8 @@ export function useTemplates() {
 
       if (error) {
         console.error("Error fetching templates:", error);
-        throw error;
+        setError(error);
+        return;
       }
 
       console.log("Templates data:", data);
@@ -48,11 +53,7 @@ export function useTemplates() {
       }
     } catch (error) {
       console.error("Error fetching templates:", error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger les templates",
-        variant: "destructive",
-      });
+      setError(error as Error);
     } finally {
       setLoading(false);
     }
@@ -102,6 +103,7 @@ export function useTemplates() {
 
   return {
     loading,
+    error,
     templates,
     selectedTemplate,
     handleTemplateChange
