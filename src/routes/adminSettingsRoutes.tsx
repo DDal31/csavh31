@@ -90,5 +90,3 @@ export const AdminSettingsRoutes = () => {
     </>
   );
 };
-
-export default AdminSettingsRoutes;

@@ -51,7 +51,7 @@ export function useTemplates() {
 
       if (error) throw error;
 
-      // Convert the data to Template type
+      // Convert the data to Template type with proper type checking
       const convertedTemplates = data.map(template => ({
         ...template,
         color_scheme: typeof template.color_scheme === 'string' 
@@ -59,7 +59,8 @@ export function useTemplates() {
           : template.color_scheme,
         layout_config: typeof template.layout_config === 'string'
           ? JSON.parse(template.layout_config)
-          : template.layout_config
+          : template.layout_config,
+        style: template.style as Template['style']
       })) as Template[];
       
       setTemplates(convertedTemplates);
@@ -105,6 +106,9 @@ export function useTemplates() {
         title: "Succès",
         description: "Le template a été mis à jour",
       });
+
+      // Rafraîchir la liste des templates
+      await fetchTemplates();
     } catch (error) {
       console.error("Erreur lors de la mise à jour du template:", error);
       toast({
