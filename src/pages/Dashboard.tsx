@@ -50,6 +50,10 @@ const Dashboard = () => {
     }
   };
 
+  const handleTileClick = (path: string) => {
+    navigate(path);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center" role="status" aria-label="Chargement en cours">
@@ -68,7 +72,7 @@ const Dashboard = () => {
             <DashboardHeader onSignOut={handleSignOut} />
             <NotificationButton />
           </div>
-          <DashboardTiles isAdmin={isAdmin} />
+          <DashboardTiles onTileClick={handleTileClick} isAdmin={isAdmin} />
         </div>
       </main>
       <Footer />
