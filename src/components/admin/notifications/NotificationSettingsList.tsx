@@ -21,12 +21,31 @@ interface NotificationHistory {
   sent_at: string;
 }
 
+interface NotificationSetting {
+  id: string;
+  delay_hours: number;
+  enabled: boolean;
+  logo_path: string | null;
+  min_players: number | null;
+  notification_text: string | null;
+  notification_title: string | null;
+  notification_type: "training_reminder" | "missing_players" | "custom";
+  sport: string | null;
+  target_group: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 interface NotificationSettingsListProps {
   onAddClick: () => void;
+  settings?: NotificationSetting[];
+  onEditClick?: (setting: NotificationSetting) => void;
 }
 
 export function NotificationSettingsList({
   onAddClick,
+  settings,
+  onEditClick,
 }: NotificationSettingsListProps) {
   const { data: notifications, isLoading } = useQuery({
     queryKey: ["notification-history"],
