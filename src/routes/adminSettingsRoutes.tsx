@@ -6,6 +6,7 @@ import AdminSettingsNews from "@/pages/AdminNews";
 import AdminSettingsSportsTeams from "@/pages/AdminSportsTeams";
 import AdminSettingsDocumentTypes from "@/pages/AdminDocumentTypes";
 import AdminSettingsAttendanceSheets from "@/pages/AdminAttendanceSheets";
+import AdminSiteSettings from "@/pages/AdminSiteSettings";
 
 export const AdminSettingsRoutes = () => {
   return (
@@ -55,6 +56,14 @@ export const AdminSettingsRoutes = () => {
         element={
           <ProtectedRoute requireAdmin>
             <AdminSettingsAttendanceSheets />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/settings/site"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminSiteSettings />
           </ProtectedRoute>
         }
       />
