@@ -31,19 +31,23 @@ serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
-    // Récupérer tous les tokens FCM des utilisateurs ayant activé les notifications
-    const { data: tokens, error: tokensError } = await supabaseClient
-      .from('user_fcm_tokens')
-      .select('token')
-      .innerJoin(
-        'user_notification_preferences',
-        'user_fcm_tokens.user_id = user_notification_preferences.user_id'
-      )
-      .eq('user_notification_preferences.push_enabled', true)
+    // Get all FCM tokens for users with enabled notifications
+    const { data: preferences, error: preferencesError } = await supabaseClient
+      .from('user_notification_preferences')
+      .select(`
+        user_id,
+        user_fcm_tokens!inner (
+          token
+        )
+      `)
+      .eq('push_enabled', true)
 
-    if (tokensError) throw tokensError
+    if (preferencesError) throw preferencesError
 
-    const registrationTokens = tokens.map((t) => t.token)
+    const registrationTokens = preferences
+      ?.flatMap(p => p.user_fcm_tokens)
+      .map(t => t.token) || []
+
     if (registrationTokens.length === 0) {
       throw new Error('No tokens found')
     }
@@ -71,12 +75,12 @@ serve(async (req) => {
 
     const result = await response.json()
 
-    // Enregistrer l'historique
+    // Save notification history
     await supabaseClient
       .from('notification_history')
       .insert({
         title,
-        body,
+        content: body,
         training_id: trainingId,
         sent_by: userId,
         status: response.ok ? 'success' : 'error',
@@ -88,6 +92,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
+    console.error('Error sending notification:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
