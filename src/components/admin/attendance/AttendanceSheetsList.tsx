@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import * as XLSX from "xlsx";
 import { useAttendanceData } from "@/hooks/useAttendanceData";
 import { generateWorksheet, createExcelFile } from "@/utils/excel";
+import type { Training } from "@/types/training";
 
 export function AttendanceSheetsList() {
   const {
@@ -72,7 +73,7 @@ export function AttendanceSheetsList() {
               )
             )
           `)
-          .eq('type', sport.name.toLowerCase())
+          .eq('type', sport.name.toLowerCase() as Training['type'])
           .gte('date', startDate.toISOString())
           .lte('date', endDate.toISOString())
           .order('date');
