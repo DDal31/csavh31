@@ -623,7 +623,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_user_notification_preferences"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_notification_preferences"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_notification_preferences: {
         Row: {

@@ -19,6 +19,7 @@ serve(async (req) => {
     )
 
     const { title, body, trainingId, userId } = await req.json()
+    console.log('Received notification request:', { title, body, trainingId, userId })
 
     // Vérifier les autorisations
     const { data: profile, error: profileError } = await supabaseClient
@@ -27,28 +28,33 @@ serve(async (req) => {
       .eq('id', userId)
       .single()
 
-    if (profileError || profile?.site_role !== 'admin') {
+    if (profileError) {
+      console.error('Error fetching profile:', profileError)
       throw new Error('Unauthorized')
     }
 
-    // Get all FCM tokens for users with enabled notifications
-    const { data: preferences, error: preferencesError } = await supabaseClient
-      .from('user_notification_preferences')
-      .select(`
-        user_id,
-        user_fcm_tokens!inner (
-          token
-        )
-      `)
-      .eq('push_enabled', true)
+    if (profile?.site_role !== 'admin') {
+      console.error('User is not an admin:', profile)
+      throw new Error('Unauthorized')
+    }
 
-    if (preferencesError) throw preferencesError
+    // Get FCM tokens for users with enabled notifications
+    const { data: tokens, error: tokensError } = await supabaseClient
+      .from('user_fcm_tokens')
+      .select('token')
+      .eq('user_id', userId)
 
-    const registrationTokens = preferences
-      ?.flatMap(p => p.user_fcm_tokens)
-      .map(t => t.token) || []
+    if (tokensError) {
+      console.error('Error fetching FCM tokens:', tokensError)
+      throw tokensError
+    }
+
+    console.log('Found tokens:', tokens)
+
+    const registrationTokens = tokens?.map(t => t.token) || []
 
     if (registrationTokens.length === 0) {
+      console.log('No tokens found')
       throw new Error('No tokens found')
     }
 
@@ -74,9 +80,10 @@ serve(async (req) => {
     })
 
     const result = await response.json()
+    console.log('FCM response:', result)
 
     // Save notification history
-    await supabaseClient
+    const { error: historyError } = await supabaseClient
       .from('notification_history')
       .insert({
         title,
@@ -86,6 +93,10 @@ serve(async (req) => {
         status: response.ok ? 'success' : 'error',
         error_message: !response.ok ? JSON.stringify(result) : null,
       })
+
+    if (historyError) {
+      console.error('Error saving notification history:', historyError)
+    }
 
     return new Response(
       JSON.stringify(result),
