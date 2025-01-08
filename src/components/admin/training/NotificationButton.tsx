@@ -30,8 +30,20 @@ export function NotificationButton({ training }: NotificationButtonProps) {
   const handleSendNotification = async () => {
     try {
       setSending(true);
+      console.log("Starting notification send process");
+      
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) {
+        console.error("No session found");
+        return;
+      }
+
+      console.log("Sending notification with data:", {
+        title,
+        body,
+        trainingId: training.id,
+        userId: session.user.id
+      });
 
       const { error } = await supabase.functions.invoke('send-notification', {
         body: {
@@ -42,8 +54,12 @@ export function NotificationButton({ training }: NotificationButtonProps) {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error from edge function:", error);
+        throw error;
+      }
 
+      console.log("Notification sent successfully");
       toast({
         title: "Notification envoyée",
         description: "La notification a été envoyée avec succès.",

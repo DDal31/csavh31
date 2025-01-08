@@ -20,6 +20,11 @@ serve(async (req) => {
     const { title, body, trainingId, userId } = await req.json()
     console.log('Received notification request:', { title, body, trainingId, userId })
 
+    if (!userId || typeof userId !== 'string') {
+      console.error('Invalid userId:', userId)
+      throw new Error('Invalid userId provided')
+    }
+
     // Vérifier les autorisations
     const { data: profile, error: profileError } = await supabaseClient
       .from('profiles')
@@ -41,10 +46,11 @@ serve(async (req) => {
     const { data: tokens, error: tokensError } = await supabaseClient
       .from('user_fcm_tokens')
       .select('token')
-      .eq('user_id', supabaseClient
-        .from('user_notification_preferences')
-        .select('user_id')
-        .eq('push_enabled', true)
+      .in('user_id', 
+        supabaseClient
+          .from('user_notification_preferences')
+          .select('user_id')
+          .eq('push_enabled', true)
       )
 
     if (tokensError) {
