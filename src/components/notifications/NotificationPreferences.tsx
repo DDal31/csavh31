@@ -8,12 +8,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { initializeApp } from 'firebase/app';
 import { getMessaging, getToken } from 'firebase/messaging';
 
-// Initialize Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyBkkFF0XhNZeWuDmOfEhsgdfX1VBG7WTas",
-  projectId: "your-project-id",
-  messagingSenderId: "your-sender-id",
-  appId: "your-app-id"
+  projectId: "csavh31-c6a45",
+  messagingSenderId: "954580417010",
+  appId: "1:954580417010:web:7d4bcd931955f5b7f5e2c6"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -87,8 +86,20 @@ export function NotificationPreferences() {
       if (!session) return;
 
       if (!pushEnabled) {
-        // Request notification permission
+        // Vérifier si le navigateur supporte les notifications
+        if (!('Notification' in window)) {
+          toast({
+            title: "Non supporté",
+            description: "Votre navigateur ne supporte pas les notifications push.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Demander la permission
         const permission = await Notification.requestPermission();
+        console.log("Notification permission:", permission);
+        
         if (permission !== 'granted') {
           toast({
             title: "Permission refusée",
@@ -98,33 +109,45 @@ export function NotificationPreferences() {
           return;
         }
 
-        // Register service worker and get FCM token
-        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-        const currentToken = await getToken(messaging, {
-          vapidKey: process.env.VITE_VAPID_PUBLIC_KEY,
-          serviceWorkerRegistration: registration,
-        });
+        try {
+          // Enregistrer le service worker
+          console.log("Registering service worker...");
+          const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+          console.log("Service Worker registered:", registration);
 
-        if (!currentToken) {
-          throw new Error("No registration token available");
-        }
-
-        // Save the token
-        const { error: tokenError } = await supabase
-          .from('user_fcm_tokens')
-          .upsert({
-            user_id: session.user.id,
-            token: currentToken,
-            device_type: 'web',
+          // Obtenir le token FCM
+          console.log("Getting FCM token...");
+          const currentToken = await getToken(messaging, {
+            vapidKey: "BHgwOxwsVYoWgxqkF4jGZkSDPHtqL_1pdZs-Q_H5SPezvQn1XGbPpKGAuYZqgafUgKX2F7P_YOHwuQoVXyQ6qYk",
+            serviceWorkerRegistration: registration,
           });
 
-        if (tokenError) {
-          console.error('Error saving FCM token:', tokenError);
-          throw tokenError;
+          console.log("FCM token obtained:", currentToken);
+
+          if (!currentToken) {
+            throw new Error("No registration token available");
+          }
+
+          // Sauvegarder le token
+          const { error: tokenError } = await supabase
+            .from('user_fcm_tokens')
+            .upsert({
+              user_id: session.user.id,
+              token: currentToken,
+              device_type: 'web',
+            });
+
+          if (tokenError) {
+            console.error('Error saving FCM token:', tokenError);
+            throw tokenError;
+          }
+        } catch (error) {
+          console.error("Error during FCM setup:", error);
+          throw error;
         }
       }
 
-      // Update preferences
+      // Mettre à jour les préférences
       const { error: prefError } = await supabase
         .from('user_notification_preferences')
         .upsert({

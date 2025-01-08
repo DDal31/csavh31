@@ -1,10 +1,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { corsHeaders } from '../_shared/cors.ts'
 
-const serviceAccount = Deno.env.get('FIREBASE_SERVICE_ACCOUNT')
-if (!serviceAccount) {
-  throw new Error('FIREBASE_SERVICE_ACCOUNT is required')
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
 serve(async (req) => {
@@ -38,11 +37,16 @@ serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
-    // Get FCM tokens for users with enabled notifications
+    // Récupérer tous les tokens FCM des utilisateurs ayant activé les notifications
     const { data: tokens, error: tokensError } = await supabaseClient
       .from('user_fcm_tokens')
       .select('token')
-      .eq('user_id', userId)
+      .in('user_id', 
+        supabaseClient
+          .from('user_notification_preferences')
+          .select('user_id')
+          .eq('push_enabled', true)
+      )
 
     if (tokensError) {
       console.error('Error fetching FCM tokens:', tokensError)
@@ -58,12 +62,13 @@ serve(async (req) => {
       throw new Error('No tokens found')
     }
 
-    const firebaseConfig = JSON.parse(serviceAccount)
-    const response = await fetch('https://fcm.googleapis.com/v1/projects/' + firebaseConfig.project_id + '/messages:send', {
+    const firebaseServiceAccount = JSON.parse(Deno.env.get('FIREBASE_SERVICE_ACCOUNT') || '{}')
+
+    const response = await fetch('https://fcm.googleapis.com/v1/projects/csavh31-c6a45/messages:send', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer ' + await getAccessToken(),
         'Content-Type': 'application/json',
+        Authorization: `Bearer ${await getAccessToken(firebaseServiceAccount)}`,
       },
       body: JSON.stringify({
         message: {
@@ -72,7 +77,7 @@ serve(async (req) => {
             body,
           },
           data: {
-            trainingId: trainingId.toString(),
+            trainingId: trainingId || '',
           },
           tokens: registrationTokens,
         },
@@ -82,7 +87,7 @@ serve(async (req) => {
     const result = await response.json()
     console.log('FCM response:', result)
 
-    // Save notification history
+    // Sauvegarder l'historique des notifications
     const { error: historyError } = await supabaseClient
       .from('notification_history')
       .insert({
@@ -100,57 +105,63 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify(result),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: response.ok ? 200 : 400
+      }
     )
   } catch (error) {
-    console.error('Error sending notification:', error)
+    console.error('Error in send-notification function:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400
       }
     )
   }
 })
 
-async function getAccessToken() {
-  const serviceAccount = JSON.parse(Deno.env.get('FIREBASE_SERVICE_ACCOUNT') ?? '{}')
-  
-  const response = await fetch(
-    `https://oauth2.googleapis.com/token`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-        assertion: generateJWT(serviceAccount),
-      }),
-    }
-  )
-
-  const data = await response.json()
-  return data.access_token
-}
-
-function generateJWT(serviceAccount: any) {
+// Fonction pour obtenir un token d'accès Firebase
+async function getAccessToken(serviceAccount: any) {
   const now = Math.floor(Date.now() / 1000)
-  const hour = 3600
-  const payload = {
+  const token = {
     iss: serviceAccount.client_email,
     scope: 'https://www.googleapis.com/auth/firebase.messaging',
     aud: 'https://oauth2.googleapis.com/token',
-    exp: now + hour,
+    exp: now + 3600,
     iat: now,
   }
 
-  // Note: This is a simplified JWT implementation
   const header = { alg: 'RS256', typ: 'JWT' }
   const encodedHeader = btoa(JSON.stringify(header))
-  const encodedPayload = btoa(JSON.stringify(payload))
-  const signature = 'signature' // In a real implementation, this would be a proper RS256 signature
+  const encodedClaim = btoa(JSON.stringify(token))
+  const input = `${encodedHeader}.${encodedClaim}`
+  
+  const key = serviceAccount.private_key.replace(/\\n/g, '\n')
+  const signature = await crypto.subtle.sign(
+    'RSASSA-PKCS1-v1_5',
+    await crypto.subtle.importKey(
+      'pkcs8',
+      new TextEncoder().encode(key),
+      { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+      false,
+      ['sign']
+    ),
+    new TextEncoder().encode(input)
+  )
 
-  return `${encodedHeader}.${encodedPayload}.${signature}`
+  const jwt = `${input}.${btoa(String.fromCharCode(...new Uint8Array(signature)))}`
+
+  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion: jwt,
+    }),
+  })
+
+  const { access_token } = await tokenResponse.json()
+  return access_token
 }

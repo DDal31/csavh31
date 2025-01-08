@@ -3,9 +3,9 @@ importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compa
 
 firebase.initializeApp({
   apiKey: "AIzaSyBkkFF0XhNZeWuDmOfEhsgdfX1VBG7WTas",
-  projectId: "your-project-id",
-  messagingSenderId: "your-sender-id",
-  appId: "your-app-id"
+  projectId: "csavh31-c6a45",
+  messagingSenderId: "954580417010",
+  appId: "1:954580417010:web:7d4bcd931955f5b7f5e2c6"
 });
 
 const messaging = firebase.messaging();
