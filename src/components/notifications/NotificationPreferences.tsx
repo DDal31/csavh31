@@ -30,21 +30,53 @@ export function NotificationPreferences() {
 
   const loadPreferences = async () => {
     try {
+      console.log("Loading notification preferences...");
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) {
+        console.log("No session found");
+        setLoading(false);
+        return;
+      }
 
-      const { data } = await supabase
+      console.log("Fetching preferences for user:", session.user.id);
+      const { data, error } = await supabase
         .from('user_notification_preferences')
         .select('push_enabled')
         .eq('user_id', session.user.id)
-        .single();
+        .maybeSingle();
 
-      if (data) {
+      if (error) {
+        console.error('Error fetching preferences:', error);
+        throw error;
+      }
+
+      if (!data) {
+        console.log("No preferences found, creating default preferences");
+        const { error: insertError } = await supabase
+          .from('user_notification_preferences')
+          .insert({
+            user_id: session.user.id,
+            push_enabled: false
+          });
+
+        if (insertError) {
+          console.error('Error creating default preferences:', insertError);
+          throw insertError;
+        }
+
+        setPushEnabled(false);
+      } else {
+        console.log("Preferences found:", data);
         setPushEnabled(data.push_enabled);
       }
-      setLoading(false);
     } catch (error) {
       console.error('Error loading preferences:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger vos préférences de notification.",
+        variant: "destructive",
+      });
+    } finally {
       setLoading(false);
     }
   };
@@ -78,20 +110,32 @@ export function NotificationPreferences() {
         }
 
         // Save the token
-        await supabase.from('user_fcm_tokens').upsert({
-          user_id: session.user.id,
-          token: currentToken,
-          device_type: 'web',
-        });
+        const { error: tokenError } = await supabase
+          .from('user_fcm_tokens')
+          .upsert({
+            user_id: session.user.id,
+            token: currentToken,
+            device_type: 'web',
+          });
+
+        if (tokenError) {
+          console.error('Error saving FCM token:', tokenError);
+          throw tokenError;
+        }
       }
 
       // Update preferences
-      await supabase
+      const { error: prefError } = await supabase
         .from('user_notification_preferences')
         .upsert({
           user_id: session.user.id,
           push_enabled: !pushEnabled,
         });
+
+      if (prefError) {
+        console.error('Error updating preferences:', prefError);
+        throw prefError;
+      }
 
       setPushEnabled(!pushEnabled);
       toast({
