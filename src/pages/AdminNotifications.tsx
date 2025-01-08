@@ -69,7 +69,17 @@ export default function AdminNotifications() {
 
       if (error) throw error;
 
-      setNotifications(data);
+      // Transform the data to match NotificationHistory type
+      const transformedData: NotificationHistory[] = data.map(item => ({
+        id: item.id,
+        title: item.title,
+        body: item.content,
+        sent_at: item.sent_at,
+        status: 'success',
+        error_message: null
+      }));
+
+      setNotifications(transformedData);
     } catch (error) {
       console.error("Error loading notifications:", error);
     } finally {

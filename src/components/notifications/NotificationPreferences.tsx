@@ -5,6 +5,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
+import { initializeApp } from 'firebase/app';
+import { getMessaging, getToken } from 'firebase/messaging';
+
+// Initialize Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyBkkFF0XhNZeWuDmOfEhsgdfX1VBG7WTas",
+  projectId: "your-project-id",
+  messagingSenderId: "your-sender-id",
+  appId: "your-app-id"
+};
+
+const app = initializeApp(firebaseConfig);
+const messaging = getMessaging(app);
 
 export function NotificationPreferences() {
   const [pushEnabled, setPushEnabled] = useState(false);
@@ -42,7 +55,7 @@ export function NotificationPreferences() {
       if (!session) return;
 
       if (!pushEnabled) {
-        // Demander la permission pour les notifications
+        // Request notification permission
         const permission = await Notification.requestPermission();
         if (permission !== 'granted') {
           toast({
@@ -53,23 +66,26 @@ export function NotificationPreferences() {
           return;
         }
 
-        // Enregistrer le service worker
+        // Register service worker and get FCM token
         const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-        const messaging = await import('firebase/messaging');
-        const token = await messaging.getToken({
-          vapidKey: 'VOTRE_VAPID_KEY',
+        const currentToken = await getToken(messaging, {
+          vapidKey: process.env.VITE_VAPID_PUBLIC_KEY,
           serviceWorkerRegistration: registration,
         });
 
-        // Sauvegarder le token
+        if (!currentToken) {
+          throw new Error("No registration token available");
+        }
+
+        // Save the token
         await supabase.from('user_fcm_tokens').upsert({
           user_id: session.user.id,
-          token,
+          token: currentToken,
           device_type: 'web',
         });
       }
 
-      // Mettre à jour les préférences
+      // Update preferences
       await supabase
         .from('user_notification_preferences')
         .upsert({
