@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, User, Pencil, ArrowLeft } from "lucide-react";
 import type { Profile } from "@/types/profile";
+import { NotificationPreferences } from "@/components/notifications/NotificationPreferences";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -189,6 +190,8 @@ const ProfilePage = () => {
               </div>
             </CardContent>
           </Card>
+
+          <NotificationPreferences />
         </div>
       </main>
       <Footer />
