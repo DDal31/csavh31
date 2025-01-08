@@ -55,7 +55,7 @@ export function NotificationPreferences() {
 
         // Enregistrer le service worker
         const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-        const messaging = firebase.messaging();
+        const messaging = await import('firebase/messaging');
         const token = await messaging.getToken({
           vapidKey: 'VOTRE_VAPID_KEY',
           serviceWorkerRegistration: registration,
