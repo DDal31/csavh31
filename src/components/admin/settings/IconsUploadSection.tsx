@@ -3,7 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { ArrowUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const REQUIRED_ICON_SIZES = [
@@ -110,7 +110,7 @@ export const IconsUploadSection = () => {
         ))}
         {uploading && (
           <div className="flex items-center justify-center">
-            <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+            <ArrowUp className="h-6 w-6 animate-spin text-blue-500" />
           </div>
         )}
       </CardContent>

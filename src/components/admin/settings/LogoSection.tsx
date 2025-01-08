@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { ArrowUp } from "lucide-react";
 
 interface LogoSectionProps {
   settings: {
@@ -129,7 +129,7 @@ export const LogoSection = ({ settings, onSettingChange }: LogoSectionProps) => 
 
         {uploading && (
           <div className="flex justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+            <ArrowUp className="h-8 w-8 animate-spin text-blue-500" />
           </div>
         )}
       </CardContent>
