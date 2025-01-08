@@ -42,86 +42,100 @@ serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
-    // Récupérer tous les tokens FCM des utilisateurs ayant activé les notifications
-    const { data: tokens, error: tokensError } = await supabaseClient
-      .from('user_fcm_tokens')
-      .select('token')
-      .in('user_id', 
-        supabaseClient
-          .from('user_notification_preferences')
-          .select('user_id')
-          .eq('push_enabled', true)
-      )
+    // First get users with enabled notifications
+    const { data: enabledUsers, error: preferencesError } = await supabaseClient
+      .from('user_notification_preferences')
+      .select('user_id')
+      .eq('push_enabled', true)
 
-    if (tokensError) {
-      console.error('Error fetching FCM tokens:', tokensError)
-      throw tokensError
+    if (preferencesError) {
+      console.error('Error fetching notification preferences:', preferencesError)
+      throw preferencesError
     }
 
-    console.log('Found tokens:', tokens)
+    console.log('Users with enabled notifications:', enabledUsers)
 
-    const registrationTokens = tokens?.map(t => t.token) || []
-    console.log('Registration tokens:', registrationTokens)
-
-    if (registrationTokens.length === 0) {
-      console.log('No tokens found')
+    if (!enabledUsers || enabledUsers.length === 0) {
+      console.log('No users with enabled notifications found')
       // Continue anyway to save in history
     } else {
-      const firebaseServiceAccount = JSON.parse(Deno.env.get('FIREBASE_SERVICE_ACCOUNT') || '{}')
+      // Then get FCM tokens for these users
+      const userIds = enabledUsers.map(user => user.user_id)
+      const { data: tokens, error: tokensError } = await supabaseClient
+        .from('user_fcm_tokens')
+        .select('token')
+        .in('user_id', userIds)
 
-      const response = await fetch('https://fcm.googleapis.com/v1/projects/csavh31-c6a45/messages:send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${await getAccessToken(firebaseServiceAccount)}`,
-        },
-        body: JSON.stringify({
-          message: {
-            notification: {
-              title,
-              body,
-            },
-            data: {
-              trainingId: trainingId || '',
-              click_action: 'FLUTTER_NOTIFICATION_CLICK',
-            },
-            tokens: registrationTokens,
-            apns: {
-              payload: {
-                aps: {
-                  alert: {
-                    title,
-                    body,
+      if (tokensError) {
+        console.error('Error fetching FCM tokens:', tokensError)
+        throw tokensError
+      }
+
+      console.log('Found tokens:', tokens)
+
+      const registrationTokens = tokens?.map(t => t.token) || []
+      console.log('Registration tokens:', registrationTokens)
+
+      if (registrationTokens.length === 0) {
+        console.log('No tokens found')
+        // Continue anyway to save in history
+      } else {
+        const firebaseServiceAccount = JSON.parse(Deno.env.get('FIREBASE_SERVICE_ACCOUNT') || '{}')
+
+        const response = await fetch('https://fcm.googleapis.com/v1/projects/csavh31-c6a45/messages:send', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${await getAccessToken(firebaseServiceAccount)}`,
+          },
+          body: JSON.stringify({
+            message: {
+              notification: {
+                title,
+                body,
+              },
+              data: {
+                trainingId: trainingId || '',
+                click_action: 'FLUTTER_NOTIFICATION_CLICK',
+              },
+              tokens: registrationTokens,
+              apns: {
+                payload: {
+                  aps: {
+                    alert: {
+                      title,
+                      body,
+                    },
+                    sound: 'default',
+                    badge: 1,
                   },
+                },
+              },
+              android: {
+                notification: {
                   sound: 'default',
-                  badge: 1,
+                  priority: 'high',
+                  click_action: 'FLUTTER_NOTIFICATION_CLICK',
+                },
+              },
+              webpush: {
+                notification: {
+                  icon: '/app-icon-192.png',
+                  badge: '/app-icon-192.png',
+                  vibrate: [200, 100, 200],
                 },
               },
             },
-            android: {
-              notification: {
-                sound: 'default',
-                priority: 'high',
-                click_action: 'FLUTTER_NOTIFICATION_CLICK',
-              },
-            },
-            webpush: {
-              notification: {
-                icon: '/app-icon-192.png',
-                badge: '/app-icon-192.png',
-                vibrate: [200, 100, 200],
-              },
-            },
-          },
-        }),
-      })
+          }),
+        })
 
-      const result = await response.json()
-      console.log('FCM response:', result)
+        const result = await response.json()
+        console.log('FCM response:', result)
 
-      if (!response.ok) {
-        console.error('Error sending FCM notification:', result)
-        throw new Error(`FCM error: ${JSON.stringify(result)}`)
+        if (!response.ok) {
+          console.error('Error sending FCM notification:', result)
+          throw new Error(`FCM error: ${JSON.stringify(result)}`)
+        }
       }
     }
 
