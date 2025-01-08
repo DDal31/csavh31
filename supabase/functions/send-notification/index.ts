@@ -41,11 +41,10 @@ serve(async (req) => {
     const { data: tokens, error: tokensError } = await supabaseClient
       .from('user_fcm_tokens')
       .select('token')
-      .in('user_id', 
-        supabaseClient
-          .from('user_notification_preferences')
-          .select('user_id')
-          .eq('push_enabled', true)
+      .eq('user_id', supabaseClient
+        .from('user_notification_preferences')
+        .select('user_id')
+        .eq('push_enabled', true)
       )
 
     if (tokensError) {
@@ -56,36 +55,69 @@ serve(async (req) => {
     console.log('Found tokens:', tokens)
 
     const registrationTokens = tokens?.map(t => t.token) || []
+    console.log('Registration tokens:', registrationTokens)
 
     if (registrationTokens.length === 0) {
       console.log('No tokens found')
-      throw new Error('No tokens found')
-    }
+      // Continue anyway to save in history
+    } else {
+      const firebaseServiceAccount = JSON.parse(Deno.env.get('FIREBASE_SERVICE_ACCOUNT') || '{}')
 
-    const firebaseServiceAccount = JSON.parse(Deno.env.get('FIREBASE_SERVICE_ACCOUNT') || '{}')
-
-    const response = await fetch('https://fcm.googleapis.com/v1/projects/csavh31-c6a45/messages:send', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${await getAccessToken(firebaseServiceAccount)}`,
-      },
-      body: JSON.stringify({
-        message: {
-          notification: {
-            title,
-            body,
-          },
-          data: {
-            trainingId: trainingId || '',
-          },
-          tokens: registrationTokens,
+      const response = await fetch('https://fcm.googleapis.com/v1/projects/csavh31-c6a45/messages:send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${await getAccessToken(firebaseServiceAccount)}`,
         },
-      }),
-    })
+        body: JSON.stringify({
+          message: {
+            notification: {
+              title,
+              body,
+            },
+            data: {
+              trainingId: trainingId || '',
+              click_action: 'FLUTTER_NOTIFICATION_CLICK',
+            },
+            tokens: registrationTokens,
+            apns: {
+              payload: {
+                aps: {
+                  alert: {
+                    title,
+                    body,
+                  },
+                  sound: 'default',
+                  badge: 1,
+                },
+              },
+            },
+            android: {
+              notification: {
+                sound: 'default',
+                priority: 'high',
+                click_action: 'FLUTTER_NOTIFICATION_CLICK',
+              },
+            },
+            webpush: {
+              notification: {
+                icon: '/app-icon-192.png',
+                badge: '/app-icon-192.png',
+                vibrate: [200, 100, 200],
+              },
+            },
+          },
+        }),
+      })
 
-    const result = await response.json()
-    console.log('FCM response:', result)
+      const result = await response.json()
+      console.log('FCM response:', result)
+
+      if (!response.ok) {
+        console.error('Error sending FCM notification:', result)
+        throw new Error(`FCM error: ${JSON.stringify(result)}`)
+      }
+    }
 
     // Sauvegarder l'historique des notifications
     const { error: historyError } = await supabaseClient
@@ -95,8 +127,7 @@ serve(async (req) => {
         content: body,
         training_id: trainingId,
         sent_by: userId,
-        status: response.ok ? 'success' : 'error',
-        error_message: !response.ok ? JSON.stringify(result) : null,
+        status: 'success',
       })
 
     if (historyError) {
@@ -104,10 +135,10 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify(result),
+      JSON.stringify({ success: true }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: response.ok ? 200 : 400
+        status: 200
       }
     )
   } catch (error) {

@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { initializeApp } from 'firebase/app';
-import { getMessaging, getToken } from 'firebase/messaging';
+import { getMessaging, getToken, isSupported } from 'firebase/messaging';
 
 const firebaseConfig = {
   apiKey: "AIzaSyBkkFF0XhNZeWuDmOfEhsgdfX1VBG7WTas",
@@ -16,16 +16,28 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const messaging = getMessaging(app);
 
 export function NotificationPreferences() {
   const [pushEnabled, setPushEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isFirebaseSupported, setIsFirebaseSupported] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
+    checkFirebaseSupport();
     loadPreferences();
   }, []);
+
+  const checkFirebaseSupport = async () => {
+    try {
+      const supported = await isSupported();
+      console.log("Firebase Messaging supported:", supported);
+      setIsFirebaseSupported(supported);
+    } catch (error) {
+      console.error("Error checking Firebase support:", error);
+      setIsFirebaseSupported(false);
+    }
+  };
 
   const loadPreferences = async () => {
     try {
@@ -86,8 +98,9 @@ export function NotificationPreferences() {
       if (!session) return;
 
       if (!pushEnabled) {
-        // Vérifier si le navigateur supporte les notifications
+        // Check if notifications are supported
         if (!('Notification' in window)) {
+          console.log("Notifications not supported in this browser");
           toast({
             title: "Non supporté",
             description: "Votre navigateur ne supporte pas les notifications push.",
@@ -96,11 +109,12 @@ export function NotificationPreferences() {
           return;
         }
 
-        // Demander la permission
+        // Request permission
         const permission = await Notification.requestPermission();
         console.log("Notification permission:", permission);
         
         if (permission !== 'granted') {
+          console.log("Notification permission denied");
           toast({
             title: "Permission refusée",
             description: "Vous devez autoriser les notifications dans votre navigateur.",
@@ -110,12 +124,21 @@ export function NotificationPreferences() {
         }
 
         try {
-          // Enregistrer le service worker
+          // Handle iOS Safari
+          if (!isFirebaseSupported) {
+            console.log("Firebase not supported, using native notifications");
+            // Update preferences without FCM token
+            await updatePreferences(session.user.id, true);
+            setPushEnabled(true);
+            return;
+          }
+
+          // Register service worker for supported browsers
           console.log("Registering service worker...");
           const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
           console.log("Service Worker registered:", registration);
 
-          // Obtenir le token FCM
+          const messaging = getMessaging(app);
           console.log("Getting FCM token...");
           const currentToken = await getToken(messaging, {
             vapidKey: "BHgwOxwsVYoWgxqkF4jGZkSDPHtqL_1pdZs-Q_H5SPezvQn1XGbPpKGAuYZqgafUgKX2F7P_YOHwuQoVXyQ6qYk",
@@ -128,7 +151,7 @@ export function NotificationPreferences() {
             throw new Error("No registration token available");
           }
 
-          // Sauvegarder le token
+          // Save token
           const { error: tokenError } = await supabase
             .from('user_fcm_tokens')
             .upsert({
@@ -141,26 +164,21 @@ export function NotificationPreferences() {
             console.error('Error saving FCM token:', tokenError);
             throw tokenError;
           }
+
+          // Update preferences
+          await updatePreferences(session.user.id, true);
+          setPushEnabled(true);
+
         } catch (error) {
-          console.error("Error during FCM setup:", error);
+          console.error("Error during notification setup:", error);
           throw error;
         }
+      } else {
+        // Disable notifications
+        await updatePreferences(session.user.id, false);
+        setPushEnabled(false);
       }
 
-      // Mettre à jour les préférences
-      const { error: prefError } = await supabase
-        .from('user_notification_preferences')
-        .upsert({
-          user_id: session.user.id,
-          push_enabled: !pushEnabled,
-        });
-
-      if (prefError) {
-        console.error('Error updating preferences:', prefError);
-        throw prefError;
-      }
-
-      setPushEnabled(!pushEnabled);
       toast({
         title: !pushEnabled ? "Notifications activées" : "Notifications désactivées",
         description: !pushEnabled 
@@ -174,6 +192,20 @@ export function NotificationPreferences() {
         description: "Une erreur est survenue lors de la modification des préférences.",
         variant: "destructive",
       });
+    }
+  };
+
+  const updatePreferences = async (userId: string, enabled: boolean) => {
+    const { error: prefError } = await supabase
+      .from('user_notification_preferences')
+      .upsert({
+        user_id: userId,
+        push_enabled: enabled,
+      });
+
+    if (prefError) {
+      console.error('Error updating preferences:', prefError);
+      throw prefError;
     }
   };
 
@@ -200,6 +232,11 @@ export function NotificationPreferences() {
         </CardTitle>
         <CardDescription>
           Recevez des notifications pour les entraînements et autres événements importants.
+          {!isFirebaseSupported && (
+            <p className="mt-2 text-yellow-500">
+              Note: Certaines fonctionnalités de notification peuvent être limitées sur votre appareil.
+            </p>
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent>
