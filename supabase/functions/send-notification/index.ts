@@ -78,8 +78,15 @@ serve(async (req) => {
         console.log('Registration tokens:', registrationTokens)
 
         const firebaseServiceAccount = JSON.parse(Deno.env.get('FIREBASE_SERVICE_ACCOUNT') || '{}')
+        const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY')
+        
+        if (!vapidPrivateKey) {
+          throw new Error('VAPID_PRIVATE_KEY not found in environment variables')
+        }
 
-        const response = await fetch('https://fcm.googleapis.com/v1/projects/csavh31-c6a45/messages:send', {
+        console.log('Using VAPID private key for Web Push')
+
+        const response = await fetch('https://fcm.googleapis.com/v1/projects/csavh31/messages:send', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -121,6 +128,14 @@ serve(async (req) => {
                   badge: '/app-icon-192.png',
                   vibrate: [200, 100, 200],
                 },
+                headers: {
+                  Urgency: 'high',
+                  TTL: '86400'
+                },
+                fcm_options: {
+                  link: '/'
+                },
+                vapid_private_key: vapidPrivateKey,
               },
             },
           }),
