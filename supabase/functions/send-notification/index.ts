@@ -124,7 +124,8 @@ serve(async (req) => {
                 },
                 headers: {
                   'apns-priority': '10',
-                  'apns-push-type': 'alert'
+                  'apns-push-type': 'alert',
+                  'apns-topic': 'com.csavh31.app'  // Ajout de l'identifiant du bundle iOS
                 }
               },
               android: {
