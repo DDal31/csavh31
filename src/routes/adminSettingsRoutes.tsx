@@ -40,7 +40,7 @@ export const AdminSettingsRoutes = (
       }
     />
     <Route
-      path="/admin/settings/news/edit/:id"
+      path="/admin/settings/news/:id/edit"
       element={
         <ProtectedRoute requireAdmin>
           <AdminNewsEdit />
