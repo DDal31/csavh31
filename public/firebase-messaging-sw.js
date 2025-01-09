@@ -15,10 +15,12 @@ const messaging = firebase.messaging();
 
 self.addEventListener('install', (event) => {
   console.log('Service Worker installing.');
+  event.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener('activate', (event) => {
   console.log('Service Worker activating.');
+  event.waitUntil(self.clients.claim());
 });
 
 messaging.onBackgroundMessage(function(payload) {
@@ -42,6 +44,12 @@ messaging.onBackgroundMessage(function(payload) {
     ]
   };
 
+  if ('setAppBadge' in navigator) {
+    navigator.setAppBadge(1).catch((error) => {
+      console.log('Error setting app badge:', error);
+    });
+  }
+
   return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
@@ -50,7 +58,19 @@ self.addEventListener('notificationclick', function(event) {
   event.notification.close();
   
   if (event.action === 'open') {
-    // Ajoutez ici la logique pour ouvrir une URL spécifique
-    clients.openWindow('/');
+    event.waitUntil(
+      clients.matchAll({type: 'window'}).then(windowClients => {
+        // Vérifier si une fenêtre est déjà ouverte
+        for (let client of windowClients) {
+          if (client.url === '/' && 'focus' in client) {
+            return client.focus();
+          }
+        }
+        // Si aucune fenêtre n'est ouverte, en ouvrir une nouvelle
+        if (clients.openWindow) {
+          return clients.openWindow('/');
+        }
+      })
+    );
   }
 });

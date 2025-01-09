@@ -73,7 +73,11 @@ export function useNotificationPreferences() {
       throw new Error("Les notifications ne sont pas supportées sur votre navigateur");
     }
 
-    const permission = await Notification.requestPermission();
+    if (window.Notification.permission === "denied") {
+      throw new Error("Les notifications ont été bloquées. Veuillez les autoriser dans les paramètres de votre navigateur.");
+    }
+
+    const permission = await window.Notification.requestPermission();
     console.log("iOS Notification permission status:", permission);
     return permission;
   };
@@ -104,6 +108,15 @@ export function useNotificationPreferences() {
           
           await updatePreferencesMutation.mutateAsync(true);
           setPushEnabled(true);
+          
+          // Créer une notification de test pour iOS
+          if (isIOS()) {
+            new Notification("Notifications activées", {
+              body: "Les notifications sont maintenant activées sur votre appareil.",
+              icon: "/app-icon-192.png"
+            });
+          }
+
           toast({
             title: "Notifications activées",
             description: "Vous recevrez désormais des notifications push.",
