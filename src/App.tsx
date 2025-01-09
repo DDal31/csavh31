@@ -20,12 +20,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <Routes>
-          <Route>
-            {PublicRoutes}
-            {MemberRoutes}
-            {AdminRoutes}
-            {AdminSettingsRoutes}
-          </Route>
+          {PublicRoutes()}
+          {MemberRoutes()}
+          {AdminRoutes()}
+          {AdminSettingsRoutes}
         </Routes>
         <Toaster />
       </Router>
