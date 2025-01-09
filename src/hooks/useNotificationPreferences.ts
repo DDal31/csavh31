@@ -178,18 +178,24 @@ export function useNotificationPreferences() {
 
         const permission = await requestNotificationPermission();
         if (permission === "granted") {
-          const token = await getToken(messaging, {
-            vapidKey: "BEpTfcfcPXLCo6KKmODVDfZETR_YPcsQJGD8hs_eQRAInu0el6Rz3Df6_7EacaL0CGkxJqZtiB4Sb_n5RM3WpQA"
-          });
-          console.log("FCM Token:", token);
-          
-          await updatePreferencesMutation.mutateAsync(true);
-          setPushEnabled(true);
-          
-          toast({
-            title: "Notifications activées",
-            description: "Vous recevrez désormais des notifications push.",
-          });
+          try {
+            console.log("Requesting FCM token...");
+            const token = await getToken(messaging, {
+              vapidKey: "BEpTfcfcPXLCo6KKmODVDfZETR_YPcsQJGD8hs_eQRAInu0el6Rz3Df6_7EacaL0CGkxJqZtiB4Sb_n5RM3WpQA"
+            });
+            console.log("FCM Token obtained:", token);
+            
+            await updatePreferencesMutation.mutateAsync(true);
+            setPushEnabled(true);
+            
+            toast({
+              title: "Notifications activées",
+              description: "Vous recevrez désormais des notifications push.",
+            });
+          } catch (error) {
+            console.error("Error getting FCM token:", error);
+            throw new Error("Erreur lors de l'obtention du token FCM. Veuillez réessayer.");
+          }
         } else {
           toast({
             title: "Permission refusée",
