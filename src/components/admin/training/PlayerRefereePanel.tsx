@@ -64,7 +64,7 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
       const { data, error } = await supabase
         .from("registrations")
         .select("user_id")
-        .eq("registrations.training_id", training.id)
+        .eq("training_id", training.id)
         .order("created_at", { ascending: true });
 
       if (error) throw error;
@@ -91,7 +91,10 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
       } else {
         const { error } = await supabase
           .from("registrations")
-          .insert({ training_id: training.id, user_id: userId });
+          .insert([{ 
+            training_id: training.id, 
+            user_id: userId 
+          }]);
         
         if (error) throw error;
       }
