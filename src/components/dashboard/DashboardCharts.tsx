@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import { isValidTrainingType } from "@/utils/trainingTypes";
 import { MonthlyTrainingChart } from "./charts/MonthlyTrainingChart";
 import { YearlyAttendanceChart } from "./charts/YearlyAttendanceChart";
+import { YearlyTrendChart } from "./charts/YearlyTrendChart";
 
 interface MonthlyStats {
   month: string;
@@ -125,20 +126,31 @@ export function DashboardCharts({ sport }: { sport: string }) {
         </div>
       </div>
 
-      <div 
-        className="bg-gray-800 p-6 rounded-lg"
-        role="region"
-        aria-label={`Évolution des présences aux entraînements de ${sport} sur l'année ${new Date().getFullYear()}`}
-      >
-        <h3 className="text-lg font-semibold text-white mb-4">
-          Taux de présence sur l'année
-        </h3>
-        <YearlyAttendanceChart yearlyStats={yearlyStats} />
-        <div className="sr-only">
-          Évolution mensuelle du taux de présence:
-          {yearlyStats.map(stat => (
-            ` ${stat.month}: ${stat.percentage.toFixed(1)}%`
-          ))}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1">
+          <div 
+            className="bg-gray-800 p-6 rounded-lg h-full"
+            role="region"
+            aria-label={`Évolution des présences aux entraînements de ${sport} sur l'année ${new Date().getFullYear()}`}
+          >
+            <h3 className="text-lg font-semibold text-white mb-4">
+              Évolution annuelle
+            </h3>
+            <YearlyTrendChart yearlyStats={yearlyStats} />
+          </div>
+        </div>
+        
+        <div className="lg:col-span-2">
+          <div 
+            className="bg-gray-800 p-6 rounded-lg"
+            role="region"
+            aria-label={`Détail mensuel des présences aux entraînements de ${sport} sur l'année ${new Date().getFullYear()}`}
+          >
+            <h3 className="text-lg font-semibold text-white mb-4">
+              Détail mensuel
+            </h3>
+            <YearlyAttendanceChart yearlyStats={yearlyStats} />
+          </div>
         </div>
       </div>
     </div>
