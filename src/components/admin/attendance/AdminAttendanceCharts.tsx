@@ -16,7 +16,28 @@ export function AdminAttendanceCharts() {
     currentMonth: TrainingStats;
     yearlyStats: TrainingStats;
     bestMonth: { month: string; percentage: number };
-  }>>({} as Record<TrainingType, any>);
+  }>>({
+    goalball: {
+      currentMonth: { present: 0, total: 0 },
+      yearlyStats: { present: 0, total: 0 },
+      bestMonth: { month: "", percentage: 0 }
+    },
+    torball: {
+      currentMonth: { present: 0, total: 0 },
+      yearlyStats: { present: 0, total: 0 },
+      bestMonth: { month: "", percentage: 0 }
+    },
+    other: {
+      currentMonth: { present: 0, total: 0 },
+      yearlyStats: { present: 0, total: 0 },
+      bestMonth: { month: "", percentage: 0 }
+    },
+    showdown: {
+      currentMonth: { present: 0, total: 0 },
+      yearlyStats: { present: 0, total: 0 },
+      bestMonth: { month: "", percentage: 0 }
+    }
+  });
 
   const calculateAttendanceStats = async () => {
     try {
@@ -32,16 +53,52 @@ export function AdminAttendanceCharts() {
       if (sportsError) throw sportsError;
       console.log("Fetched sports:", sportsData);
 
-      // Initialize stats object with fetched sports
-      const initialStats: Record<TrainingType, any> = {};
-      sportsData.forEach(sport => {
-        const sportType = sport.name.toLowerCase() as TrainingType;
-        initialStats[sportType] = {
+      const stats: Record<TrainingType, {
+        currentMonth: TrainingStats;
+        yearlyStats: TrainingStats;
+        monthlyStats: MonthlyStats;
+      }> = {
+        goalball: {
           currentMonth: { present: 0, total: 0 },
           yearlyStats: { present: 0, total: 0 },
-          bestMonth: { month: "", percentage: 0 }
-        };
-      });
+          monthlyStats: {}
+        },
+        torball: {
+          currentMonth: { present: 0, total: 0 },
+          yearlyStats: { present: 0, total: 0 },
+          monthlyStats: {}
+        },
+        other: {
+          currentMonth: { present: 0, total: 0 },
+          yearlyStats: { present: 0, total: 0 },
+          monthlyStats: {}
+        },
+        showdown: {
+          currentMonth: { present: 0, total: 0 },
+          yearlyStats: { present: 0, total: 0 },
+          monthlyStats: {}
+        }
+      };
+
+      // Get total potential players for each sport type
+      const sportPlayers: Record<TrainingType, number> = {
+        goalball: 0,
+        torball: 0,
+        other: 0,
+        showdown: 0
+      };
+      
+      for (const sport of sportsData) {
+        const sportType = sport.name.toLowerCase() as TrainingType;
+        const { data: players } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("sport", sportType);
+        
+        if (players) {
+          sportPlayers[sportType] = players.length;
+        }
+      }
 
       const now = new Date();
       const startOfCurrentMonth = startOfMonth(now);
@@ -67,93 +124,87 @@ export function AdminAttendanceCharts() {
       if (trainingsError) throw trainingsError;
       console.log("Fetched trainings:", trainings);
 
-      const stats: Record<TrainingType, {
-        currentMonth: TrainingStats;
-        yearlyStats: TrainingStats;
-        monthlyStats: MonthlyStats;
-      }> = {};
+      // Group trainings by month and sport type
+      const trainingsByMonth: Record<string, Record<TrainingType, { attendanceSum: number; count: number }>> = {};
 
-      // Initialize stats for each sport
-      sportsData.forEach(sport => {
-        const sportType = sport.name.toLowerCase() as TrainingType;
-        stats[sportType] = {
-          currentMonth: { present: 0, total: 0 },
-          yearlyStats: { present: 0, total: 0 },
-          monthlyStats: {}
-        };
-      });
-
-      // Get total potential players for each sport type
-      const sportPlayers: Record<TrainingType, number> = {};
-      
-      for (const sport of sportsData) {
-        const sportType = sport.name.toLowerCase() as TrainingType;
-        const { data: players } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("sport", sportType);
-        
-        sportPlayers[sportType] = players?.length || 0;
-      }
-
-      // Calculate stats for each training
       for (const training of trainings) {
         const trainingType = training.type as TrainingType;
-        if (!stats[trainingType]) continue; // Skip if sport type not in database
-
         const trainingDate = parseISO(training.date);
         const monthKey = format(trainingDate, "yyyy-MM");
         const registeredCount = training.registrations?.length || 0;
         const totalPlayersCount = sportPlayers[trainingType];
 
-        // Update monthly stats
-        if (!stats[trainingType].monthlyStats[monthKey]) {
-          stats[trainingType].monthlyStats[monthKey] = {
-            present: 0,
-            total: 0
+        // Skip if no players are registered for this sport
+        if (totalPlayersCount === 0) continue;
+
+        // Calculate attendance percentage for this training
+        const attendancePercentage = (registeredCount / totalPlayersCount) * 100;
+
+        // Initialize month data if not exists
+        if (!trainingsByMonth[monthKey]) {
+          trainingsByMonth[monthKey] = {
+            goalball: { attendanceSum: 0, count: 0 },
+            torball: { attendanceSum: 0, count: 0 },
+            other: { attendanceSum: 0, count: 0 },
+            showdown: { attendanceSum: 0, count: 0 }
           };
         }
-        stats[trainingType].monthlyStats[monthKey].present += registeredCount;
-        stats[trainingType].monthlyStats[monthKey].total += totalPlayersCount;
 
-        // Update current month stats
-        if (trainingDate >= startOfCurrentMonth && trainingDate <= endOfCurrentMonth) {
-          stats[trainingType].currentMonth.present += registeredCount;
-          stats[trainingType].currentMonth.total += totalPlayersCount;
-        }
-
-        // Update yearly stats
-        stats[trainingType].yearlyStats.present += registeredCount;
-        stats[trainingType].yearlyStats.total += totalPlayersCount;
+        // Add attendance percentage to monthly sum and increment count
+        trainingsByMonth[monthKey][trainingType].attendanceSum += attendancePercentage;
+        trainingsByMonth[monthKey][trainingType].count += 1;
       }
 
-      // Calculate best month for each sport
-      const finalStats: Record<TrainingType, any> = {};
-      
-      for (const sport of sportsData) {
-        const sportType = sport.name.toLowerCase() as TrainingType;
-        finalStats[sportType] = {
-          currentMonth: stats[sportType].currentMonth,
-          yearlyStats: stats[sportType].yearlyStats,
-          bestMonth: { month: "", percentage: 0 }
-        };
+      // Calculate monthly averages and find best month
+      const finalStats: Record<TrainingType, any> = {
+        goalball: { currentMonth: { present: 0, total: 100 }, yearlyStats: { present: 0, total: 100 }, bestMonth: { month: "", percentage: 0 } },
+        torball: { currentMonth: { present: 0, total: 100 }, yearlyStats: { present: 0, total: 100 }, bestMonth: { month: "", percentage: 0 } },
+        other: { currentMonth: { present: 0, total: 100 }, yearlyStats: { present: 0, total: 100 }, bestMonth: { month: "", percentage: 0 } },
+        showdown: { currentMonth: { present: 0, total: 100 }, yearlyStats: { present: 0, total: 100 }, bestMonth: { month: "", percentage: 0 } }
+      };
 
-        let bestMonth = { month: "", percentage: 0 };
-        
-        for (const [month, monthData] of Object.entries(stats[sportType].monthlyStats)) {
-          if (monthData.total > 0) {
-            const percentage = (monthData.present / monthData.total) * 100;
-            if (percentage > bestMonth.percentage) {
-              bestMonth = {
+      const currentMonthKey = format(now, "yyyy-MM");
+      let yearlyTotalsByType: Record<TrainingType, { sum: number; count: number }> = {
+        goalball: { sum: 0, count: 0 },
+        torball: { sum: 0, count: 0 },
+        other: { sum: 0, count: 0 },
+        showdown: { sum: 0, count: 0 }
+      };
+
+      // Process monthly averages
+      Object.entries(trainingsByMonth).forEach(([month, sportData]) => {
+        Object.entries(sportData).forEach(([sport, data]) => {
+          const sportType = sport as TrainingType;
+          if (data.count > 0) {
+            const monthlyAverage = data.attendanceSum / data.count;
+
+            // Update yearly totals
+            yearlyTotalsByType[sportType].sum += monthlyAverage;
+            yearlyTotalsByType[sportType].count += 1;
+
+            // Update best month if this is the highest percentage
+            if (monthlyAverage > finalStats[sportType].bestMonth.percentage) {
+              finalStats[sportType].bestMonth = {
                 month: format(parseISO(month + "-01"), "MMMM yyyy", { locale: fr }),
-                percentage
+                percentage: monthlyAverage
               };
             }
-          }
-        }
 
-        finalStats[sportType].bestMonth = bestMonth;
-      }
+            // Update current month stats
+            if (month === currentMonthKey) {
+              finalStats[sportType].currentMonth.present = Math.round(monthlyAverage);
+            }
+          }
+        });
+      });
+
+      // Calculate yearly averages
+      Object.entries(yearlyTotalsByType).forEach(([sport, data]) => {
+        const sportType = sport as TrainingType;
+        if (data.count > 0) {
+          finalStats[sportType].yearlyStats.present = Math.round(data.sum / data.count);
+        }
+      });
 
       console.log("Final calculated stats:", finalStats);
       setSportStats(finalStats);
