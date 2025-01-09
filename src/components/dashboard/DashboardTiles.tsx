@@ -1,93 +1,90 @@
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Activity, Calendar, Shield, Key, FileText } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { 
+  CalendarDays, 
+  ClipboardList, 
+  FileText, 
+  Settings, 
+  Users 
+} from "lucide-react";
 
 interface DashboardTilesProps {
   isAdmin: boolean;
 }
 
 export function DashboardTiles({ isAdmin }: DashboardTilesProps) {
-  const navigate = useNavigate();
-  
-  const tiles = [
-    {
-      title: "Mon Profil",
-      icon: User,
-      route: "/profile",
-      bgColor: "bg-blue-600 hover:bg-blue-700",
-      ariaLabel: "Accéder à votre profil personnel"
-    },
-    {
-      title: "Inscription Entraînement",
-      icon: Activity,
-      route: "/training",
-      bgColor: "bg-green-600 hover:bg-green-700",
-      ariaLabel: "Gérer vos inscriptions aux entraînements"
-    },
-    {
-      title: "Présence",
-      icon: Calendar,
-      route: "/attendance",
-      bgColor: "bg-orange-600 hover:bg-orange-700",
-      ariaLabel: "Consulter les présences aux entraînements"
-    },
-    {
-      title: "Mes Documents",
-      icon: FileText,
-      route: "/documents",
-      bgColor: "bg-purple-600 hover:bg-purple-700",
-      ariaLabel: "Gérer vos documents personnels"
-    },
-    {
-      title: "Changer le mot de passe",
-      icon: Key,
-      route: "/change-password",
-      bgColor: "bg-indigo-600 hover:bg-indigo-700",
-      ariaLabel: "Modifier votre mot de passe"
-    }
-  ];
-
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-      {tiles.map((tile) => (
-        <Card 
-          key={tile.title}
-          className={`${tile.bgColor} border-none cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl focus-within:ring-2 focus-within:ring-white`}
-          onClick={() => navigate(tile.route)}
-          role="button"
-          aria-label={tile.ariaLabel}
-          tabIndex={0}
-        >
-          <CardHeader className="text-center p-4 sm:p-6">
-            <tile.icon 
-              className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-4 text-white" 
-              aria-hidden="true"
-            />
-            <CardTitle className="text-sm sm:text-lg font-bold text-white">
-              {tile.title}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-      ))}
-      
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <Link
+        to="/training"
+        className="p-6 bg-gray-800 rounded-lg shadow hover:bg-gray-700 transition-colors"
+      >
+        <div className="flex items-center gap-4">
+          <CalendarDays className="h-6 w-6 text-green-500" />
+          <h3 className="text-lg font-semibold text-white">Entraînements</h3>
+        </div>
+        <p className="mt-2 text-gray-400">
+          Consultez et inscrivez-vous aux entraînements
+        </p>
+      </Link>
+
+      <Link
+        to="/documents"
+        className="p-6 bg-gray-800 rounded-lg shadow hover:bg-gray-700 transition-colors"
+      >
+        <div className="flex items-center gap-4">
+          <FileText className="h-6 w-6 text-blue-500" />
+          <h3 className="text-lg font-semibold text-white">Documents</h3>
+        </div>
+        <p className="mt-2 text-gray-400">
+          Accédez à vos documents personnels
+        </p>
+      </Link>
+
       {isAdmin && (
-        <Card 
-          className="bg-red-600 hover:bg-red-700 border-none cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl focus-within:ring-2 focus-within:ring-white"
-          onClick={() => navigate("/admin")}
-          role="button"
-          aria-label="Accéder au tableau de bord administrateur"
-          tabIndex={0}
-        >
-          <CardHeader className="text-center p-4 sm:p-6">
-            <Shield 
-              className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-4 text-white" 
-              aria-hidden="true"
-            />
-            <CardTitle className="text-sm sm:text-lg font-bold text-white">
-              Espace Admin
-            </CardTitle>
-          </CardHeader>
-        </Card>
+        <>
+          <Link
+            to="/admin/users"
+            className="p-6 bg-gray-800 rounded-lg shadow hover:bg-gray-700 transition-colors"
+          >
+            <div className="flex items-center gap-4">
+              <Users className="h-6 w-6 text-purple-500" />
+              <h3 className="text-lg font-semibold text-white">Utilisateurs</h3>
+            </div>
+            <p className="mt-2 text-gray-400">
+              Gérez les utilisateurs du site
+            </p>
+          </Link>
+
+          <Link
+            to="/admin/trainings"
+            className="p-6 bg-gray-800 rounded-lg shadow hover:bg-gray-700 transition-colors"
+          >
+            <div className="flex items-center gap-4">
+              <ClipboardList className="h-6 w-6 text-yellow-500" />
+              <h3 className="text-lg font-semibold text-white">
+                Gestion des entraînements
+              </h3>
+            </div>
+            <p className="mt-2 text-gray-400">
+              Créez et modifiez les entraînements
+            </p>
+          </Link>
+
+          <Link
+            to="/admin/settings"
+            className="p-6 bg-gray-800 rounded-lg shadow hover:bg-gray-700 transition-colors"
+          >
+            <div className="flex items-center gap-4">
+              <Settings className="h-6 w-6 text-red-500" />
+              <h3 className="text-lg font-semibold text-white">
+                Paramètres du site
+              </h3>
+            </div>
+            <p className="mt-2 text-gray-400">
+              Configurez les paramètres du site
+            </p>
+          </Link>
+        </>
       )}
     </div>
   );
