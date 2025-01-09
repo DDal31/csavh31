@@ -5,12 +5,13 @@ import { PublicRoutes } from "@/routes/publicRoutes";
 import { MemberRoutes } from "@/routes/memberRoutes";
 import { AdminRoutes } from "@/routes/adminRoutes";
 import { AdminSettingsRoutes } from "@/routes/adminSettingsRoutes";
+import "./App.css";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
+      refetchOnWindowFocus: false,
+      retry: false,
     },
   },
 });
@@ -23,7 +24,7 @@ function App() {
           {PublicRoutes()}
           {MemberRoutes()}
           {AdminRoutes()}
-          {AdminSettingsRoutes}
+          {AdminSettingsRoutes()}
         </Routes>
         <Toaster />
       </Router>
