@@ -111,42 +111,46 @@ export function DashboardCharts({ sport }: { sport: string }) {
 
   return (
     <div className="space-y-8">
+      <div 
+        className="bg-gray-800 p-6 rounded-lg"
+        role="region"
+        aria-label={`Statistiques des entraînements de ${sport} pour ${format(new Date(), 'MMMM yyyy', { locale: fr })}`}
+      >
+        <h3 className="text-lg font-semibold text-white mb-4">
+          Entraînements du mois en cours
+        </h3>
+        <MonthlyTrainingChart currentMonthStats={currentMonthStats} sport={sport} />
+        <div className="sr-only">
+          Sur {currentMonthStats.total} entraînements programmés, 
+          il y a eu des présences à {currentMonthStats.present} entraînements
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div 
-          className="bg-gray-800 p-6 rounded-lg"
-          role="region"
-          aria-label={`Statistiques des entraînements de ${sport} pour ${format(new Date(), 'MMMM yyyy', { locale: fr })}`}
-        >
-          <h3 className="text-lg font-semibold text-white mb-4">
-            Entraînements du mois en cours
-          </h3>
-          <MonthlyTrainingChart currentMonthStats={currentMonthStats} sport={sport} />
-          <div className="sr-only">
-            Sur {currentMonthStats.total} entraînements programmés, 
-            il y a eu des présences à {currentMonthStats.present} entraînements
+        <div className="lg:col-span-1">
+          <div 
+            className="bg-gray-800 p-6 rounded-lg h-full"
+            role="region"
+            aria-label={`Évolution des présences aux entraînements de ${sport} sur l'année ${new Date().getFullYear()}`}
+          >
+            <h3 className="text-lg font-semibold text-white mb-4">
+              Évolution annuelle
+            </h3>
+            <YearlyTrendChart yearlyStats={yearlyStats} />
           </div>
         </div>
-
-        <div 
-          className="bg-gray-800 p-6 rounded-lg"
-          role="region"
-          aria-label={`Évolution des présences aux entraînements de ${sport} sur l'année ${new Date().getFullYear()}`}
-        >
-          <h3 className="text-lg font-semibold text-white mb-4">
-            Évolution annuelle
-          </h3>
-          <YearlyTrendChart yearlyStats={yearlyStats} />
-        </div>
-
-        <div 
-          className="bg-gray-800 p-6 rounded-lg"
-          role="region"
-          aria-label={`Détail mensuel des présences aux entraînements de ${sport} sur l'année ${new Date().getFullYear()}`}
-        >
-          <h3 className="text-lg font-semibold text-white mb-4">
-            Détail mensuel
-          </h3>
-          <YearlyAttendanceChart yearlyStats={yearlyStats} />
+        
+        <div className="lg:col-span-2">
+          <div 
+            className="bg-gray-800 p-6 rounded-lg"
+            role="region"
+            aria-label={`Détail mensuel des présences aux entraînements de ${sport} sur l'année ${new Date().getFullYear()}`}
+          >
+            <h3 className="text-lg font-semibold text-white mb-4">
+              Détail mensuel
+            </h3>
+            <YearlyAttendanceChart yearlyStats={yearlyStats} />
+          </div>
         </div>
       </div>
     </div>
