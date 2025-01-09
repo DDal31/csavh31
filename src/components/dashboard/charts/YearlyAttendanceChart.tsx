@@ -1,4 +1,4 @@
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 interface YearlyAttendanceChartProps {
   yearlyStats: Array<{
@@ -11,40 +11,45 @@ interface YearlyAttendanceChartProps {
 
 export function YearlyAttendanceChart({ yearlyStats }: YearlyAttendanceChartProps) {
   const chartTheme = {
-    stroke: "#4169E1",
-    fill: "#4169E1"
+    fill: "#4169E1",
+    background: "#1f2937"
   };
 
   return (
-    <div className="h-64">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart
-          data={yearlyStats}
-          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis 
-            dataKey="month"
-            tick={{ fill: '#fff' }}
-          />
-          <YAxis 
-            tick={{ fill: '#fff' }}
-            unit="%"
-          />
-          <Tooltip 
-            formatter={(value: number) => [`${value.toFixed(1)}%`, 'Taux de présence']}
-          />
-          <Line
-            type="stepAfter"
-            dataKey="percentage"
-            stroke={chartTheme.stroke}
-            name="Taux de présence"
-            role="graphics-symbol"
-            aria-label="Pourcentage de présence mensuel"
-            dot={{ fill: chartTheme.fill }}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      {yearlyStats.map((stat) => (
+        <div key={stat.month} className="relative h-32">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={[
+                  { name: "present", value: stat.percentage },
+                  { name: "remaining", value: 100 - stat.percentage }
+                ]}
+                cx="50%"
+                cy="50%"
+                startAngle={0}
+                endAngle={360}
+                innerRadius="60%"
+                outerRadius="80%"
+                dataKey="value"
+                role="graphics-symbol"
+                aria-label={`Taux de présence pour ${stat.month}: ${stat.percentage.toFixed(1)}%`}
+              >
+                <Cell key="present" fill={chartTheme.fill} />
+                <Cell key="remaining" fill={chartTheme.background} />
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+            <span className="text-lg font-bold">{stat.percentage.toFixed(0)}%</span>
+            <span className="text-xs mt-1">{stat.month}</span>
+            <div className="text-xs mt-1 text-gray-400">
+              {stat.attendance} / {stat.total}
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
