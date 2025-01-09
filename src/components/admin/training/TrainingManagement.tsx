@@ -65,6 +65,7 @@ export function TrainingManagement() {
           training={editingTraining}
           onSuccess={handleClose}
           onCancel={handleClose}
+          isAdmin={true}
         />
       ) : (
         <TrainingList 

@@ -20,9 +20,10 @@ type TrainingFormProps = {
   training?: Training | null;
   onSuccess: () => void;
   onCancel: () => void;
+  isAdmin?: boolean;
 };
 
-export function TrainingForm({ training, onSuccess, onCancel }: TrainingFormProps) {
+export function TrainingForm({ training, onSuccess, onCancel, isAdmin = false }: TrainingFormProps) {
   const { toast } = useToast();
   const isEditing = !!training;
 
@@ -120,7 +121,7 @@ export function TrainingForm({ training, onSuccess, onCancel }: TrainingFormProp
             aria-label={`Formulaire pour ${isEditing ? "modifier" : "créer"} un entraînement`}
           >
             <AccessibleTrainingTypeField form={form} />
-            <AccessibleTrainingDateField form={form} />
+            <AccessibleTrainingDateField form={form} isAdmin={isAdmin} />
             <AccessibleTrainingTimeFields form={form} />
             
             <Button 
