@@ -26,12 +26,13 @@ serve(async (req) => {
     console.log('Received request for sport:', sport);
     console.log('User message:', message);
     console.log('Is visually impaired:', isVisuallyImpaired);
+    console.log('User ID:', userId);
 
     // Initialize Supabase client with service role key
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
-    // Get upcoming trainings with low attendance
-    const { data: upcomingTrainings } = await supabase
+    // Get upcoming trainings
+    const { data: upcomingTrainings, error: trainingsError } = await supabase
       .from('trainings')
       .select(`
         *,
@@ -43,6 +44,13 @@ serve(async (req) => {
       .eq('type', sport)
       .gte('date', new Date().toISOString().split('T')[0])
       .order('date', { ascending: true });
+
+    if (trainingsError) {
+      console.error('Error fetching trainings:', trainingsError);
+      throw trainingsError;
+    }
+
+    console.log('Found upcoming trainings:', upcomingTrainings?.length);
 
     let trainingPrompt = '';
     if (upcomingTrainings && upcomingTrainings.length > 0) {
@@ -59,11 +67,13 @@ serve(async (req) => {
             month: 'long'
           });
           const players = training.registrations?.length || 0;
-          return `${date} (${players} joueurs inscrits)`;
+          return `${date} (${players} joueur${players > 1 ? 's' : ''} inscrit${players > 1 ? 's' : ''})`;
         });
 
+      console.log('Low attendance trainings:', lowAttendanceTrainings);
+
       if (lowAttendanceTrainings.length > 0) {
-        trainingPrompt = `\n\nJe vois que certains entraînements manquent de joueurs. Tu pourrais t'inscrire aux dates suivantes :\n• ${lowAttendanceTrainings.join('\n• ')}`;
+        trainingPrompt = `\n\nJe remarque que certains entraînements manquent de joueurs. Tu n'es pas encore inscrit aux dates suivantes :\n• ${lowAttendanceTrainings.join('\n• ')}\n\nTa présence serait vraiment appréciée ! 🏃‍♂️`;
       }
     }
 
