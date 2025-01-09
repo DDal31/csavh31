@@ -49,36 +49,26 @@ export function NotificationPreferences() {
         return;
       }
 
-      console.log("Fetching preferences for user:", session.user.id);
       const { data, error } = await supabase
         .from('user_notification_preferences')
         .select('push_enabled')
         .eq('user_id', session.user.id)
         .maybeSingle();
 
-      if (error) {
-        console.error('Error fetching preferences:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      if (!data) {
+      if (data) {
+        console.log("Preferences found:", data);
+        setPushEnabled(data.push_enabled);
+      } else {
         console.log("No preferences found, creating default preferences");
-        const { error: insertError } = await supabase
+        await supabase
           .from('user_notification_preferences')
           .insert({
             user_id: session.user.id,
             push_enabled: false
           });
-
-        if (insertError) {
-          console.error('Error creating default preferences:', insertError);
-          throw insertError;
-        }
-
         setPushEnabled(false);
-      } else {
-        console.log("Preferences found:", data);
-        setPushEnabled(data.push_enabled);
       }
     } catch (error) {
       console.error('Error loading preferences:', error);
@@ -98,7 +88,7 @@ export function NotificationPreferences() {
       if (!session) return;
 
       if (!pushEnabled) {
-        // Check if notifications are supported
+        // Only request permission if notifications are not already enabled
         if (!('Notification' in window)) {
           console.log("Notifications not supported in this browser");
           toast({
@@ -109,7 +99,6 @@ export function NotificationPreferences() {
           return;
         }
 
-        // Request permission
         const permission = await Notification.requestPermission();
         console.log("Notification permission:", permission);
         
@@ -123,62 +112,49 @@ export function NotificationPreferences() {
           return;
         }
 
-        try {
-          // Handle iOS Safari
-          if (!isFirebaseSupported) {
-            console.log("Firebase not supported, using native notifications");
-            // Update preferences without FCM token
-            await updatePreferences(session.user.id, true);
-            setPushEnabled(true);
-            return;
-          }
+        let currentToken = '';
+        if (isFirebaseSupported) {
+          try {
+            const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+            console.log("Service Worker registered:", registration);
 
-          // Register service worker for supported browsers
-          console.log("Registering service worker...");
-          const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-          console.log("Service Worker registered:", registration);
-
-          const messaging = getMessaging(app);
-          console.log("Getting FCM token...");
-          const currentToken = await getToken(messaging, {
-            vapidKey: "BHgwOxwsVYoWgxqkF4jGZkSDPHtqL_1pdZs-Q_H5SPezvQn1XGbPpKGAuYZqgafUgKX2F7P_YOHwuQoVXyQ6qYk",
-            serviceWorkerRegistration: registration,
-          });
-
-          console.log("FCM token obtained:", currentToken);
-
-          if (!currentToken) {
-            throw new Error("No registration token available");
-          }
-
-          // Save token
-          const { error: tokenError } = await supabase
-            .from('user_fcm_tokens')
-            .upsert({
-              user_id: session.user.id,
-              token: currentToken,
-              device_type: 'web',
+            const messaging = getMessaging(app);
+            currentToken = await getToken(messaging, {
+              vapidKey: "BHgwOxwsVYoWgxqkF4jGZkSDPHtqL_1pdZs-Q_H5SPezvQn1XGbPpKGAuYZqgafUgKX2F7P_YOHwuQoVXyQ6qYk",
+              serviceWorkerRegistration: registration,
             });
 
-          if (tokenError) {
-            console.error('Error saving FCM token:', tokenError);
-            throw tokenError;
+            console.log("FCM token obtained:", currentToken);
+
+            if (!currentToken) {
+              throw new Error("No registration token available");
+            }
+
+            // Save token
+            await supabase
+              .from('user_fcm_tokens')
+              .upsert({
+                user_id: session.user.id,
+                token: currentToken,
+                device_type: 'web',
+              });
+          } catch (error) {
+            console.error("Error during FCM setup:", error);
           }
-
-          // Update preferences
-          await updatePreferences(session.user.id, true);
-          setPushEnabled(true);
-
-        } catch (error) {
-          console.error("Error during notification setup:", error);
-          throw error;
         }
-      } else {
-        // Disable notifications
-        await updatePreferences(session.user.id, false);
-        setPushEnabled(false);
       }
 
+      // Update preferences
+      const { error: prefError } = await supabase
+        .from('user_notification_preferences')
+        .upsert({
+          user_id: session.user.id,
+          push_enabled: !pushEnabled,
+        });
+
+      if (prefError) throw prefError;
+
+      setPushEnabled(!pushEnabled);
       toast({
         title: !pushEnabled ? "Notifications activées" : "Notifications désactivées",
         description: !pushEnabled 
@@ -192,20 +168,6 @@ export function NotificationPreferences() {
         description: "Une erreur est survenue lors de la modification des préférences.",
         variant: "destructive",
       });
-    }
-  };
-
-  const updatePreferences = async (userId: string, enabled: boolean) => {
-    const { error: prefError } = await supabase
-      .from('user_notification_preferences')
-      .upsert({
-        user_id: userId,
-        push_enabled: enabled,
-      });
-
-    if (prefError) {
-      console.error('Error updating preferences:', prefError);
-      throw prefError;
     }
   };
 

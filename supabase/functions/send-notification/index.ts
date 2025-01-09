@@ -42,7 +42,7 @@ serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
-    // First get users with enabled notifications
+    // Get users with enabled notifications
     const { data: enabledUsers, error: preferencesError } = await supabaseClient
       .from('user_notification_preferences')
       .select('user_id')
@@ -59,7 +59,7 @@ serve(async (req) => {
       console.log('No users with enabled notifications found')
       // Continue anyway to save in history
     } else {
-      // Then get FCM tokens for these users
+      // Get FCM tokens for these users
       const userIds = enabledUsers.map(user => user.user_id)
       const { data: tokens, error: tokensError } = await supabaseClient
         .from('user_fcm_tokens')
@@ -73,13 +73,10 @@ serve(async (req) => {
 
       console.log('Found tokens:', tokens)
 
-      const registrationTokens = tokens?.map(t => t.token) || []
-      console.log('Registration tokens:', registrationTokens)
+      if (tokens && tokens.length > 0) {
+        const registrationTokens = tokens.map(t => t.token)
+        console.log('Registration tokens:', registrationTokens)
 
-      if (registrationTokens.length === 0) {
-        console.log('No tokens found')
-        // Continue anyway to save in history
-      } else {
         const firebaseServiceAccount = JSON.parse(Deno.env.get('FIREBASE_SERVICE_ACCOUNT') || '{}')
 
         const response = await fetch('https://fcm.googleapis.com/v1/projects/csavh31-c6a45/messages:send', {
@@ -139,7 +136,7 @@ serve(async (req) => {
       }
     }
 
-    // Sauvegarder l'historique des notifications
+    // Save notification history
     const { error: historyError } = await supabaseClient
       .from('notification_history')
       .insert({
