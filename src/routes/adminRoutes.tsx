@@ -28,7 +28,7 @@ export const AdminRoutes = () => {
         }
       />
       <Route
-        path="/admin/users/:id"
+        path="/admin/users/:userId/edit"
         element={
           <ProtectedRoute requireAdmin>
             <AdminUserEdit />
