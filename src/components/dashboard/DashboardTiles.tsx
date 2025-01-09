@@ -2,6 +2,9 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { User, Activity, Calendar, Shield, Key, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { DashboardCharts } from "./DashboardCharts";
+import type { Database } from "@/integrations/supabase/types";
+
+type TrainingType = Database["public"]["Enums"]["training_type"];
 
 interface DashboardTilesProps {
   isAdmin: boolean;
@@ -49,20 +52,22 @@ export function DashboardTiles({ isAdmin, userSports = [] }: DashboardTilesProps
     }
   ];
 
-  // Function to normalize sport names
-  const normalizeSport = (sport: string) => {
-    const sportMap: { [key: string]: string } = {
-      'goalball': 'Goalball',
-      'torball': 'Torball',
-      'both': 'Goalball et Torball'
-    };
-    return sportMap[sport.toLowerCase()] || sport;
+  // Function to normalize sport names and ensure they match TrainingType
+  const normalizeSport = (sport: string): TrainingType => {
+    const normalizedSport = sport.toLowerCase();
+    if (normalizedSport === 'goalball' || 
+        normalizedSport === 'torball' || 
+        normalizedSport === 'other' || 
+        normalizedSport === 'showdown') {
+      return normalizedSport;
+    }
+    return 'goalball'; // Default fallback
   };
 
-  // Get unique sports from userSports
+  // Get unique sports from userSports and ensure they match TrainingType
   const uniqueSports = [...new Set(userSports.flatMap(sport => 
     sport.toLowerCase() === 'both' ? ['goalball', 'torball'] : [sport.toLowerCase()]
-  ))];
+  ))].map(sport => normalizeSport(sport));
 
   return (
     <div className="space-y-8">
@@ -114,7 +119,7 @@ export function DashboardTiles({ isAdmin, userSports = [] }: DashboardTilesProps
           {uniqueSports.map(sport => (
             <div key={sport} className="space-y-4">
               <h2 className="text-xl font-bold text-white">
-                Statistiques {normalizeSport(sport)}
+                Statistiques {sport.charAt(0).toUpperCase() + sport.slice(1)}
               </h2>
               <DashboardCharts sport={sport} />
             </div>
