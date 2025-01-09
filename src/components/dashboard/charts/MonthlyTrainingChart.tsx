@@ -48,9 +48,6 @@ export function MonthlyTrainingChart({ currentMonthStats, sport }: MonthlyTraini
       <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
         <span className="text-3xl font-bold">{percentage.toFixed(1)}%</span>
         <span className="text-sm mt-2">de présence</span>
-        <div className="text-sm mt-1 text-gray-400">
-          {currentMonthStats.present} / {currentMonthStats.total} entraînements
-        </div>
       </div>
     </div>
   );
