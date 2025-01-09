@@ -5,7 +5,6 @@ import { PublicRoutes } from "@/routes/publicRoutes";
 import { MemberRoutes } from "@/routes/memberRoutes";
 import { AdminRoutes } from "@/routes/adminRoutes";
 import { AdminSettingsRoutes } from "@/routes/adminSettingsRoutes";
-import { ThemeProvider } from "@/contexts/ThemeContext";
 import "./App.css";
 
 const queryClient = new QueryClient({
@@ -20,17 +19,15 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <Router>
-          <Routes>
-            {PublicRoutes()}
-            {MemberRoutes()}
-            {AdminRoutes()}
-            {AdminSettingsRoutes}
-          </Routes>
-          <Toaster />
-        </Router>
-      </ThemeProvider>
+      <Router>
+        <Routes>
+          {PublicRoutes()}
+          {MemberRoutes()}
+          {AdminRoutes()}
+          {AdminSettingsRoutes}
+        </Routes>
+        <Toaster />
+      </Router>
     </QueryClientProvider>
   );
 }

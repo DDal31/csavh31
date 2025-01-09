@@ -12,7 +12,6 @@ import AdminSettingsPresentation from "@/pages/AdminPresentation";
 import AdminSettingsNotifications from "@/pages/AdminNotifications";
 import AdminNews from "@/pages/AdminNews";
 import AdminContacts from "@/pages/AdminContacts";
-import AdminTemplateSettings from "@/pages/AdminTemplateSettings";
 
 export const AdminSettingsRoutes = (
   <>
@@ -109,14 +108,6 @@ export const AdminSettingsRoutes = (
       element={
         <ProtectedRoute requireAdmin>
           <AdminSettingsNotifications />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/settings/template"
-      element={
-        <ProtectedRoute requireAdmin>
-          <AdminTemplateSettings />
         </ProtectedRoute>
       }
     />
