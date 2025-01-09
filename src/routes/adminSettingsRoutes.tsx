@@ -10,6 +10,8 @@ import AdminSettingsDocumentTypes from "@/pages/AdminDocumentTypes";
 import AdminSettingsAttendanceSheets from "@/pages/AdminAttendanceSheets";
 import AdminSettingsPresentation from "@/pages/AdminPresentation";
 import AdminSettingsNotifications from "@/pages/AdminNotifications";
+import AdminNews from "@/pages/AdminNews";
+import AdminContacts from "@/pages/AdminContacts";
 
 export const AdminSettingsRoutes = (
   <>
@@ -18,6 +20,14 @@ export const AdminSettingsRoutes = (
       element={
         <ProtectedRoute requireAdmin>
           <AdminSiteSettings />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/admin/settings/news"
+      element={
+        <ProtectedRoute requireAdmin>
+          <AdminNews />
         </ProtectedRoute>
       }
     />
@@ -34,6 +44,14 @@ export const AdminSettingsRoutes = (
       element={
         <ProtectedRoute requireAdmin>
           <AdminNewsEdit />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/admin/settings/contacts"
+      element={
+        <ProtectedRoute requireAdmin>
+          <AdminContacts />
         </ProtectedRoute>
       }
     />
