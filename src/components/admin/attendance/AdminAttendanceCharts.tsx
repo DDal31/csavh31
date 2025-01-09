@@ -59,112 +59,130 @@ export function AdminAttendanceCharts() {
       const startOfCurrentYear = startOfYear(now);
       const endOfCurrentYear = endOfYear(now);
 
-      // Initialize stats object for each sport
+      // Initialize stats object with default values for all sport types
       const stats: Record<TrainingType, {
         currentMonth: TrainingStats;
         yearlyStats: TrainingStats;
         bestMonth: { month: string; percentage: number };
-      }> = {};
-
-      // Initialize stats for each sport
-      for (const sport of sportsData) {
-        const sportType = sport.name.toLowerCase() as TrainingType;
-        stats[sportType] = {
+      }> = {
+        goalball: {
           currentMonth: { present: 0, total: 0 },
           yearlyStats: { present: 0, total: 0 },
           bestMonth: { month: "", percentage: 0 }
-        };
-
-        // Get total players for this sport
-        const { data: players } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("sport", sportType);
-
-        const totalPlayers = players?.length || 0;
-
-        // Get trainings for current month
-        const { data: currentMonthTrainings } = await supabase
-          .from("trainings")
-          .select(`
-            id,
-            date,
-            registrations (
-              id,
-              user_id
-            )
-          `)
-          .eq("type", sportType)
-          .gte("date", startOfCurrentMonth.toISOString())
-          .lte("date", endOfCurrentMonth.toISOString());
-
-        if (currentMonthTrainings && currentMonthTrainings.length > 0) {
-          let monthlyAttendanceSum = 0;
-          currentMonthTrainings.forEach(training => {
-            const presentPlayers = training.registrations?.length || 0;
-            monthlyAttendanceSum += (presentPlayers / totalPlayers) * 100;
-          });
-          const monthlyAverage = monthlyAttendanceSum / currentMonthTrainings.length;
-          stats[sportType].currentMonth = {
-            present: Math.round(monthlyAverage),
-            total: 100
-          };
+        },
+        torball: {
+          currentMonth: { present: 0, total: 0 },
+          yearlyStats: { present: 0, total: 0 },
+          bestMonth: { month: "", percentage: 0 }
+        },
+        other: {
+          currentMonth: { present: 0, total: 0 },
+          yearlyStats: { present: 0, total: 0 },
+          bestMonth: { month: "", percentage: 0 }
+        },
+        showdown: {
+          currentMonth: { present: 0, total: 0 },
+          yearlyStats: { present: 0, total: 0 },
+          bestMonth: { month: "", percentage: 0 }
         }
+      };
 
-        // Get trainings for the whole year
-        const { data: yearTrainings } = await supabase
-          .from("trainings")
-          .select(`
-            id,
-            date,
-            registrations (
+      // Process each sport from the database
+      for (const sport of sportsData) {
+        const sportType = sport.name.toLowerCase() as TrainingType;
+        if (stats[sportType]) {  // Only process if it's a valid sport type
+          // Get total players for this sport
+          const { data: players } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq("sport", sportType);
+
+          const totalPlayers = players?.length || 0;
+          console.log(`Total players for ${sportType}:`, totalPlayers);
+
+          // Get trainings for current month
+          const { data: currentMonthTrainings } = await supabase
+            .from("trainings")
+            .select(`
               id,
-              user_id
-            )
-          `)
-          .eq("type", sportType)
-          .gte("date", startOfCurrentYear.toISOString())
-          .lte("date", endOfCurrentYear.toISOString());
+              date,
+              registrations (
+                id,
+                user_id
+              )
+            `)
+            .eq("type", sportType)
+            .gte("date", startOfCurrentMonth.toISOString())
+            .lte("date", endOfCurrentMonth.toISOString());
 
-        if (yearTrainings && yearTrainings.length > 0) {
-          // Group trainings by month
-          const monthlyStats: Record<string, { sum: number; count: number }> = {};
-          
-          yearTrainings.forEach(training => {
-            const monthKey = format(parseISO(training.date), "yyyy-MM");
-            if (!monthlyStats[monthKey]) {
-              monthlyStats[monthKey] = { sum: 0, count: 0 };
-            }
-            
-            const presentPlayers = training.registrations?.length || 0;
-            const attendancePercentage = (presentPlayers / totalPlayers) * 100;
-            monthlyStats[monthKey].sum += attendancePercentage;
-            monthlyStats[monthKey].count += 1;
-          });
-
-          // Calculate monthly averages and find the best month
-          let yearlySum = 0;
-          let monthCount = 0;
-          
-          Object.entries(monthlyStats).forEach(([monthKey, data]) => {
-            const monthlyAverage = data.sum / data.count;
-            yearlySum += monthlyAverage;
-            monthCount += 1;
-
-            if (monthlyAverage > (stats[sportType].bestMonth.percentage || 0)) {
-              stats[sportType].bestMonth = {
-                month: format(parseISO(`${monthKey}-01`), "MMMM yyyy", { locale: fr }),
-                percentage: Math.round(monthlyAverage)
-              };
-            }
-          });
-
-          // Calculate yearly average
-          if (monthCount > 0) {
-            stats[sportType].yearlyStats = {
-              present: Math.round(yearlySum / monthCount),
+          if (currentMonthTrainings && currentMonthTrainings.length > 0 && totalPlayers > 0) {
+            let monthlyAttendanceSum = 0;
+            currentMonthTrainings.forEach(training => {
+              const presentPlayers = training.registrations?.length || 0;
+              monthlyAttendanceSum += (presentPlayers / totalPlayers) * 100;
+            });
+            const monthlyAverage = monthlyAttendanceSum / currentMonthTrainings.length;
+            stats[sportType].currentMonth = {
+              present: Math.round(monthlyAverage),
               total: 100
             };
+          }
+
+          // Get trainings for the whole year
+          const { data: yearTrainings } = await supabase
+            .from("trainings")
+            .select(`
+              id,
+              date,
+              registrations (
+                id,
+                user_id
+              )
+            `)
+            .eq("type", sportType)
+            .gte("date", startOfCurrentYear.toISOString())
+            .lte("date", endOfCurrentYear.toISOString());
+
+          if (yearTrainings && yearTrainings.length > 0 && totalPlayers > 0) {
+            // Group trainings by month
+            const monthlyStats: Record<string, { sum: number; count: number }> = {};
+            
+            yearTrainings.forEach(training => {
+              const monthKey = format(parseISO(training.date), "yyyy-MM");
+              if (!monthlyStats[monthKey]) {
+                monthlyStats[monthKey] = { sum: 0, count: 0 };
+              }
+              
+              const presentPlayers = training.registrations?.length || 0;
+              const attendancePercentage = (presentPlayers / totalPlayers) * 100;
+              monthlyStats[monthKey].sum += attendancePercentage;
+              monthlyStats[monthKey].count += 1;
+            });
+
+            // Calculate monthly averages and find the best month
+            let yearlySum = 0;
+            let monthCount = 0;
+            
+            Object.entries(monthlyStats).forEach(([monthKey, data]) => {
+              const monthlyAverage = data.sum / data.count;
+              yearlySum += monthlyAverage;
+              monthCount += 1;
+
+              if (monthlyAverage > (stats[sportType].bestMonth.percentage || 0)) {
+                stats[sportType].bestMonth = {
+                  month: format(parseISO(`${monthKey}-01`), "MMMM yyyy", { locale: fr }),
+                  percentage: Math.round(monthlyAverage)
+                };
+              }
+            });
+
+            // Calculate yearly average
+            if (monthCount > 0) {
+              stats[sportType].yearlyStats = {
+                present: Math.round(yearlySum / monthCount),
+                total: 100
+              };
+            }
           }
         }
       }
