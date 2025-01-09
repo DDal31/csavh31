@@ -64,7 +64,8 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
       const { data, error } = await supabase
         .from("registrations")
         .select("user_id")
-        .eq("training_id", training.id);
+        .eq("training_id", training.id)
+        .order("created_at", { ascending: true });
 
       if (error) throw error;
       return data.map(reg => reg.user_id);
