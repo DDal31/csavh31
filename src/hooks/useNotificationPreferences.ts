@@ -27,7 +27,6 @@ export function useNotificationPreferences() {
 
   const checkFirebaseSupport = async () => {
     try {
-      // Si on est sur Safari iOS en mode navigateur, on sait déjà que ce n'est pas supporté
       if (isIOS() && isSafari() && !isPWA()) {
         console.log("Notifications non supportées sur Safari iOS");
         setIsFirebaseSupported(false);
@@ -80,24 +79,62 @@ export function useNotificationPreferences() {
     },
   });
 
-  const requestNotificationPermission = async () => {
+  const checkNotificationPermission = async () => {
     if (!("Notification" in window)) {
       throw new Error("Les notifications ne sont pas supportées sur votre navigateur");
     }
 
-    if (window.Notification.permission === "denied") {
-      throw new Error("Les notifications ont été bloquées. Veuillez les autoriser dans les paramètres de votre appareil.");
+    const permission = window.Notification.permission;
+    console.log("Current notification permission:", permission);
+    
+    if (permission === "denied") {
+      if (isIOS() && isPWA()) {
+        throw new Error(
+          "Les notifications sont désactivées. Veuillez :\n" +
+          "1. Ouvrir les Réglages de votre iPhone\n" +
+          "2. Faire défiler jusqu'à trouver cette application\n" +
+          "3. Activer les notifications"
+        );
+      } else {
+        throw new Error(
+          "Les notifications sont bloquées. Veuillez les autoriser dans les paramètres de votre navigateur."
+        );
+      }
     }
 
-    const permission = await window.Notification.requestPermission();
-    console.log("Notification permission status:", permission);
     return permission;
+  };
+
+  const requestNotificationPermission = async () => {
+    try {
+      const currentPermission = await checkNotificationPermission();
+      
+      if (currentPermission === "granted") {
+        return currentPermission;
+      }
+
+      const permission = await window.Notification.requestPermission();
+      console.log("New notification permission status:", permission);
+      
+      if (permission === "denied" && isIOS() && isPWA()) {
+        throw new Error(
+          "Les notifications n'ont pas été autorisées. Veuillez :\n" +
+          "1. Ouvrir les Réglages de votre iPhone\n" +
+          "2. Faire défiler jusqu'à trouver cette application\n" +
+          "3. Activer les notifications"
+        );
+      }
+
+      return permission;
+    } catch (error) {
+      console.error("Error requesting notification permission:", error);
+      throw error;
+    }
   };
 
   const handleToggleNotifications = async () => {
     try {
       if (!pushEnabled) {
-        // Vérification spécifique pour Safari iOS en mode navigateur
         if (isIOS() && isSafari() && !isPWA()) {
           toast({
             title: "Notifications non supportées",
@@ -107,7 +144,6 @@ export function useNotificationPreferences() {
           return;
         }
 
-        // Vérification pour iOS en mode PWA
         if (isIOS() && isPWA()) {
           try {
             const permission = await requestNotificationPermission();
@@ -121,7 +157,7 @@ export function useNotificationPreferences() {
             } else {
               toast({
                 title: "Permission refusée",
-                description: "Veuillez autoriser les notifications dans les paramètres de votre iPhone (Réglages > [Nom de l'app])",
+                description: "Veuillez autoriser les notifications dans les Réglages de votre iPhone pour cette application.",
                 variant: "destructive",
               });
             }
@@ -129,14 +165,13 @@ export function useNotificationPreferences() {
             console.error("Erreur lors de la demande de permission:", error);
             toast({
               title: "Erreur",
-              description: "Une erreur est survenue lors de l'activation des notifications. Veuillez vérifier vos paramètres de notifications.",
+              description: error instanceof Error ? error.message : "Une erreur est survenue lors de l'activation des notifications.",
               variant: "destructive",
             });
           }
           return;
         }
 
-        // Pour les autres navigateurs
         if (!isFirebaseSupported) {
           throw new Error("Les notifications ne sont pas supportées sur votre appareil");
         }
