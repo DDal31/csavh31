@@ -15,6 +15,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const fetchActiveTemplate = async () => {
       try {
+        console.log("Fetching active template from database...");
         const { data, error } = await supabase
           .from('template_settings')
           .select('name')
@@ -26,13 +27,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         if (data) {
           const template = templates.find(t => t.id === data.name);
           if (template) {
-            console.log("Template actif chargé:", template.name);
+            console.log("Active template loaded:", template.name);
             setCurrentTemplate(template);
             applyTemplateStyles(template);
           }
         }
       } catch (error) {
-        console.error("Erreur lors du chargement du template:", error);
+        console.error("Error loading template:", error);
       }
     };
 
@@ -40,12 +41,46 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const applyTemplateStyles = (template: Template) => {
+    console.log("Applying template styles:", template.name);
     document.documentElement.setAttribute('data-theme', template.theme);
-    document.documentElement.style.setProperty('--primary', template.primaryColor);
-    document.documentElement.style.setProperty('--secondary', template.secondaryColor);
+    
+    // Appliquer les couleurs du template
+    const root = document.documentElement;
+    if (template.theme === 'light') {
+      root.style.setProperty('--background', '0 0% 100%');
+      root.style.setProperty('--foreground', '222.2 84% 4.9%');
+      root.style.setProperty('--card', '0 0% 100%');
+      root.style.setProperty('--card-foreground', '222.2 84% 4.9%');
+      root.style.setProperty('--popover', '0 0% 100%');
+      root.style.setProperty('--popover-foreground', '222.2 84% 4.9%');
+      root.style.setProperty('--primary', template.primaryColor);
+      root.style.setProperty('--primary-foreground', '210 40% 98%');
+      root.style.setProperty('--secondary', template.secondaryColor);
+      root.style.setProperty('--secondary-foreground', '222.2 47.4% 11.2%');
+      root.style.setProperty('--muted', '210 40% 96.1%');
+      root.style.setProperty('--muted-foreground', '215.4 16.3% 46.9%');
+      root.style.setProperty('--accent', '210 40% 96.1%');
+      root.style.setProperty('--accent-foreground', '222.2 47.4% 11.2%');
+    } else {
+      root.style.setProperty('--background', '222.2 84% 4.9%');
+      root.style.setProperty('--foreground', '210 40% 98%');
+      root.style.setProperty('--card', '222.2 84% 4.9%');
+      root.style.setProperty('--card-foreground', '210 40% 98%');
+      root.style.setProperty('--popover', '222.2 84% 4.9%');
+      root.style.setProperty('--popover-foreground', '210 40% 98%');
+      root.style.setProperty('--primary', template.primaryColor);
+      root.style.setProperty('--primary-foreground', '222.2 47.4% 11.2%');
+      root.style.setProperty('--secondary', template.secondaryColor);
+      root.style.setProperty('--secondary-foreground', '210 40% 98%');
+      root.style.setProperty('--muted', '217.2 32.6% 17.5%');
+      root.style.setProperty('--muted-foreground', '215 20.2% 65.1%');
+      root.style.setProperty('--accent', '217.2 32.6% 17.5%');
+      root.style.setProperty('--accent-foreground', '210 40% 98%');
+    }
   };
 
   const updateCurrentTemplate = (template: Template) => {
+    console.log("Updating current template to:", template.name);
     setCurrentTemplate(template);
     applyTemplateStyles(template);
   };

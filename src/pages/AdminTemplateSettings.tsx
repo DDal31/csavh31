@@ -11,10 +11,6 @@ import { useTheme } from "@/contexts/ThemeContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
-const themeToStyle = (theme: 'light' | 'dark'): 'default' | 'modern' | 'minimal' | 'playful' | 'professional' => {
-  return theme === 'light' ? 'default' : 'modern';
-};
-
 const AdminTemplateSettings = () => {
   const navigate = useNavigate();
   const [selectedTemplate, setSelectedTemplate] = useState('classic-light');
@@ -24,6 +20,7 @@ const AdminTemplateSettings = () => {
   useEffect(() => {
     const fetchCurrentTemplate = async () => {
       try {
+        console.log("Fetching current template settings...");
         const { data, error } = await supabase
           .from('template_settings')
           .select('name')
@@ -35,6 +32,12 @@ const AdminTemplateSettings = () => {
         if (data) {
           setSelectedTemplate(data.name);
           console.log("Template actif chargé:", data.name);
+          
+          // Appliquer le template actif immédiatement
+          const template = templates.find(t => t.id === data.name);
+          if (template) {
+            updateCurrentTemplate(template);
+          }
         }
       } catch (error) {
         console.error("Erreur lors du chargement du template:", error);
@@ -43,13 +46,15 @@ const AdminTemplateSettings = () => {
     };
 
     fetchCurrentTemplate();
-  }, []);
+  }, [updateCurrentTemplate]);
 
   const handleTemplateChange = (templateId: string) => {
     setSelectedTemplate(templateId);
     const template = templates.find(t => t.id === templateId);
     if (template) {
       console.log("Nouveau template sélectionné:", template.name);
+      // Appliquer le template immédiatement lors de la sélection
+      updateCurrentTemplate(template);
       toast.success(`Le template "${template.name}" a été sélectionné.`);
     }
   };
@@ -65,6 +70,7 @@ const AdminTemplateSettings = () => {
     }
 
     try {
+      console.log("Applying template changes...");
       // Désactiver tous les templates
       await supabase
         .from('template_settings')
@@ -77,7 +83,7 @@ const AdminTemplateSettings = () => {
         .upsert({
           name: template.id,
           description: template.description,
-          style: themeToStyle(template.theme),
+          style: template.theme === 'light' ? 'default' : 'modern',
           color_scheme: {
             primary: template.primaryColor,
             secondary: template.secondaryColor
