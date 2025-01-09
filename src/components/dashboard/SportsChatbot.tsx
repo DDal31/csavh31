@@ -107,10 +107,12 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
 
       try {
         const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user?.id) return;
+
         const { data: profile } = await supabase
           .from("profiles")
           .select("*")
-          .eq("id", session?.user?.id)
+          .eq("id", session.user.id)
           .single();
 
         const isVisuallyImpaired = profile?.club_role === "joueur";
@@ -119,7 +121,8 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
           body: { 
             message: statsMessage, 
             sport,
-            isVisuallyImpaired 
+            isVisuallyImpaired,
+            userId: session.user.id
           }
         });
 
@@ -181,7 +184,8 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
         body: { 
           message, 
           sport,
-          isVisuallyImpaired 
+          isVisuallyImpaired,
+          userId: session.user.id
         }
       });
 

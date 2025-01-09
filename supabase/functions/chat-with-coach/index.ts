@@ -1,7 +1,10 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,10 +22,49 @@ serve(async (req) => {
       throw new Error('DeepSeek API key not configured');
     }
 
-    const { message, sport, isVisuallyImpaired } = await req.json();
+    const { message, sport, isVisuallyImpaired, userId } = await req.json();
     console.log('Received request for sport:', sport);
     console.log('User message:', message);
     console.log('Is visually impaired:', isVisuallyImpaired);
+
+    // Initialize Supabase client with service role key
+    const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+
+    // Get upcoming trainings with low attendance
+    const { data: upcomingTrainings } = await supabase
+      .from('trainings')
+      .select(`
+        *,
+        registrations (
+          id,
+          user_id
+        )
+      `)
+      .eq('type', sport)
+      .gte('date', new Date().toISOString().split('T')[0])
+      .order('date', { ascending: true });
+
+    let trainingPrompt = '';
+    if (upcomingTrainings && upcomingTrainings.length > 0) {
+      const lowAttendanceTrainings = upcomingTrainings
+        .filter(training => {
+          const registeredPlayers = training.registrations?.length || 0;
+          const userIsRegistered = training.registrations?.some(reg => reg.user_id === userId);
+          return registeredPlayers <= 6 && !userIsRegistered;
+        })
+        .map(training => {
+          const date = new Date(training.date).toLocaleDateString('fr-FR', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long'
+          });
+          return `${date} (${training.registrations?.length || 0} joueurs inscrits)`;
+        });
+
+      if (lowAttendanceTrainings.length > 0) {
+        trainingPrompt = `\nJe vois qu'il y a des entraînements à venir qui manquent de joueurs. Tu pourrais t'inscrire aux dates suivantes : ${lowAttendanceTrainings.join(', ')}. N'hésite pas à t'inscrire pour renforcer l'équipe !`;
+      }
+    }
 
     let systemPrompt = `Tu es un coach sportif spécialisé en ${sport}. 
     ${isVisuallyImpaired ? "Tu t'adresses à une personne malvoyante ou non-voyante, donc tu adaptes systématiquement tous les exercices et conseils pour qu'ils soient réalisables en toute sécurité par une personne ayant une déficience visuelle. Tu donnes des repères sonores et tactiles plutôt que visuels." : ""}
@@ -41,6 +83,9 @@ serve(async (req) => {
       Demande ensuite à l'athlète sur quel axe il/elle aimerait travailler en priorité.`;
     }
 
+    // Add training prompt to the message if available
+    const finalMessage = message + trainingPrompt;
+
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -51,7 +96,7 @@ serve(async (req) => {
         model: 'deepseek-chat',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: message }
+          { role: 'user', content: finalMessage }
         ],
         max_tokens: 150,
         temperature: 0.7,
