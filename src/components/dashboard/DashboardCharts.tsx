@@ -177,7 +177,7 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-5xl mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div 
           className="bg-gray-800 p-6 rounded-lg"
@@ -210,7 +210,7 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
         </div>
       </div>
 
-      <div className="w-full">
+      <div className="w-full max-w-3xl mx-auto">
         <div className="bg-gray-800 rounded-lg shadow-lg transform transition-all duration-300 hover:shadow-xl">
           <SportsChatbot 
             sport={sport} 
