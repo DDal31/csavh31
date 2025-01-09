@@ -64,7 +64,7 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
       const { data, error } = await supabase
         .from("registrations")
         .select("user_id")
-        .eq("training_id", training.id)
+        .eq("registrations.training_id", training.id)
         .order("created_at", { ascending: true });
 
       if (error) throw error;
@@ -144,7 +144,7 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
       <SheetContent side="right" className="w-full sm:w-[540px] bg-gray-900 text-white">
         <SheetHeader>
           <SheetTitle className="text-white">
-            Ajouter des participants - {training.type.charAt(0).toUpperCase() + training.type.slice(1)}
+            Ajouter des participants - {training?.type.charAt(0).toUpperCase() + training?.type.slice(1)}
           </SheetTitle>
         </SheetHeader>
         
