@@ -6,12 +6,7 @@ import { ArticleForm } from "@/components/admin/news/ArticleForm";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Loader2 } from "lucide-react";
-
-interface Section {
-  subtitle: string;
-  content: string;
-  imagePath?: string;
-}
+import type { ArticleFormData } from "@/types/news";
 
 export default function AdminNewsCreate() {
   const navigate = useNavigate();
@@ -25,6 +20,7 @@ export default function AdminNewsCreate() {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
+          console.log("No session found, redirecting to login");
           toast({
             title: "Erreur d'authentification",
             description: "Vous devez être connecté pour accéder à cette page",
@@ -34,7 +30,7 @@ export default function AdminNewsCreate() {
           return;
         }
 
-        console.log("Vérification du rôle admin pour l'utilisateur:", session.user.id);
+        console.log("Checking admin role for user:", session.user.id);
         
         const { data: profile, error: profileError } = await supabase
           .from("profiles")
@@ -43,7 +39,7 @@ export default function AdminNewsCreate() {
           .single();
 
         if (profileError) {
-          console.error("Erreur lors de la vérification du profil:", profileError);
+          console.error("Error checking profile:", profileError);
           toast({
             title: "Erreur",
             description: "Impossible de vérifier vos droits d'accès",
@@ -54,7 +50,7 @@ export default function AdminNewsCreate() {
         }
 
         if (!profile || profile.site_role !== "admin") {
-          console.log("Accès refusé : l'utilisateur n'est pas admin", profile);
+          console.log("Access denied: user is not admin", profile);
           toast({
             title: "Accès refusé",
             description: "Vous devez être administrateur pour publier des articles",
@@ -66,7 +62,7 @@ export default function AdminNewsCreate() {
 
         setLoading(false);
       } catch (error) {
-        console.error("Erreur lors de la vérification des droits admin:", error);
+        console.error("Error checking admin rights:", error);
         toast({
           title: "Erreur",
           description: "Une erreur est survenue lors de la vérification de vos droits",
@@ -79,11 +75,9 @@ export default function AdminNewsCreate() {
     checkAuth();
   }, [navigate, toast]);
 
-  const handleSubmit = async ({ title, mainImage, sections }: {
-    title: string;
-    mainImage: File | null;
-    sections: Section[];
-  }) => {
+  const handleSubmit = async ({ title, mainImage, sections }: ArticleFormData) => {
+    console.log("Starting article submission with:", { title, sections });
+    
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.user?.id) {
@@ -107,6 +101,7 @@ export default function AdminNewsCreate() {
     setIsSubmitting(true);
 
     try {
+      console.log("Uploading main image...");
       const fileExt = mainImage.name.split('.').pop();
       const filePath = `${crypto.randomUUID()}.${fileExt}`;
       
@@ -114,11 +109,16 @@ export default function AdminNewsCreate() {
         .from('club-assets')
         .upload(filePath, mainImage);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error("Error uploading main image:", uploadError);
+        throw uploadError;
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from('club-assets')
         .getPublicUrl(filePath);
+
+      console.log("Main image uploaded successfully, URL:", publicUrl);
 
       const { error: insertError } = await supabase
         .from('news')
@@ -130,8 +130,12 @@ export default function AdminNewsCreate() {
           status: 'published'
         });
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error("Error inserting article:", insertError);
+        throw insertError;
+      }
 
+      console.log("Article published successfully");
       toast({
         title: "Succès",
         description: "L'article a été publié avec succès",
@@ -170,7 +174,7 @@ export default function AdminNewsCreate() {
       <Navbar />
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-6">
-          <h1 className="text-2xl font-bold mb-6">Créer un nouvel article</h1>
+          <h1 className="text-2xl font-bold mb-6 text-white">Créer un nouvel article</h1>
           <ArticleForm
             onSubmit={handleSubmit}
             onPreview={handlePreview}
