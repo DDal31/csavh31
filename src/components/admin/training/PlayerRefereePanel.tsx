@@ -27,7 +27,6 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
   const queryClient = useQueryClient();
   const [selectedTab, setSelectedTab] = useState("players");
 
-  // Profiles query with sport filtering
   const { data: profiles = [], isLoading: isLoadingProfiles } = useQuery({
     queryKey: ["profiles", training?.type],
     queryFn: async () => {
@@ -43,7 +42,6 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
         throw error;
       }
 
-      // Filter profiles based on sport
       const filteredProfiles = data.filter(profile => {
         const sports = profile.sport.toLowerCase().split(',').map(s => s.trim());
         return sports.includes(training.type.toLowerCase());
@@ -55,7 +53,6 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
     enabled: isOpen && !!training?.type,
   });
 
-  // Registrations query
   const { data: registrations = [], isLoading: isLoadingRegistrations } = useQuery({
     queryKey: ["registrations", training?.id],
     queryFn: async () => {
@@ -78,7 +75,6 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
     enabled: isOpen && !!training?.id,
   });
 
-  // Registration mutation
   const toggleRegistration = useMutation({
     mutationFn: async (userId: string) => {
       if (!training?.id) return;
@@ -93,7 +89,13 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
           .eq("training_id", training.id)
           .eq("user_id", userId);
         
-        if (error) throw error;
+        if (error) {
+          console.error("Error deleting registration:", error);
+          if (error.code === "42501") {
+            throw new Error("Vous n'avez pas la permission de supprimer cette inscription.");
+          }
+          throw error;
+        }
       } else {
         console.log("Creating registration for user:", userId);
         const { error } = await supabase
@@ -103,22 +105,31 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
             user_id: userId 
           }]);
         
-        if (error) throw error;
+        if (error) {
+          console.error("Error creating registration:", error);
+          if (error.code === "42501") {
+            throw new Error("Vous n'avez pas la permission de créer une inscription pour cet entraînement.");
+          }
+          throw error;
+        }
       }
     },
-    onSuccess: () => {
+    onSuccess: (_, userId) => {
       queryClient.invalidateQueries({ queryKey: ["registrations", training?.id] });
       queryClient.invalidateQueries({ queryKey: ["trainings"] });
+      const isRegistered = registrations.includes(userId);
       toast({
         title: "Succès",
-        description: "L'inscription a été mise à jour",
+        description: isRegistered 
+          ? "L'inscription a été supprimée"
+          : "L'inscription a été créée",
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       console.error("Error toggling registration:", error);
       toast({
         title: "Erreur",
-        description: "Impossible de mettre à jour l'inscription",
+        description: error.message || "Impossible de mettre à jour l'inscription",
         variant: "destructive",
       });
     },
