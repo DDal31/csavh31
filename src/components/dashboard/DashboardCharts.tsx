@@ -1,23 +1,13 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Loader2 } from "lucide-react";
 import { isValidTrainingType } from "@/utils/trainingTypes";
 import { MonthlyTrainingChart } from "./charts/MonthlyTrainingChart";
-import { YearlyAttendanceChart } from "./charts/YearlyAttendanceChart";
-import { YearlyTrendChart } from "./charts/YearlyTrendChart";
-
-interface MonthlyStats {
-  month: string;
-  attendance: number;
-  total: number;
-  percentage: number;
-}
 
 export function DashboardCharts({ sport }: { sport: string }) {
   const [currentMonthStats, setCurrentMonthStats] = useState<{ present: number; total: number }>({ present: 0, total: 0 });
-  const [yearlyStats, setYearlyStats] = useState<MonthlyStats[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -59,38 +49,6 @@ export function DashboardCharts({ sport }: { sport: string }) {
           total: totalCount
         });
 
-        // Fetch yearly stats
-        const monthlyStats: MonthlyStats[] = [];
-        for (let i = 0; i < 12; i++) {
-          const monthStart = startOfMonth(subMonths(now, i));
-          const monthEnd = endOfMonth(subMonths(now, i));
-
-          const { data: monthData, error: monthError } = await supabase
-            .from("trainings")
-            .select(`
-              *,
-              registrations (
-                id
-              )
-            `)
-            .eq("type", normalizedSport)
-            .gte("date", monthStart.toISOString())
-            .lte("date", monthEnd.toISOString());
-
-          if (monthError) throw monthError;
-
-          const monthPresent = monthData?.filter(t => t.registrations?.length > 0).length || 0;
-          const monthTotal = monthData?.length || 0;
-
-          monthlyStats.unshift({
-            month: format(monthStart, "MMM", { locale: fr }),
-            attendance: monthPresent,
-            total: monthTotal,
-            percentage: monthTotal > 0 ? (monthPresent / monthTotal) * 100 : 0
-          });
-        }
-
-        setYearlyStats(monthlyStats);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching stats:", error);
@@ -123,34 +81,6 @@ export function DashboardCharts({ sport }: { sport: string }) {
         <div className="sr-only">
           Sur {currentMonthStats.total} entraînements programmés, 
           il y a eu des présences à {currentMonthStats.present} entraînements
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1">
-          <div 
-            className="bg-gray-800 p-6 rounded-lg h-full"
-            role="region"
-            aria-label={`Évolution des présences aux entraînements de ${sport} sur l'année ${new Date().getFullYear()}`}
-          >
-            <h3 className="text-lg font-semibold text-white mb-4">
-              Évolution annuelle
-            </h3>
-            <YearlyTrendChart yearlyStats={yearlyStats} />
-          </div>
-        </div>
-        
-        <div className="lg:col-span-2">
-          <div 
-            className="bg-gray-800 p-6 rounded-lg"
-            role="region"
-            aria-label={`Détail mensuel des présences aux entraînements de ${sport} sur l'année ${new Date().getFullYear()}`}
-          >
-            <h3 className="text-lg font-semibold text-white mb-4">
-              Détail mensuel
-            </h3>
-            <YearlyAttendanceChart yearlyStats={yearlyStats} />
-          </div>
         </div>
       </div>
     </div>
