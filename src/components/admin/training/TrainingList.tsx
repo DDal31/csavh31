@@ -3,7 +3,8 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PencilIcon, Trash2 } from "lucide-react";
+import { PlayerRefereePanel } from "./PlayerRefereePanel";
+import { UserPlus, PencilIcon, Trash2 } from "lucide-react";
 import type { Training } from "@/types/training";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
@@ -14,6 +15,8 @@ type TrainingListProps = {
 };
 
 export function TrainingList({ trainings, onAddClick, onEditClick }: TrainingListProps) {
+  const [selectedTraining, setSelectedTraining] = useState<Training | null>(null);
+
   if (trainings.length === 0) {
     return (
       <div className="text-center text-gray-400">
@@ -47,6 +50,22 @@ export function TrainingList({ trainings, onAddClick, onEditClick }: TrainingLis
                   : training.type.charAt(0).toUpperCase() + training.type.slice(1)}
               </CardTitle>
               <div className="flex items-center space-x-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setSelectedTraining(training)}
+                  className="text-white hover:bg-gray-600 relative"
+                  aria-label={`Ajouter/retirer des joueurs et arbitres pour l'entraînement de ${training.type} du ${formatTrainingDate(training.date)}`}
+                >
+                  <div className="relative">
+                    <Avatar className="h-6 w-6">
+                      <AvatarFallback className="bg-purple-600 text-white text-xs">
+                        P
+                      </AvatarFallback>
+                    </Avatar>
+                    <UserPlus className="w-3 h-3 absolute -bottom-1 -right-1 text-white bg-purple-600 rounded-full p-[1px]" />
+                  </div>
+                </Button>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -102,6 +121,12 @@ export function TrainingList({ trainings, onAddClick, onEditClick }: TrainingLis
           </Card>
         ))}
       </div>
+
+      <PlayerRefereePanel
+        training={selectedTraining}
+        isOpen={!!selectedTraining}
+        onClose={() => setSelectedTraining(null)}
+      />
     </div>
   );
 }
