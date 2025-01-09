@@ -10,7 +10,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type TrainingListProps = {
   trainings: Training[];
-  on: Training) => void;
+  onAddClick: () => void;
+  onEditClick: (training: Training) => void;
 };
 
 export function TrainingList({ trainings, onAddClick, onEditClick }: TrainingListProps) {
