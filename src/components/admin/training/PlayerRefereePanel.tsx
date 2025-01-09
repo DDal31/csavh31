@@ -67,7 +67,10 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
         .eq("training_id", training.id)
         .order("created_at", { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching registrations:", error);
+        throw error;
+      }
       return data.map(reg => reg.user_id);
     },
     enabled: isOpen && !!training?.id,
