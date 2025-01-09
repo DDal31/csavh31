@@ -2,11 +2,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { fr } from "date-fns/locale";
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line
-} from "recharts";
 import { Loader2 } from "lucide-react";
+import { isValidTrainingType } from "@/utils/trainingTypes";
+import { MonthlyTrainingChart } from "./charts/MonthlyTrainingChart";
+import { YearlyAttendanceChart } from "./charts/YearlyAttendanceChart";
 
 interface MonthlyStats {
   month: string;
@@ -24,10 +23,17 @@ export function DashboardCharts({ sport }: { sport: string }) {
     const fetchStats = async () => {
       try {
         console.log("Fetching stats for sport:", sport);
+        const normalizedSport = sport.toLowerCase();
+        
+        if (!isValidTrainingType(normalizedSport)) {
+          console.error("Invalid sport type:", sport);
+          setLoading(false);
+          return;
+        }
+
         const now = new Date();
         const startOfCurrentMonth = startOfMonth(now);
         const endOfCurrentMonth = endOfMonth(now);
-        const startOfYear = new Date(now.getFullYear(), 0, 1);
 
         // Fetch current month stats
         const { data: currentMonthData, error: currentMonthError } = await supabase
@@ -38,7 +44,7 @@ export function DashboardCharts({ sport }: { sport: string }) {
               id
             )
           `)
-          .eq("type", sport.toLowerCase())
+          .eq("type", normalizedSport)
           .gte("date", startOfCurrentMonth.toISOString())
           .lte("date", endOfCurrentMonth.toISOString());
 
@@ -66,7 +72,7 @@ export function DashboardCharts({ sport }: { sport: string }) {
                 id
               )
             `)
-            .eq("type", sport.toLowerCase())
+            .eq("type", normalizedSport)
             .gte("date", monthStart.toISOString())
             .lte("date", monthEnd.toISOString());
 
@@ -102,11 +108,6 @@ export function DashboardCharts({ sport }: { sport: string }) {
     );
   }
 
-  const chartTheme = {
-    fill: "#4169E1",
-    stroke: "#4169E1"
-  };
-
   return (
     <div className="space-y-8">
       <div 
@@ -117,37 +118,7 @@ export function DashboardCharts({ sport }: { sport: string }) {
         <h3 className="text-lg font-semibold text-white mb-4">
           Entraînements du mois en cours
         </h3>
-        <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={[{ 
-                name: 'Entraînements', 
-                present: currentMonthStats.present,
-                total: currentMonthStats.total 
-              }]}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar 
-                dataKey="total" 
-                fill={chartTheme.fill} 
-                name="Total programmé"
-                role="graphics-symbol"
-                aria-label="Nombre total d'entraînements programmés"
-              />
-              <Bar 
-                dataKey="present" 
-                fill="#82ca9d" 
-                name="Présences"
-                role="graphics-symbol"
-                aria-label="Nombre d'entraînements avec présences"
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        <MonthlyTrainingChart currentMonthStats={currentMonthStats} sport={sport} />
         <div className="sr-only">
           Sur {currentMonthStats.total} entraînements programmés, 
           il y a eu des présences à {currentMonthStats.present} entraînements
@@ -162,36 +133,7 @@ export function DashboardCharts({ sport }: { sport: string }) {
         <h3 className="text-lg font-semibold text-white mb-4">
           Taux de présence sur l'année
         </h3>
-        <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              data={yearlyStats}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="month"
-                tick={{ fill: '#fff' }}
-              />
-              <YAxis 
-                tick={{ fill: '#fff' }}
-                unit="%"
-              />
-              <Tooltip 
-                formatter={(value: number) => [`${value.toFixed(1)}%`, 'Taux de présence']}
-              />
-              <Line
-                type="stepAfter"
-                dataKey="percentage"
-                stroke={chartTheme.stroke}
-                name="Taux de présence"
-                role="graphics-symbol"
-                aria-label="Pourcentage de présence mensuel"
-                dot={{ fill: chartTheme.fill }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+        <YearlyAttendanceChart yearlyStats={yearlyStats} />
         <div className="sr-only">
           Évolution mensuelle du taux de présence:
           {yearlyStats.map(stat => (
