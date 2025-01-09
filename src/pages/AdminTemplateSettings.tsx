@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,26 +6,98 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { TemplateSelector } from "@/components/admin/template/TemplateSelector";
 import { templates } from "@/types/template";
+import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 const AdminTemplateSettings = () => {
   const navigate = useNavigate();
   const [selectedTemplate, setSelectedTemplate] = useState('classic-light');
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchCurrentTemplate = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('template_settings')
+          .select('name')
+          .eq('is_active', true)
+          .single();
+
+        if (error) throw error;
+        if (data) {
+          setSelectedTemplate(data.name);
+          console.log("Template actif chargé:", data.name);
+        }
+      } catch (error) {
+        console.error("Erreur lors du chargement du template:", error);
+        toast.error("Erreur lors du chargement du template");
+      }
+    };
+
+    fetchCurrentTemplate();
+  }, []);
 
   const handleTemplateChange = (templateId: string) => {
     setSelectedTemplate(templateId);
     const template = templates.find(t => t.id === templateId);
     if (template) {
+      console.log("Nouveau template sélectionné:", template.name);
       toast.success(`Le template "${template.name}" a été sélectionné.`);
     }
   };
 
-  const handleApplyChanges = () => {
+  const handleApplyChanges = async () => {
+    setIsLoading(true);
     const template = templates.find(t => t.id === selectedTemplate);
-    if (template) {
+    
+    if (!template) {
+      toast.error("Template invalide");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // Désactiver tous les templates
+      await supabase
+        .from('template_settings')
+        .update({ is_active: false })
+        .neq('id', '00000000-0000-0000-0000-000000000000');
+
+      // Créer ou mettre à jour le template sélectionné
+      const { error } = await supabase
+        .from('template_settings')
+        .upsert({
+          name: template.id,
+          description: template.description,
+          style: template.theme,
+          color_scheme: {
+            primary: template.primaryColor,
+            secondary: template.secondaryColor
+          },
+          layout_config: {
+            layout: template.layout
+          },
+          is_active: true
+        }, {
+          onConflict: 'name'
+        });
+
+      if (error) throw error;
+
+      console.log("Template appliqué avec succès:", template.name);
       toast.success("Les changements de template ont été appliqués avec succès.");
-      console.log("Template appliqué:", template);
+
+      // Mettre à jour les variables CSS pour le thème
+      document.documentElement.setAttribute('data-theme', template.theme);
+      document.documentElement.style.setProperty('--primary', template.primaryColor);
+      document.documentElement.style.setProperty('--secondary', template.secondaryColor);
+
+    } catch (error) {
+      console.error("Erreur lors de l'application du template:", error);
+      toast.error("Erreur lors de l'application du template");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -67,8 +139,9 @@ const AdminTemplateSettings = () => {
             onClick={handleApplyChanges}
             className="w-full sm:w-auto mt-8"
             size="lg"
+            disabled={isLoading}
           >
-            Appliquer les modifications
+            {isLoading ? "Application en cours..." : "Appliquer les modifications"}
           </Button>
         </div>
       </main>
