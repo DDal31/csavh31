@@ -72,7 +72,7 @@ export function useNotificationPreferences() {
         const permission = await Notification.requestPermission();
         if (permission === "granted") {
           const token = await getToken(messaging, {
-            vapidKey: "BKagOny0KF_2pCJQ3m0I4iFi1-ALtZqgxCph6Zr_sYqtxGt_DxRrPaYZOGz7XY6nFjDzCrVVJ4dWJL_zUcpEQQ4"
+            vapidKey: "BEpTfcfcPXLCo6KKmODVDfZETR_YPcsQJGD8hs_eQRAInu0el6Rz3Df6_7EacaL0CGkxJqZtiB4Sb_n5RM3WpQA"
           });
           
           if (token) {
