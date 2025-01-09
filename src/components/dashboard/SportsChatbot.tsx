@@ -5,9 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Loader2, Send, Bot } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { startOfMonth, subMonths, endOfMonth, startOfDay, endOfDay } from "date-fns";
+import type { Database } from "@/integrations/supabase/types";
+
+type TrainingType = Database["public"]["Enums"]["training_type"];
 
 interface SportsChatbotProps {
-  sport: string;
+  sport: TrainingType;
   currentMonthStats: {
     present: number;
     total: number;
@@ -30,10 +33,14 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
 
   useEffect(() => {
     const fetchMessageCount = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) return;
+
       const today = new Date();
       const { data, error } = await supabase
         .from("chat_messages")
         .select("id")
+        .eq("user_id", session.user.id)
         .gte("created_at", startOfDay(today).toISOString())
         .lte("created_at", endOfDay(today).toISOString())
         .eq("status", "active");
@@ -133,12 +140,19 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
 
     setIsLoading(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) {
+        throw new Error("User not authenticated");
+      }
+
       // First store the message
       const { error: insertError } = await supabase
         .from("chat_messages")
         .insert({
           message: message.trim(),
           sport,
+          user_id: session.user.id,
+          status: 'active'
         });
 
       if (insertError) throw insertError;
