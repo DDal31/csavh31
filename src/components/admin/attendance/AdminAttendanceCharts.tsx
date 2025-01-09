@@ -43,14 +43,6 @@ export function AdminAttendanceCharts() {
       setLoading(true);
       console.log("Début du calcul des statistiques de présence...");
 
-      const { data: sportsData, error: sportsError } = await supabase
-        .from("sports")
-        .select("id, name")
-        .order("name");
-
-      if (sportsError) throw sportsError;
-      console.log("Sports récupérés:", sportsData);
-
       const now = new Date();
       const startOfCurrentMonth = startOfMonth(now);
       const endOfCurrentMonth = endOfMonth(now);
@@ -89,36 +81,18 @@ export function AdminAttendanceCharts() {
         }
       };
 
-      for (const sport of sportsData) {
-        const sportType = sport.name.toLowerCase() as TrainingType;
+      // Get current month trainings for each sport type
+      for (const sportType of Object.keys(stats) as TrainingType[]) {
         console.log(`\nAnalyse du sport: ${sportType}`);
-        
-        // Get total players for this sport
-        const { data: totalPlayers, error: playersError } = await supabase
-          .from("sport_players")
-          .select("id")
-          .eq("sport_id", sport.id);
 
-        if (playersError) {
-          console.error(`Erreur lors de la récupération des joueurs pour ${sportType}:`, playersError);
-          continue;
-        }
-
-        const totalPlayersCount = totalPlayers?.length || 0;
-        console.log(`Nombre total de joueurs pour ${sportType}: ${totalPlayersCount}`);
-
-        if (totalPlayersCount === 0) continue;
-
-        // Get current month trainings with registrations
+        // Get current month trainings
         const { data: currentMonthTrainings, error: trainingsError } = await supabase
           .from("trainings")
           .select(`
             id,
             date,
-            registrations (
-              id,
-              user_id
-            )
+            registered_players_count,
+            total_sport_players_count
           `)
           .eq("type", sportType)
           .gte("date", startOfCurrentMonth.toISOString())
@@ -136,9 +110,10 @@ export function AdminAttendanceCharts() {
           
           console.log(`\nDétail des présences pour ${sportType}:`);
           currentMonthTrainings.forEach(training => {
-            const presentPlayers = training.registrations?.length || 0;
-            const trainingPercentage = (presentPlayers / totalPlayersCount) * 100;
-            console.log(`Entraînement du ${format(parseISO(training.date), 'dd/MM/yyyy')}: ${presentPlayers}/${totalPlayersCount} joueurs = ${trainingPercentage.toFixed(1)}%`);
+            const presentPlayers = training.registered_players_count || 0;
+            const totalPlayers = training.total_sport_players_count || 0;
+            const trainingPercentage = totalPlayers > 0 ? (presentPlayers / totalPlayers) * 100 : 0;
+            console.log(`Entraînement du ${format(parseISO(training.date), 'dd/MM/yyyy')}: ${presentPlayers}/${totalPlayers} joueurs = ${trainingPercentage.toFixed(1)}%`);
             monthlyPercentagesSum += trainingPercentage;
           });
           
@@ -157,10 +132,8 @@ export function AdminAttendanceCharts() {
           .select(`
             id,
             date,
-            registrations (
-              id,
-              user_id
-            )
+            registered_players_count,
+            total_sport_players_count
           `)
           .eq("type", sportType)
           .gte("date", startOfCurrentYear.toISOString())
@@ -175,8 +148,9 @@ export function AdminAttendanceCharts() {
               monthlyStats[monthKey] = { sum: 0, count: 0 };
             }
             
-            const presentPlayers = training.registrations?.length || 0;
-            const attendancePercentage = (presentPlayers / totalPlayersCount) * 100;
+            const presentPlayers = training.registered_players_count || 0;
+            const totalPlayers = training.total_sport_players_count || 0;
+            const attendancePercentage = totalPlayers > 0 ? (presentPlayers / totalPlayers) * 100 : 0;
             monthlyStats[monthKey].sum += attendancePercentage;
             monthlyStats[monthKey].count += 1;
           });
@@ -244,23 +218,9 @@ export function AdminAttendanceCharts() {
       )
       .subscribe();
 
-    const sportPlayersChannel = supabase
-      .channel('sport-players-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'sport_players'
-        },
-        () => calculateAttendanceStats()
-      )
-      .subscribe();
-
     return () => {
       supabase.removeChannel(registrationsChannel);
       supabase.removeChannel(trainingsChannel);
-      supabase.removeChannel(sportPlayersChannel);
     };
   }, []);
 
