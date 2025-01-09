@@ -14,6 +14,11 @@ serve(async (req) => {
   }
 
   try {
+    if (!DEEPSEEK_API_KEY) {
+      console.error('DEEPSEEK_API_KEY is not set');
+      throw new Error('Configuration API manquante');
+    }
+
     const { message, sport } = await req.json();
 
     console.log('Received request for sport:', sport);
@@ -41,8 +46,19 @@ serve(async (req) => {
       }),
     });
 
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('DeepSeek API error:', errorData);
+      throw new Error(`Erreur API DeepSeek: ${response.status}`);
+    }
+
     const data = await response.json();
     console.log('DeepSeek response:', data);
+
+    if (!data.choices?.[0]?.message?.content) {
+      console.error('Unexpected DeepSeek response format:', data);
+      throw new Error('Format de réponse invalide');
+    }
 
     return new Response(JSON.stringify({ 
       response: data.choices[0].message.content 
