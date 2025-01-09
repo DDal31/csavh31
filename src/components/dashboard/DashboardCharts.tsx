@@ -17,7 +17,14 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
 
   const fetchStats = async () => {
     try {
-      console.log("Fetching stats for sport:", sport);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) {
+        console.error("No user session found");
+        setLoading(false);
+        return;
+      }
+
+      console.log("Fetching stats for sport:", sport, "and user:", session.user.id);
       const normalizedSport = sport.toLowerCase() as TrainingType;
       
       if (!isValidTrainingType(normalizedSport)) {
@@ -32,7 +39,7 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
       const startOfCurrentYear = startOfYear(now);
       const endOfCurrentYear = endOfYear(now);
 
-      // Fetch current month stats with proper join
+      // Fetch current month stats with proper join and user filter
       const { data: currentMonthData, error: currentMonthError } = await supabase
         .from("trainings")
         .select(`
@@ -40,16 +47,18 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
           date,
           registrations!inner (
             id,
-            training_id
+            training_id,
+            user_id
           )
         `)
         .eq("type", normalizedSport)
+        .eq("registrations.user_id", session.user.id)
         .gte("date", startOfCurrentMonth.toISOString())
         .lte("date", endOfCurrentMonth.toISOString());
 
       if (currentMonthError) throw currentMonthError;
 
-      // Fetch yearly stats with proper join
+      // Fetch yearly stats with proper join and user filter
       const { data: yearData, error: yearError } = await supabase
         .from("trainings")
         .select(`
@@ -57,10 +66,12 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
           date,
           registrations!inner (
             id,
-            training_id
+            training_id,
+            user_id
           )
         `)
         .eq("type", normalizedSport)
+        .eq("registrations.user_id", session.user.id)
         .gte("date", startOfCurrentYear.toISOString())
         .lte("date", endOfCurrentYear.toISOString());
 
