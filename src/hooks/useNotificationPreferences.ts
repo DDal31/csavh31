@@ -16,11 +16,17 @@ export function useNotificationPreferences() {
     return /iphone|ipad|ipod/.test(userAgent);
   };
 
+  const isSafari = () => {
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    return userAgent.includes('safari') && !userAgent.includes('chrome');
+  };
+
   const checkFirebaseSupport = async () => {
     try {
       const supported = await isSupported();
       console.log("Firebase Messaging supported:", supported);
       console.log("Is iOS device:", isIOS());
+      console.log("Is Safari browser:", isSafari());
       console.log("User Agent:", window.navigator.userAgent);
       setIsFirebaseSupported(supported);
     } catch (error) {
@@ -62,27 +68,46 @@ export function useNotificationPreferences() {
     },
   });
 
+  const requestIOSPermission = async () => {
+    if (!("Notification" in window)) {
+      throw new Error("Les notifications ne sont pas supportées sur votre navigateur");
+    }
+
+    const permission = await Notification.requestPermission();
+    console.log("iOS Notification permission status:", permission);
+    return permission;
+  };
+
   const handleToggleNotifications = async () => {
     try {
       if (!pushEnabled) {
-        if (!isFirebaseSupported) {
+        if (!isFirebaseSupported && !isIOS()) {
           throw new Error("Les notifications ne sont pas supportées sur votre appareil");
         }
 
-        const permission = await Notification.requestPermission();
+        let permission;
+        if (isIOS()) {
+          permission = await requestIOSPermission();
+        } else {
+          permission = await Notification.requestPermission();
+        }
+
+        console.log("Permission status:", permission);
+
         if (permission === "granted") {
-          const token = await getToken(messaging, {
-            vapidKey: "BEpTfcfcPXLCo6KKmODVDfZETR_YPcsQJGD8hs_eQRAInu0el6Rz3Df6_7EacaL0CGkxJqZtiB4Sb_n5RM3WpQA"
-          });
-          
-          if (token) {
-            await updatePreferencesMutation.mutateAsync(true);
-            setPushEnabled(true);
-            toast({
-              title: "Notifications activées",
-              description: "Vous recevrez désormais des notifications push.",
+          if (!isIOS()) {
+            const token = await getToken(messaging, {
+              vapidKey: "BEpTfcfcPXLCo6KKmODVDfZETR_YPcsQJGD8hs_eQRAInu0el6Rz3Df6_7EacaL0CGkxJqZtiB4Sb_n5RM3WpQA"
             });
+            console.log("FCM Token:", token);
           }
+          
+          await updatePreferencesMutation.mutateAsync(true);
+          setPushEnabled(true);
+          toast({
+            title: "Notifications activées",
+            description: "Vous recevrez désormais des notifications push.",
+          });
         } else {
           toast({
             title: "Permission refusée",

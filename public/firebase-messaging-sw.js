@@ -13,6 +13,14 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
+self.addEventListener('install', (event) => {
+  console.log('Service Worker installing.');
+});
+
+self.addEventListener('activate', (event) => {
+  console.log('Service Worker activating.');
+});
+
 messaging.onBackgroundMessage(function(payload) {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
 
@@ -35,4 +43,14 @@ messaging.onBackgroundMessage(function(payload) {
   };
 
   return self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
+self.addEventListener('notificationclick', function(event) {
+  console.log('Notification click received.');
+  event.notification.close();
+  
+  if (event.action === 'open') {
+    // Ajoutez ici la logique pour ouvrir une URL spécifique
+    clients.openWindow('/');
+  }
 });
