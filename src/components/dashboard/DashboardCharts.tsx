@@ -95,7 +95,7 @@ export function DashboardCharts({ sport }: { sport: string }) {
 
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div 
           className="bg-gray-800 p-6 rounded-lg"
           role="region"
@@ -125,8 +125,10 @@ export function DashboardCharts({ sport }: { sport: string }) {
             il y a eu des présences à {yearlyStats.present} entraînements
           </div>
         </div>
+      </div>
 
-        <div className="bg-gray-800 rounded-lg h-full">
+      <div className="w-full">
+        <div className="bg-gray-800 rounded-lg shadow-lg transform transition-all duration-300 hover:shadow-xl">
           <SportsChatbot sport={sport} />
         </div>
       </div>
