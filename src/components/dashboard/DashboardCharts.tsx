@@ -32,14 +32,15 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
       const startOfCurrentYear = startOfYear(now);
       const endOfCurrentYear = endOfYear(now);
 
-      // Fetch current month stats
+      // Fetch current month stats with proper join
       const { data: currentMonthData, error: currentMonthError } = await supabase
         .from("trainings")
         .select(`
           id,
           date,
-          registrations (
-            id
+          registrations!inner (
+            id,
+            training_id
           )
         `)
         .eq("type", normalizedSport)
@@ -48,14 +49,15 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
 
       if (currentMonthError) throw currentMonthError;
 
-      // Fetch yearly stats
+      // Fetch yearly stats with proper join
       const { data: yearData, error: yearError } = await supabase
         .from("trainings")
         .select(`
           id,
           date,
-          registrations (
-            id
+          registrations!inner (
+            id,
+            training_id
           )
         `)
         .eq("type", normalizedSport)
@@ -64,13 +66,33 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
 
       if (yearError) throw yearError;
 
-      console.log("Current month data:", currentMonthData);
-      console.log("Year data:", yearData);
+      console.log("Raw current month data:", currentMonthData);
+      console.log("Raw year data:", yearData);
 
-      const monthPresentCount = currentMonthData?.filter(t => t.registrations?.length > 0).length || 0;
-      const monthTotalCount = currentMonthData?.length || 0;
-      const yearPresentCount = yearData?.filter(t => t.registrations?.length > 0).length || 0;
-      const yearTotalCount = yearData?.length || 0;
+      // Get total counts for the month
+      const { data: totalMonthData, error: totalMonthError } = await supabase
+        .from("trainings")
+        .select("id")
+        .eq("type", normalizedSport)
+        .gte("date", startOfCurrentMonth.toISOString())
+        .lte("date", endOfCurrentMonth.toISOString());
+
+      if (totalMonthError) throw totalMonthError;
+
+      // Get total counts for the year
+      const { data: totalYearData, error: totalYearError } = await supabase
+        .from("trainings")
+        .select("id")
+        .eq("type", normalizedSport)
+        .gte("date", startOfCurrentYear.toISOString())
+        .lte("date", endOfCurrentYear.toISOString());
+
+      if (totalYearError) throw totalYearError;
+
+      const monthPresentCount = currentMonthData?.length || 0;
+      const monthTotalCount = totalMonthData?.length || 0;
+      const yearPresentCount = yearData?.length || 0;
+      const yearTotalCount = totalYearData?.length || 0;
 
       console.log("Monthly stats - Present:", monthPresentCount, "Total:", monthTotalCount);
       console.log("Yearly stats - Present:", yearPresentCount, "Total:", yearTotalCount);
@@ -107,7 +129,6 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
         },
         (payload) => {
           console.log('Registration change detected:', payload);
-          // Refetch stats immediately when any registration changes
           fetchStats();
         }
       )
@@ -125,7 +146,6 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
         },
         (payload) => {
           console.log('Training change detected:', payload);
-          // Refetch stats when trainings are modified
           fetchStats();
         }
       )
