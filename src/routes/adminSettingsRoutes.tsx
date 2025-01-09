@@ -11,89 +11,89 @@ import AdminSettingsAttendanceSheets from "@/pages/AdminAttendanceSheets";
 import AdminSettingsPresentation from "@/pages/AdminPresentation";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
-const adminSettingsRoutes = (
-  <>
-    <Route
-      path="/admin/settings"
-      element={
-        <ProtectedRoute requireAdmin>
-          <AdminSettings />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/settings/contacts"
-      element={
-        <ProtectedRoute requireAdmin>
-          <AdminSettingsContacts />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/settings/news"
-      element={
-        <ProtectedRoute requireAdmin>
-          <AdminSettingsNews />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/settings/news/create"
-      element={
-        <ProtectedRoute requireAdmin>
-          <AdminNewsCreate />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/settings/news/:id/edit"
-      element={
-        <ProtectedRoute requireAdmin>
-          <AdminNewsEdit />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/settings/sports-teams"
-      element={
-        <ProtectedRoute requireAdmin>
-          <AdminSettingsSportsTeams />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/settings/sports-teams/add-sport"
-      element={
-        <ProtectedRoute requireAdmin>
-          <AdminSportCreate />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/settings/document-types"
-      element={
-        <ProtectedRoute requireAdmin>
-          <AdminSettingsDocumentTypes />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/settings/attendance-sheets"
-      element={
-        <ProtectedRoute requireAdmin>
-          <AdminSettingsAttendanceSheets />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/settings/presentation"
-      element={
-        <ProtectedRoute requireAdmin>
-          <AdminSettingsPresentation />
-        </ProtectedRoute>
-      }
-    />
-  </>
-);
-
-export default adminSettingsRoutes;
+export const AdminSettingsRoutes = () => {
+  return (
+    <>
+      <Route
+        path="/admin/settings"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminSettings />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/settings/contacts"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminSettingsContacts />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/settings/news"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminSettingsNews />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/settings/news/create"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminNewsCreate />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/settings/news/:id/edit"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminNewsEdit />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/settings/sports-teams"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminSettingsSportsTeams />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/settings/sports-teams/add-sport"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminSportCreate />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/settings/document-types"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminSettingsDocumentTypes />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/settings/attendance-sheets"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminSettingsAttendanceSheets />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/settings/presentation"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminSettingsPresentation />
+          </ProtectedRoute>
+        }
+      />
+    </>
+  );
+};
