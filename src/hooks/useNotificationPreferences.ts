@@ -19,10 +19,23 @@ export const useNotificationPreferences = () => {
   const [isFirebaseSupported, setIsFirebaseSupported] = useState(false);
   const { toast } = useToast();
 
+  const isIOS = () => {
+    return [
+      'iPad Simulator',
+      'iPhone Simulator',
+      'iPod Simulator',
+      'iPad',
+      'iPhone',
+      'iPod'
+    ].includes(navigator.platform)
+    || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
+  };
+
   const checkFirebaseSupport = async () => {
     try {
       const supported = await isSupported();
       console.log("Firebase Messaging supported:", supported);
+      console.log("Is iOS device:", isIOS());
       setIsFirebaseSupported(supported);
     } catch (error) {
       console.error("Error checking Firebase support:", error);
@@ -81,7 +94,6 @@ export const useNotificationPreferences = () => {
         return;
       }
 
-      // If we're enabling notifications, we need to request permission first
       if (!pushEnabled) {
         console.log("Requesting notification permission...");
         
@@ -102,7 +114,9 @@ export const useNotificationPreferences = () => {
           console.log("Notification permission denied");
           toast({
             title: "Permission refusée",
-            description: "Vous devez autoriser les notifications dans votre navigateur.",
+            description: isIOS() 
+              ? "Veuillez autoriser les notifications dans les paramètres de votre iPhone (Réglages > Notifications > Safari)"
+              : "Vous devez autoriser les notifications dans votre navigateur.",
             variant: "destructive",
           });
           return;
@@ -125,13 +139,12 @@ export const useNotificationPreferences = () => {
               throw new Error("No registration token available");
             }
 
-            // Save token
             const { error: tokenError } = await supabase
               .from('user_fcm_tokens')
               .upsert({
                 user_id: session.user.id,
                 token: currentToken,
-                device_type: 'web',
+                device_type: isIOS() ? 'ios' : 'web',
               });
 
             if (tokenError) throw tokenError;
@@ -142,7 +155,6 @@ export const useNotificationPreferences = () => {
         }
       }
 
-      // Update preferences
       const { error: prefError } = await supabase
         .from('user_notification_preferences')
         .upsert({

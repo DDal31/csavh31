@@ -18,7 +18,15 @@ messaging.onBackgroundMessage((payload) => {
     body: payload.notification.body,
     icon: '/app-icon-192.png',
     badge: '/app-icon-192.png',
-    vibrate: [200, 100, 200]
+    vibrate: [200, 100, 200],
+    // Ajout des options spécifiques pour iOS
+    sound: 'default',
+    actions: [
+      {
+        action: 'open',
+        title: 'Ouvrir'
+      }
+    ]
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
