@@ -9,6 +9,8 @@ export type Training = {
   notification_week_before: string | null;
   notification_day_before: string | null;
   notification_missing_players: string | null;
+  registered_players_count: number | null;
+  total_sport_players_count: number | null;
   registrations: {
     id: string;
     user_id: string;
