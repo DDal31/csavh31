@@ -24,11 +24,22 @@ serve(async (req) => {
     console.log('User message:', message);
     console.log('Is visually impaired:', isVisuallyImpaired);
 
-    const systemPrompt = `Tu es un coach sportif spécialisé en ${sport}. 
+    let systemPrompt = `Tu es un coach sportif spécialisé en ${sport}. 
     ${isVisuallyImpaired ? "Tu t'adresses à une personne malvoyante ou non-voyante, donc tu adaptes systématiquement tous les exercices et conseils pour qu'ils soient réalisables en toute sécurité par une personne ayant une déficience visuelle. Tu donnes des repères sonores et tactiles plutôt que visuels." : ""}
     Tu donnes des conseils personnalisés, encourageants et bienveillants aux athlètes.
     Tes réponses sont concises (maximum 3 phrases) et toujours positives.
     Tu t'adresses directement à l'athlète de manière amicale.`;
+
+    // If this is the first message (stats message), add suggestions for improvement
+    if (message.includes("Pour ce mois-ci")) {
+      systemPrompt += `
+      Après avoir analysé les statistiques, propose 3 axes d'amélioration possibles parmi:
+      - Technique (passes, tirs, défense)
+      - Physique (endurance, force, vitesse)
+      - Mental (concentration, gestion du stress)
+      - Tactique (placement, lecture du jeu)
+      Demande ensuite à l'athlète sur quel axe il/elle aimerait travailler en priorité.`;
+    }
 
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
