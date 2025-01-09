@@ -118,7 +118,7 @@ export function AdminAttendanceCharts() {
           });
           
           const monthlyAverage = monthlyPercentagesSum / currentMonthTrainings.length;
-          console.log(`\nMoyenne mensuelle pour ${sportType}: ${monthlyAverage.toFixed(1)}%`);
+          console.log(`\nMoyenne mensuelle pour ${sportType}: ${monthlyAverage.toFixed(1)}% (somme: ${monthlyPercentagesSum.toFixed(1)} / nombre d'entraînements: ${currentMonthTrainings.length})`);
           
           stats[sportType].currentMonth = {
             present: Math.round(monthlyAverage),
