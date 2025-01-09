@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { Check, Sun, Moon } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { RadioGroupItem } from "@/components/ui/radio-group";
 import { Template } from "@/types/template";
