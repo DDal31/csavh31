@@ -19,8 +19,10 @@ messaging.onBackgroundMessage((payload) => {
     icon: '/app-icon-192.png',
     badge: '/app-icon-192.png',
     vibrate: [200, 100, 200],
-    // Ajout des options spécifiques pour iOS
     sound: 'default',
+    data: payload.data,
+    tag: 'notification-' + Date.now(),
+    renotify: true,
     actions: [
       {
         action: 'open',

@@ -20,15 +20,8 @@ export const useNotificationPreferences = () => {
   const { toast } = useToast();
 
   const isIOS = () => {
-    return [
-      'iPad Simulator',
-      'iPhone Simulator',
-      'iPod Simulator',
-      'iPad',
-      'iPhone',
-      'iPod'
-    ].includes(navigator.platform)
-    || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    return /iphone|ipad|ipod/.test(userAgent);
   };
 
   const checkFirebaseSupport = async () => {
@@ -36,6 +29,7 @@ export const useNotificationPreferences = () => {
       const supported = await isSupported();
       console.log("Firebase Messaging supported:", supported);
       console.log("Is iOS device:", isIOS());
+      console.log("User Agent:", window.navigator.userAgent);
       setIsFirebaseSupported(supported);
     } catch (error) {
       console.error("Error checking Firebase support:", error);
@@ -115,7 +109,7 @@ export const useNotificationPreferences = () => {
           toast({
             title: "Permission refusée",
             description: isIOS() 
-              ? "Veuillez autoriser les notifications dans les paramètres de votre iPhone (Réglages > Notifications > Safari)"
+              ? "Veuillez autoriser les notifications dans les paramètres de votre iPhone (Réglages > Safari > Notifications)"
               : "Vous devez autoriser les notifications dans votre navigateur.",
             variant: "destructive",
           });
