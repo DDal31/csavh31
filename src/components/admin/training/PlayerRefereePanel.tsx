@@ -62,7 +62,8 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
       const { data, error } = await supabase
         .from("registrations")
         .select("id, user_id")
-        .eq("training_id", training.id);
+        .eq("training_id", training.id)
+        .returns<{ id: string; user_id: string }[]>();
 
       if (error) {
         console.error("Error fetching registrations:", error);
@@ -91,9 +92,6 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
         
         if (error) {
           console.error("Error deleting registration:", error);
-          if (error.code === "42501") {
-            throw new Error("Vous n'avez pas la permission de supprimer cette inscription.");
-          }
           throw error;
         }
       } else {
@@ -107,9 +105,6 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
         
         if (error) {
           console.error("Error creating registration:", error);
-          if (error.code === "42501") {
-            throw new Error("Vous n'avez pas la permission de créer une inscription pour cet entraînement.");
-          }
           throw error;
         }
       }
