@@ -6,6 +6,7 @@ import AdminNewsCreate from "@/pages/AdminNewsCreate";
 import AdminNewsEdit from "@/pages/AdminNewsEdit";
 import AdminSettingsSportsTeams from "@/pages/AdminSportsTeams";
 import AdminSportCreate from "@/pages/AdminSportCreate";
+import AdminTeamCreate from "@/pages/AdminTeamCreate";
 import AdminSettingsDocumentTypes from "@/pages/AdminDocumentTypes";
 import AdminSettingsAttendanceSheets from "@/pages/AdminAttendanceSheets";
 import AdminSettingsPresentation from "@/pages/AdminPresentation";
@@ -67,6 +68,14 @@ export const AdminSettingsRoutes = () => {
         element={
           <ProtectedRoute requireAdmin>
             <AdminSportCreate />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/settings/sports-teams/add-team"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminTeamCreate />
           </ProtectedRoute>
         }
       />
