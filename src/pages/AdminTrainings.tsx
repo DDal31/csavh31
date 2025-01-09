@@ -44,7 +44,7 @@ const AdminTrainings = () => {
       <Navbar />
       <main className="container mx-auto px-4 py-24">
         <Button
-          onClick={() => navigate("/admin/dashboard")}
+          onClick={() => navigate("/admin")}
           variant="ghost"
           className="mb-6 text-gray-300 hover:text-white hover:bg-gray-800 flex items-center"
           aria-label="Retour au tableau de bord administrateur"
