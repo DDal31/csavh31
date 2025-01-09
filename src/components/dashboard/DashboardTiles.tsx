@@ -1,12 +1,14 @@
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { User, Activity, Calendar, Shield, Key, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { DashboardCharts } from "./DashboardCharts";
 
 interface DashboardTilesProps {
   isAdmin: boolean;
+  userSports?: string[];
 }
 
-export function DashboardTiles({ isAdmin }: DashboardTilesProps) {
+export function DashboardTiles({ isAdmin, userSports = [] }: DashboardTilesProps) {
   const navigate = useNavigate();
   
   const tiles = [
@@ -47,47 +49,77 @@ export function DashboardTiles({ isAdmin }: DashboardTilesProps) {
     }
   ];
 
+  // Function to normalize sport names
+  const normalizeSport = (sport: string) => {
+    const sportMap: { [key: string]: string } = {
+      'goalball': 'Goalball',
+      'torball': 'Torball',
+      'both': 'Goalball et Torball'
+    };
+    return sportMap[sport.toLowerCase()] || sport;
+  };
+
+  // Get unique sports from userSports
+  const uniqueSports = [...new Set(userSports.flatMap(sport => 
+    sport.toLowerCase() === 'both' ? ['goalball', 'torball'] : [sport.toLowerCase()]
+  ))];
+
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-      {tiles.map((tile) => (
-        <Card 
-          key={tile.title}
-          className={`${tile.bgColor} border-none cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl focus-within:ring-2 focus-within:ring-white`}
-          onClick={() => navigate(tile.route)}
-          role="button"
-          aria-label={tile.ariaLabel}
-          tabIndex={0}
-        >
-          <CardHeader className="text-center p-4 sm:p-6">
-            <tile.icon 
-              className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-4 text-white" 
-              aria-hidden="true"
-            />
-            <CardTitle className="text-sm sm:text-lg font-bold text-white">
-              {tile.title}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-      ))}
-      
-      {isAdmin && (
-        <Card 
-          className="bg-red-600 hover:bg-red-700 border-none cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl focus-within:ring-2 focus-within:ring-white"
-          onClick={() => navigate("/admin")}
-          role="button"
-          aria-label="Accéder au tableau de bord administrateur"
-          tabIndex={0}
-        >
-          <CardHeader className="text-center p-4 sm:p-6">
-            <Shield 
-              className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-4 text-white" 
-              aria-hidden="true"
-            />
-            <CardTitle className="text-sm sm:text-lg font-bold text-white">
-              Espace Admin
-            </CardTitle>
-          </CardHeader>
-        </Card>
+    <div className="space-y-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+        {tiles.map((tile) => (
+          <Card 
+            key={tile.title}
+            className={`${tile.bgColor} border-none cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl focus-within:ring-2 focus-within:ring-white`}
+            onClick={() => navigate(tile.route)}
+            role="button"
+            aria-label={tile.ariaLabel}
+            tabIndex={0}
+          >
+            <CardHeader className="text-center p-4 sm:p-6">
+              <tile.icon 
+                className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-4 text-white" 
+                aria-hidden="true"
+              />
+              <CardTitle className="text-sm sm:text-lg font-bold text-white">
+                {tile.title}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+        ))}
+        
+        {isAdmin && (
+          <Card 
+            className="bg-red-600 hover:bg-red-700 border-none cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl focus-within:ring-2 focus-within:ring-white"
+            onClick={() => navigate("/admin")}
+            role="button"
+            aria-label="Accéder au tableau de bord administrateur"
+            tabIndex={0}
+          >
+            <CardHeader className="text-center p-4 sm:p-6">
+              <Shield 
+                className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-4 text-white" 
+                aria-hidden="true"
+              />
+              <CardTitle className="text-sm sm:text-lg font-bold text-white">
+                Espace Admin
+              </CardTitle>
+            </CardHeader>
+          </Card>
+        )}
+      </div>
+
+      {uniqueSports.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {uniqueSports.map(sport => (
+            <div key={sport} className="space-y-4">
+              <h2 className="text-xl font-bold text-white">
+                Statistiques {normalizeSport(sport)}
+              </h2>
+              <DashboardCharts sport={sport} />
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

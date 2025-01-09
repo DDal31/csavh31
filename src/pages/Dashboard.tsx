@@ -11,7 +11,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [userProfile, setUserProfile] = useState(null);
+  const [userSports, setUserSports] = useState<string[]>([]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -28,8 +28,12 @@ const Dashboard = () => {
           .eq("id", session.user.id)
           .single();
 
-        setUserProfile(profile);
-        setIsAdmin(profile?.site_role === "admin");
+        if (profile) {
+          setIsAdmin(profile.site_role === "admin");
+          // Split sports string into array and trim whitespace
+          const sports = profile.sport.split(',').map((s: string) => s.trim());
+          setUserSports(sports);
+        }
         setLoading(false);
       } catch (error) {
         console.error("Erreur lors de la vérification de l'authentification:", error);
@@ -43,7 +47,7 @@ const Dashboard = () => {
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
-      navigate("/"); // Redirect to homepage after sign out
+      navigate("/");
     } catch (error) {
       console.error("Erreur lors de la déconnexion:", error);
     }
@@ -64,7 +68,7 @@ const Dashboard = () => {
       <main className="container mx-auto px-4 py-12" role="main">
         <div className="max-w-6xl mx-auto">
           <DashboardHeader onSignOut={handleSignOut} />
-          <DashboardTiles isAdmin={isAdmin} />
+          <DashboardTiles isAdmin={isAdmin} userSports={userSports} />
         </div>
       </main>
       <Footer />
