@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      chat_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          sport: string
+          status: Database["public"]["Enums"]["chat_message_status"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          sport: string
+          status?: Database["public"]["Enums"]["chat_message_status"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          sport?: string
+          status?: Database["public"]["Enums"]["chat_message_status"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       contacts: {
         Row: {
           created_at: string
@@ -665,6 +692,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      chat_message_status: "active" | "deleted"
       club_role:
         | "joueur"
         | "entraineur"

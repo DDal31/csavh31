@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Send, Bot } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { startOfMonth, subMonths, endOfMonth } from "date-fns";
+import { startOfMonth, subMonths, endOfMonth, startOfDay, endOfDay } from "date-fns";
 
 interface SportsChatbotProps {
   sport: string;
@@ -23,7 +23,31 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
   const [response, setResponse] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [previousMonthStats, setPreviousMonthStats] = useState<{ present: number; total: number }>({ present: 0, total: 0 });
+  const [messageCount, setMessageCount] = useState(0);
   const { toast } = useToast();
+
+  const DAILY_MESSAGE_LIMIT = 5;
+
+  useEffect(() => {
+    const fetchMessageCount = async () => {
+      const today = new Date();
+      const { data, error } = await supabase
+        .from("chat_messages")
+        .select("id")
+        .gte("created_at", startOfDay(today).toISOString())
+        .lte("created_at", endOfDay(today).toISOString())
+        .eq("status", "active");
+
+      if (error) {
+        console.error("Error fetching message count:", error);
+        return;
+      }
+
+      setMessageCount(data?.length || 0);
+    };
+
+    fetchMessageCount();
+  }, []);
 
   useEffect(() => {
     const fetchPreviousMonthStats = async () => {
@@ -98,17 +122,39 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
     e.preventDefault();
     if (!message.trim()) return;
 
+    if (messageCount >= DAILY_MESSAGE_LIMIT) {
+      toast({
+        title: "Limite atteinte",
+        description: "Vous avez atteint la limite de 5 messages par jour. Revenez demain !",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
+      // First store the message
+      const { error: insertError } = await supabase
+        .from("chat_messages")
+        .insert({
+          message: message.trim(),
+          sport,
+        });
+
+      if (insertError) throw insertError;
+
+      // Then send it to the coach
       const { data, error } = await supabase.functions.invoke('chat-with-coach', {
         body: { message, sport }
       });
 
       if (error) throw error;
+      
       setResponse(data.response);
       setMessage("");
+      setMessageCount(prev => prev + 1);
     } catch (error) {
-      console.error('Error calling chat function:', error);
+      console.error('Error in chat interaction:', error);
       toast({
         title: "Erreur",
         description: "Impossible de communiquer avec le coach virtuel pour le moment.",
@@ -126,6 +172,9 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
         <h3 className="text-lg font-semibold text-white">
           Coach Virtuel {sport}
         </h3>
+        <span className="text-sm text-gray-400 ml-auto">
+          {messageCount}/{DAILY_MESSAGE_LIMIT} messages aujourd'hui
+        </span>
       </div>
       
       <div className="space-y-4 min-h-[200px] mb-6">
@@ -155,14 +204,14 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
           type="text"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Posez votre question..."
+          placeholder={messageCount >= DAILY_MESSAGE_LIMIT ? "Limite de messages atteinte pour aujourd'hui" : "Posez votre question..."}
           className="flex-grow bg-gray-700/50 border-gray-600 focus:border-primary text-white placeholder:text-gray-400"
           aria-label="Votre question au coach virtuel"
-          disabled={isLoading}
+          disabled={isLoading || messageCount >= DAILY_MESSAGE_LIMIT}
         />
         <Button 
           type="submit" 
-          disabled={isLoading || !message.trim()}
+          disabled={isLoading || !message.trim() || messageCount >= DAILY_MESSAGE_LIMIT}
           aria-label="Envoyer la question"
           className="bg-primary hover:bg-primary/90 text-white"
         >
