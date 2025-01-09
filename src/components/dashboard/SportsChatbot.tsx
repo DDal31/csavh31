@@ -71,7 +71,7 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
               id
             )
           `)
-          .eq("type", sport.toLowerCase())
+          .eq("type", sport)
           .gte("date", startOfPreviousMonth.toISOString())
           .lte("date", endOfPreviousMonth.toISOString());
 
