@@ -7,12 +7,10 @@ import { PlayerRefereePanel } from "./PlayerRefereePanel";
 import { UserPlus, PencilIcon, Trash2 } from "lucide-react";
 import type { Training } from "@/types/training";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { NotificationButton } from "./NotificationButton";
 
 type TrainingListProps = {
   trainings: Training[];
-  onAddClick: () => void;
-  onEditClick: (training: Training) => void;
+  on: Training) => void;
 };
 
 export function TrainingList({ trainings, onAddClick, onEditClick }: TrainingListProps) {
@@ -52,7 +50,6 @@ export function TrainingList({ trainings, onAddClick, onEditClick }: TrainingLis
                   : training.type.charAt(0).toUpperCase() + training.type.slice(1)}
               </CardTitle>
               <div className="flex items-center space-x-2">
-                <NotificationButton training={training} />
                 <Button
                   variant="ghost"
                   size="icon"
