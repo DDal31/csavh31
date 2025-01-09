@@ -61,7 +61,7 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
       console.log("Fetching registrations for training:", training.id);
       const { data, error } = await supabase
         .from("registrations")
-        .select("registrations.id, registrations.user_id")
+        .select("id, user_id")
         .eq("training_id", training.id);
 
       if (error) {
