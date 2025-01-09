@@ -6,8 +6,11 @@ import { Loader2 } from "lucide-react";
 import { isValidTrainingType } from "@/utils/trainingTypes";
 import { MonthlyTrainingChart } from "./charts/MonthlyTrainingChart";
 import { SportsChatbot } from "./SportsChatbot";
+import type { Database } from "@/integrations/supabase/types";
 
-export function DashboardCharts({ sport }: { sport: string }) {
+type TrainingType = Database["public"]["Enums"]["training_type"];
+
+export function DashboardCharts({ sport }: { sport: TrainingType }) {
   const [currentMonthStats, setCurrentMonthStats] = useState<{ present: number; total: number }>({ present: 0, total: 0 });
   const [yearlyStats, setYearlyStats] = useState<{ present: number; total: number }>({ present: 0, total: 0 });
   const [loading, setLoading] = useState(true);
@@ -16,7 +19,7 @@ export function DashboardCharts({ sport }: { sport: string }) {
     const fetchStats = async () => {
       try {
         console.log("Fetching stats for sport:", sport);
-        const normalizedSport = sport.toLowerCase();
+        const normalizedSport = sport.toLowerCase() as TrainingType;
         
         if (!isValidTrainingType(normalizedSport)) {
           console.error("Invalid sport type:", sport);
