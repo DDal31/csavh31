@@ -129,7 +129,11 @@ export function DashboardCharts({ sport }: { sport: string }) {
 
       <div className="w-full">
         <div className="bg-gray-800 rounded-lg shadow-lg transform transition-all duration-300 hover:shadow-xl">
-          <SportsChatbot sport={sport} />
+          <SportsChatbot 
+            sport={sport} 
+            currentMonthStats={currentMonthStats}
+            yearlyStats={yearlyStats}
+          />
         </div>
       </div>
     </div>
