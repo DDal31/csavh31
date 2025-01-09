@@ -111,7 +111,7 @@ export function DashboardCharts({ sport }: { sport: string }) {
 
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div 
           className="bg-gray-800 p-6 rounded-lg"
           role="region"
@@ -137,17 +137,17 @@ export function DashboardCharts({ sport }: { sport: string }) {
           </h3>
           <YearlyTrendChart yearlyStats={yearlyStats} />
         </div>
-      </div>
 
-      <div 
-        className="bg-gray-800 p-6 rounded-lg"
-        role="region"
-        aria-label={`Détail mensuel des présences aux entraînements de ${sport} sur l'année ${new Date().getFullYear()}`}
-      >
-        <h3 className="text-lg font-semibold text-white mb-4">
-          Détail mensuel
-        </h3>
-        <YearlyAttendanceChart yearlyStats={yearlyStats} />
+        <div 
+          className="bg-gray-800 p-6 rounded-lg"
+          role="region"
+          aria-label={`Détail mensuel des présences aux entraînements de ${sport} sur l'année ${new Date().getFullYear()}`}
+        >
+          <h3 className="text-lg font-semibold text-white mb-4">
+            Détail mensuel
+          </h3>
+          <YearlyAttendanceChart yearlyStats={yearlyStats} />
+        </div>
       </div>
     </div>
   );
