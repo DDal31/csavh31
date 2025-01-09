@@ -14,12 +14,12 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 self.addEventListener('install', (event) => {
-  console.log('Service Worker installing.');
+  console.log('[Service Worker] Installing Service Worker...', event);
   event.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker activating.');
+  console.log('[Service Worker] Activating Service Worker...', event);
   event.waitUntil(self.clients.claim());
 });
 
@@ -54,19 +54,17 @@ messaging.onBackgroundMessage(function(payload) {
 });
 
 self.addEventListener('notificationclick', function(event) {
-  console.log('Notification click received.');
+  console.log('[Service Worker] Notification click received.', event);
   event.notification.close();
   
   if (event.action === 'open') {
     event.waitUntil(
       clients.matchAll({type: 'window'}).then(windowClients => {
-        // Vérifier si une fenêtre est déjà ouverte
         for (let client of windowClients) {
           if (client.url === '/' && 'focus' in client) {
             return client.focus();
           }
         }
-        // Si aucune fenêtre n'est ouverte, en ouvrir une nouvelle
         if (clients.openWindow) {
           return clients.openWindow('/');
         }
