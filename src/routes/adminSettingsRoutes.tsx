@@ -3,6 +3,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import AdminSettingsPresentation from "@/pages/AdminPresentation";
 import AdminSettingsContacts from "@/pages/AdminContacts";
 import AdminSettingsNews from "@/pages/AdminNews";
+import AdminNewsCreate from "@/pages/AdminNewsCreate";
 import AdminSettingsSportsTeams from "@/pages/AdminSportsTeams";
 import AdminSettingsDocumentTypes from "@/pages/AdminDocumentTypes";
 import AdminSettingsAttendanceSheets from "@/pages/AdminAttendanceSheets";
@@ -32,6 +33,14 @@ export const AdminSettingsRoutes = () => {
         element={
           <ProtectedRoute requireAdmin>
             <AdminSettingsNews />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/settings/news/create"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminNewsCreate />
           </ProtectedRoute>
         }
       />
