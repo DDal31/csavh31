@@ -21,12 +21,24 @@ export function useNotificationPreferences() {
     return userAgent.includes('safari') && !userAgent.includes('chrome');
   };
 
+  const isPWA = () => {
+    return window.matchMedia('(display-mode: standalone)').matches;
+  };
+
   const checkFirebaseSupport = async () => {
     try {
+      // Si on est sur Safari iOS en mode navigateur, on sait déjà que ce n'est pas supporté
+      if (isIOS() && isSafari() && !isPWA()) {
+        console.log("Notifications non supportées sur Safari iOS");
+        setIsFirebaseSupported(false);
+        return;
+      }
+
       const supported = await isSupported();
       console.log("Firebase Messaging supported:", supported);
       console.log("Is iOS device:", isIOS());
       console.log("Is Safari browser:", isSafari());
+      console.log("Is PWA mode:", isPWA());
       console.log("User Agent:", window.navigator.userAgent);
       setIsFirebaseSupported(supported);
     } catch (error) {
@@ -68,55 +80,77 @@ export function useNotificationPreferences() {
     },
   });
 
-  const requestIOSPermission = async () => {
+  const requestNotificationPermission = async () => {
     if (!("Notification" in window)) {
       throw new Error("Les notifications ne sont pas supportées sur votre navigateur");
     }
 
     if (window.Notification.permission === "denied") {
-      throw new Error("Les notifications ont été bloquées. Veuillez les autoriser dans les paramètres de votre navigateur.");
+      throw new Error("Les notifications ont été bloquées. Veuillez les autoriser dans les paramètres de votre appareil.");
     }
 
     const permission = await window.Notification.requestPermission();
-    console.log("iOS Notification permission status:", permission);
+    console.log("Notification permission status:", permission);
     return permission;
   };
 
   const handleToggleNotifications = async () => {
     try {
       if (!pushEnabled) {
-        if (!isFirebaseSupported && !isIOS()) {
+        // Vérification spécifique pour Safari iOS en mode navigateur
+        if (isIOS() && isSafari() && !isPWA()) {
+          toast({
+            title: "Notifications non supportées",
+            description: "Les notifications ne sont pas supportées sur Safari iOS. Veuillez installer l'application sur votre écran d'accueil pour activer les notifications.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Vérification pour iOS en mode PWA
+        if (isIOS() && isPWA()) {
+          try {
+            const permission = await requestNotificationPermission();
+            if (permission === "granted") {
+              await updatePreferencesMutation.mutateAsync(true);
+              setPushEnabled(true);
+              toast({
+                title: "Notifications activées",
+                description: "Vous recevrez désormais des notifications push.",
+              });
+            } else {
+              toast({
+                title: "Permission refusée",
+                description: "Veuillez autoriser les notifications dans les paramètres de votre iPhone (Réglages > [Nom de l'app])",
+                variant: "destructive",
+              });
+            }
+          } catch (error) {
+            console.error("Erreur lors de la demande de permission:", error);
+            toast({
+              title: "Erreur",
+              description: "Une erreur est survenue lors de l'activation des notifications. Veuillez vérifier vos paramètres de notifications.",
+              variant: "destructive",
+            });
+          }
+          return;
+        }
+
+        // Pour les autres navigateurs
+        if (!isFirebaseSupported) {
           throw new Error("Les notifications ne sont pas supportées sur votre appareil");
         }
 
-        let permission;
-        if (isIOS()) {
-          permission = await requestIOSPermission();
-        } else {
-          permission = await Notification.requestPermission();
-        }
-
-        console.log("Permission status:", permission);
-
+        const permission = await requestNotificationPermission();
         if (permission === "granted") {
-          if (!isIOS()) {
-            const token = await getToken(messaging, {
-              vapidKey: "BEpTfcfcPXLCo6KKmODVDfZETR_YPcsQJGD8hs_eQRAInu0el6Rz3Df6_7EacaL0CGkxJqZtiB4Sb_n5RM3WpQA"
-            });
-            console.log("FCM Token:", token);
-          }
+          const token = await getToken(messaging, {
+            vapidKey: "BEpTfcfcPXLCo6KKmODVDfZETR_YPcsQJGD8hs_eQRAInu0el6Rz3Df6_7EacaL0CGkxJqZtiB4Sb_n5RM3WpQA"
+          });
+          console.log("FCM Token:", token);
           
           await updatePreferencesMutation.mutateAsync(true);
           setPushEnabled(true);
           
-          // Créer une notification de test pour iOS
-          if (isIOS()) {
-            new Notification("Notifications activées", {
-              body: "Les notifications sont maintenant activées sur votre appareil.",
-              icon: "/app-icon-192.png"
-            });
-          }
-
           toast({
             title: "Notifications activées",
             description: "Vous recevrez désormais des notifications push.",
@@ -124,9 +158,7 @@ export function useNotificationPreferences() {
         } else {
           toast({
             title: "Permission refusée",
-            description: isIOS() 
-              ? "Veuillez autoriser les notifications dans les paramètres de votre iPhone (Réglages > Safari > Notifications)"
-              : "Vous devez autoriser les notifications dans votre navigateur.",
+            description: "Vous devez autoriser les notifications dans votre navigateur.",
             variant: "destructive",
           });
         }
@@ -142,7 +174,7 @@ export function useNotificationPreferences() {
       console.error("Error toggling notifications:", error);
       toast({
         title: "Erreur",
-        description: error instanceof Error ? error.message : "Une erreur est survenue",
+        description: error instanceof Error ? error.message : "Une erreur est survenue lors de la gestion des notifications",
         variant: "destructive",
       });
     }
