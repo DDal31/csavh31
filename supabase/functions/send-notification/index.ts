@@ -63,7 +63,7 @@ serve(async (req) => {
       const userIds = enabledUsers.map(user => user.user_id)
       const { data: tokens, error: tokensError } = await supabaseClient
         .from('user_fcm_tokens')
-        .select('token')
+        .select('token, device_type')
         .in('user_id', userIds)
 
       if (tokensError) {
@@ -112,14 +112,27 @@ serve(async (req) => {
                     },
                     sound: 'default',
                     badge: 1,
+                    'mutable-content': 1,
+                    'content-available': 1,
+                    category: 'training_notification',
+                    'thread-id': 'training-notifications'
                   },
+                  data: {
+                    trainingId: trainingId || '',
+                    click_action: 'FLUTTER_NOTIFICATION_CLICK',
+                  }
                 },
+                headers: {
+                  'apns-priority': '10',
+                  'apns-push-type': 'alert'
+                }
               },
               android: {
                 notification: {
                   sound: 'default',
                   priority: 'high',
                   click_action: 'FLUTTER_NOTIFICATION_CLICK',
+                  channel_id: 'training_notifications'
                 },
               },
               webpush: {
