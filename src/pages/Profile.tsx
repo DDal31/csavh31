@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, User, Pencil, ArrowLeft } from "lucide-react";
 import type { Profile } from "@/types/profile";
+import { NotificationPreferences } from "@/components/notifications/NotificationPreferences";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ const ProfilePage = () => {
 
         console.log("Current user ID:", session.user.id);
         
+        // Log the table structure
         const { data: tableInfo, error: tableError } = await supabase
           .from('profiles')
           .select('*')
@@ -35,6 +37,7 @@ const ProfilePage = () => {
         
         console.log("Table structure check:", { tableInfo, tableError });
         
+        // Try to fetch the profile
         const { data, error } = await supabase
           .from("profiles")
           .select("*")
@@ -50,6 +53,7 @@ const ProfilePage = () => {
 
         if (!data) {
           console.log("No profile found, attempting to create one");
+          // Try to create a profile if none exists
           const { data: newProfile, error: createError } = await supabase
             .from("profiles")
             .insert([
@@ -186,6 +190,8 @@ const ProfilePage = () => {
               </div>
             </CardContent>
           </Card>
+
+          <NotificationPreferences />
         </div>
       </main>
       <Footer />
