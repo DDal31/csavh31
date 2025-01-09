@@ -36,7 +36,8 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
       const { data: currentMonthData, error: currentMonthError } = await supabase
         .from("trainings")
         .select(`
-          *,
+          id,
+          date,
           registrations (
             id
           )
@@ -51,7 +52,8 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
       const { data: yearData, error: yearError } = await supabase
         .from("trainings")
         .select(`
-          *,
+          id,
+          date,
           registrations (
             id
           )
@@ -62,10 +64,16 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
 
       if (yearError) throw yearError;
 
+      console.log("Current month data:", currentMonthData);
+      console.log("Year data:", yearData);
+
       const monthPresentCount = currentMonthData?.filter(t => t.registrations?.length > 0).length || 0;
       const monthTotalCount = currentMonthData?.length || 0;
       const yearPresentCount = yearData?.filter(t => t.registrations?.length > 0).length || 0;
       const yearTotalCount = yearData?.length || 0;
+
+      console.log("Monthly stats - Present:", monthPresentCount, "Total:", monthTotalCount);
+      console.log("Yearly stats - Present:", yearPresentCount, "Total:", yearTotalCount);
 
       setCurrentMonthStats({
         present: monthPresentCount,
@@ -87,19 +95,37 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
   useEffect(() => {
     fetchStats();
 
-    // Subscribe to changes in registrations
+    // Subscribe to ALL changes in registrations
     const channel = supabase
       .channel('registrations-changes')
       .on(
         'postgres_changes',
         {
-          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          event: '*',
           schema: 'public',
           table: 'registrations'
         },
         (payload) => {
           console.log('Registration change detected:', payload);
-          // Refetch stats when registrations change
+          // Refetch stats immediately when any registration changes
+          fetchStats();
+        }
+      )
+      .subscribe();
+
+    // Also subscribe to changes in trainings table
+    const trainingsChannel = supabase
+      .channel('trainings-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'trainings'
+        },
+        (payload) => {
+          console.log('Training change detected:', payload);
+          // Refetch stats when trainings are modified
           fetchStats();
         }
       )
@@ -107,6 +133,7 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
 
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(trainingsChannel);
     };
   }, [sport]);
 
