@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Users, Calendar, Shield, Settings, FileText } from "lucide-react";
+import { AdminAttendanceCharts } from "@/components/admin/attendance/AdminAttendanceCharts";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -85,7 +86,7 @@ const AdminDashboard = () => {
     <div className="min-h-screen bg-gray-900">
       <Navbar />
       <main className="container mx-auto px-4 py-8 sm:py-12" role="main">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto space-y-8">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
             <h1 className="text-2xl sm:text-3xl font-bold text-white text-center sm:text-left">
               Tableau de Bord Administrateur
@@ -121,6 +122,8 @@ const AdminDashboard = () => {
               </Card>
             ))}
           </div>
+
+          <AdminAttendanceCharts />
         </div>
       </main>
       <Footer />
