@@ -11,7 +11,7 @@ import AdminSettingsAttendanceSheets from "@/pages/AdminAttendanceSheets";
 import AdminSettingsPresentation from "@/pages/AdminPresentation";
 import AdminSettingsNotifications from "@/pages/AdminNotifications";
 
-export const adminSettingsRoutes = (
+export const AdminSettingsRoutes = (
   <>
     <Route
       path="/admin/settings/site"
