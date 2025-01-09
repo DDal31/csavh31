@@ -7,10 +7,10 @@ import { toast } from "sonner";
 import { TemplateSelector } from "@/components/admin/template/TemplateSelector";
 import { templates } from "@/types/template";
 import { supabase } from "@/integrations/supabase/client";
+import { useTheme } from "@/contexts/ThemeContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
-// Map theme to valid template style
 const themeToStyle = (theme: 'light' | 'dark'): 'default' | 'modern' | 'minimal' | 'playful' | 'professional' => {
   return theme === 'light' ? 'default' : 'modern';
 };
@@ -19,6 +19,7 @@ const AdminTemplateSettings = () => {
   const navigate = useNavigate();
   const [selectedTemplate, setSelectedTemplate] = useState('classic-light');
   const [isLoading, setIsLoading] = useState(false);
+  const { updateCurrentTemplate } = useTheme();
 
   useEffect(() => {
     const fetchCurrentTemplate = async () => {
@@ -34,9 +35,6 @@ const AdminTemplateSettings = () => {
         if (data) {
           setSelectedTemplate(data.name);
           console.log("Template actif chargé:", data.name);
-        } else {
-          // Si aucun template n'est actif, on garde le template par défaut
-          console.log("Aucun template actif trouvé, utilisation du template par défaut");
         }
       } catch (error) {
         console.error("Erreur lors du chargement du template:", error);
@@ -94,13 +92,11 @@ const AdminTemplateSettings = () => {
 
       if (error) throw error;
 
+      // Mettre à jour le thème global
+      updateCurrentTemplate(template);
+
       console.log("Template appliqué avec succès:", template.name);
       toast.success("Les changements de template ont été appliqués avec succès.");
-
-      // Mettre à jour les variables CSS pour le thème
-      document.documentElement.setAttribute('data-theme', template.theme);
-      document.documentElement.style.setProperty('--primary', template.primaryColor);
-      document.documentElement.style.setProperty('--secondary', template.secondaryColor);
 
     } catch (error) {
       console.error("Erreur lors de l'application du template:", error);
