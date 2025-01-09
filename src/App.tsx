@@ -24,7 +24,7 @@ function App() {
           {PublicRoutes()}
           {MemberRoutes()}
           {AdminRoutes()}
-          {AdminSettingsRoutes()}
+          {AdminSettingsRoutes}
         </Routes>
         <Toaster />
       </Router>
