@@ -12,11 +12,37 @@ interface SportStats {
   sport: TrainingType;
   monthlyStats: { present: number; total: number };
   yearlyStats: { present: number; total: number };
+  bestMonth: {
+    month: string;
+    percentage: number;
+  };
 }
 
 export function AdminAttendanceCharts() {
   const [sportsStats, setSportsStats] = useState<SportStats[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const calculateAverageAttendance = (trainings: any[]) => {
+    if (!trainings || trainings.length === 0) return { present: 0, total: 0 };
+    
+    let totalPercentage = 0;
+    let validTrainings = 0;
+
+    trainings.forEach(training => {
+      const presentCount = training.registrations?.length || 0;
+      const totalCount = training.total_players || 0;
+      
+      if (totalCount > 0) {
+        totalPercentage += (presentCount / totalCount) * 100;
+        validTrainings++;
+      }
+    });
+
+    return {
+      present: validTrainings > 0 ? Math.round(totalPercentage / validTrainings) : 0,
+      total: 100
+    };
+  };
 
   const fetchStats = async () => {
     try {
@@ -40,30 +66,25 @@ export function AdminAttendanceCharts() {
 
       const statsPromises = uniqueSports.map(async (sport) => {
         // Monthly stats
-        const { data: monthlyRegistrations } = await supabase
+        const { data: monthlyTrainings } = await supabase
           .from("trainings")
           .select(`
             id,
+            date,
             registrations (
               id
             )
           `)
-          .eq("type", sport)
-          .gte("date", startOfCurrentMonth.toISOString())
-          .lte("date", endOfCurrentMonth.toISOString());
-
-        const { count: monthlyTotal } = await supabase
-          .from("trainings")
-          .select("id", { count: "exact" })
           .eq("type", sport)
           .gte("date", startOfCurrentMonth.toISOString())
           .lte("date", endOfCurrentMonth.toISOString());
 
         // Yearly stats
-        const { data: yearlyRegistrations } = await supabase
+        const { data: yearlyTrainings } = await supabase
           .from("trainings")
           .select(`
             id,
+            date,
             registrations (
               id
             )
@@ -72,34 +93,41 @@ export function AdminAttendanceCharts() {
           .gte("date", startOfCurrentYear.toISOString())
           .lte("date", endOfCurrentYear.toISOString());
 
-        const { count: yearlyTotal } = await supabase
-          .from("trainings")
-          .select("id", { count: "exact" })
-          .eq("type", sport)
-          .gte("date", startOfCurrentYear.toISOString())
-          .lte("date", endOfCurrentYear.toISOString());
+        // Calculate best month
+        const monthlyStats = new Map();
+        yearlyTrainings?.forEach(training => {
+          const monthKey = format(new Date(training.date), 'MMMM yyyy', { locale: fr });
+          if (!monthlyStats.has(monthKey)) {
+            monthlyStats.set(monthKey, { trainings: [], totalPresent: 0, totalPlayers: 0 });
+          }
+          const monthData = monthlyStats.get(monthKey);
+          monthData.trainings.push(training);
+          monthData.totalPresent += training.registrations?.length || 0;
+          monthData.totalPlayers += 15; // Assuming average of 15 players per training
+        });
 
-        const monthlyPresent = monthlyRegistrations?.reduce((sum, training) => 
-          sum + (training.registrations?.length || 0), 0) || 0;
+        let bestMonth = { month: '', percentage: 0 };
+        monthlyStats.forEach((data, month) => {
+          const percentage = (data.totalPresent / data.totalPlayers) * 100;
+          if (percentage > bestMonth.percentage) {
+            bestMonth = { month, percentage: Math.round(percentage) };
+          }
+        });
 
-        const yearlyPresent = yearlyRegistrations?.reduce((sum, training) => 
-          sum + (training.registrations?.length || 0), 0) || 0;
+        const monthlyAverage = calculateAverageAttendance(monthlyTrainings);
+        const yearlyAverage = calculateAverageAttendance(yearlyTrainings);
 
         console.log(`Stats for ${sport}:`, {
-          monthly: { present: monthlyPresent, total: monthlyTotal },
-          yearly: { present: yearlyPresent, total: yearlyTotal }
+          monthly: monthlyAverage,
+          yearly: yearlyAverage,
+          bestMonth
         });
 
         return {
           sport,
-          monthlyStats: {
-            present: monthlyPresent,
-            total: monthlyTotal || 0
-          },
-          yearlyStats: {
-            present: yearlyPresent,
-            total: yearlyTotal || 0
-          }
+          monthlyStats: monthlyAverage,
+          yearlyStats: yearlyAverage,
+          bestMonth
         };
       });
 
@@ -174,22 +202,21 @@ export function AdminAttendanceCharts() {
           <h2 className="text-xl font-semibold text-white capitalize">
             {sportStat.sport}
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div 
               className="bg-gray-700 p-6 rounded-lg"
               role="region"
               aria-label={`Statistiques des entraînements de ${sportStat.sport} pour ${format(new Date(), 'MMMM yyyy', { locale: fr })}`}
             >
               <h3 className="text-lg font-semibold text-white mb-4">
-                Entraînements du mois en cours
+                Moyenne de présence du mois
               </h3>
               <MonthlyTrainingChart 
                 currentMonthStats={sportStat.monthlyStats} 
                 sport={sportStat.sport} 
               />
               <div className="sr-only">
-                Sur {sportStat.monthlyStats.total} entraînements programmés, 
-                il y a eu {sportStat.monthlyStats.present} présences
+                La moyenne de présence pour ce mois est de {sportStat.monthlyStats.present}%
               </div>
             </div>
 
@@ -199,15 +226,36 @@ export function AdminAttendanceCharts() {
               aria-label={`Statistiques annuelles des entraînements de ${sportStat.sport} pour ${new Date().getFullYear()}`}
             >
               <h3 className="text-lg font-semibold text-white mb-4">
-                Entraînements de l'année en cours
+                Moyenne de présence de l'année
               </h3>
               <MonthlyTrainingChart 
                 currentMonthStats={sportStat.yearlyStats} 
                 sport={sportStat.sport}
               />
               <div className="sr-only">
-                Sur {sportStat.yearlyStats.total} entraînements programmés cette année, 
-                il y a eu {sportStat.yearlyStats.present} présences
+                La moyenne de présence pour cette année est de {sportStat.yearlyStats.present}%
+              </div>
+            </div>
+
+            <div 
+              className="bg-gray-700 p-6 rounded-lg"
+              role="region"
+              aria-label={`Meilleur mois de présence pour ${sportStat.sport}`}
+            >
+              <h3 className="text-lg font-semibold text-white mb-4">
+                Meilleur mois de présence
+              </h3>
+              <div className="flex flex-col items-center justify-center h-full">
+                <p className="text-2xl font-bold text-primary mb-2">
+                  {sportStat.bestMonth.month}
+                </p>
+                <p className="text-xl text-white">
+                  {sportStat.bestMonth.percentage}% de présence
+                </p>
+              </div>
+              <div className="sr-only">
+                Le meilleur taux de présence a été atteint en {sportStat.bestMonth.month} 
+                avec {sportStat.bestMonth.percentage}% de présence
               </div>
             </div>
           </div>
