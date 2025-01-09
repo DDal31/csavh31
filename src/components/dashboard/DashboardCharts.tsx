@@ -15,77 +15,99 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
   const [yearlyStats, setYearlyStats] = useState<{ present: number; total: number }>({ present: 0, total: 0 });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        console.log("Fetching stats for sport:", sport);
-        const normalizedSport = sport.toLowerCase() as TrainingType;
-        
-        if (!isValidTrainingType(normalizedSport)) {
-          console.error("Invalid sport type:", sport);
-          setLoading(false);
-          return;
-        }
-
-        const now = new Date();
-        const startOfCurrentMonth = startOfMonth(now);
-        const endOfCurrentMonth = endOfMonth(now);
-        const startOfCurrentYear = startOfYear(now);
-        const endOfCurrentYear = endOfYear(now);
-
-        // Fetch current month stats
-        const { data: currentMonthData, error: currentMonthError } = await supabase
-          .from("trainings")
-          .select(`
-            *,
-            registrations (
-              id
-            )
-          `)
-          .eq("type", normalizedSport)
-          .gte("date", startOfCurrentMonth.toISOString())
-          .lte("date", endOfCurrentMonth.toISOString());
-
-        if (currentMonthError) throw currentMonthError;
-
-        // Fetch yearly stats
-        const { data: yearData, error: yearError } = await supabase
-          .from("trainings")
-          .select(`
-            *,
-            registrations (
-              id
-            )
-          `)
-          .eq("type", normalizedSport)
-          .gte("date", startOfCurrentYear.toISOString())
-          .lte("date", endOfCurrentYear.toISOString());
-
-        if (yearError) throw yearError;
-
-        const monthPresentCount = currentMonthData?.filter(t => t.registrations?.length > 0).length || 0;
-        const monthTotalCount = currentMonthData?.length || 0;
-        const yearPresentCount = yearData?.filter(t => t.registrations?.length > 0).length || 0;
-        const yearTotalCount = yearData?.length || 0;
-
-        setCurrentMonthStats({
-          present: monthPresentCount,
-          total: monthTotalCount
-        });
-
-        setYearlyStats({
-          present: yearPresentCount,
-          total: yearTotalCount
-        });
-
+  const fetchStats = async () => {
+    try {
+      console.log("Fetching stats for sport:", sport);
+      const normalizedSport = sport.toLowerCase() as TrainingType;
+      
+      if (!isValidTrainingType(normalizedSport)) {
+        console.error("Invalid sport type:", sport);
         setLoading(false);
-      } catch (error) {
-        console.error("Error fetching stats:", error);
-        setLoading(false);
+        return;
       }
-    };
 
+      const now = new Date();
+      const startOfCurrentMonth = startOfMonth(now);
+      const endOfCurrentMonth = endOfMonth(now);
+      const startOfCurrentYear = startOfYear(now);
+      const endOfCurrentYear = endOfYear(now);
+
+      // Fetch current month stats
+      const { data: currentMonthData, error: currentMonthError } = await supabase
+        .from("trainings")
+        .select(`
+          *,
+          registrations (
+            id
+          )
+        `)
+        .eq("type", normalizedSport)
+        .gte("date", startOfCurrentMonth.toISOString())
+        .lte("date", endOfCurrentMonth.toISOString());
+
+      if (currentMonthError) throw currentMonthError;
+
+      // Fetch yearly stats
+      const { data: yearData, error: yearError } = await supabase
+        .from("trainings")
+        .select(`
+          *,
+          registrations (
+            id
+          )
+        `)
+        .eq("type", normalizedSport)
+        .gte("date", startOfCurrentYear.toISOString())
+        .lte("date", endOfCurrentYear.toISOString());
+
+      if (yearError) throw yearError;
+
+      const monthPresentCount = currentMonthData?.filter(t => t.registrations?.length > 0).length || 0;
+      const monthTotalCount = currentMonthData?.length || 0;
+      const yearPresentCount = yearData?.filter(t => t.registrations?.length > 0).length || 0;
+      const yearTotalCount = yearData?.length || 0;
+
+      setCurrentMonthStats({
+        present: monthPresentCount,
+        total: monthTotalCount
+      });
+
+      setYearlyStats({
+        present: yearPresentCount,
+        total: yearTotalCount
+      });
+
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchStats();
+
+    // Subscribe to changes in registrations
+    const channel = supabase
+      .channel('registrations-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'registrations'
+        },
+        (payload) => {
+          console.log('Registration change detected:', payload);
+          // Refetch stats when registrations change
+          fetchStats();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [sport]);
 
   if (loading) {
