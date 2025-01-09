@@ -1,19 +1,11 @@
 import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { initializeApp } from 'firebase/app';
-import { getMessaging, getToken, isSupported } from 'firebase/messaging';
+import { messaging } from "@/config/firebase";
+import { isSupported, getToken } from "firebase/messaging";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBkkFF0XhNZeWuDmOfEhsgdfX1VBG7WTas",
-  projectId: "csavh31-c6a45",
-  messagingSenderId: "954580417010",
-  appId: "1:954580417010:web:7d4bcd931955f5b7f5e2c6"
-};
-
-const app = initializeApp(firebaseConfig);
-
-export const useNotificationPreferences = () => {
+export function useNotificationPreferences() {
   const [pushEnabled, setPushEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isFirebaseSupported, setIsFirebaseSupported] = useState(false);
@@ -37,75 +29,61 @@ export const useNotificationPreferences = () => {
     }
   };
 
-  const loadPreferences = async () => {
-    try {
-      console.log("Loading notification preferences...");
+  const { data: preferences } = useQuery({
+    queryKey: ["notification-preferences"],
+    queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.log("No session found");
-        setLoading(false);
-        return;
-      }
+      if (!session?.user?.id) return null;
 
       const { data, error } = await supabase
-        .from('user_notification_preferences')
-        .select('push_enabled')
-        .eq('user_id', session.user.id)
-        .maybeSingle();
+        .from("user_notification_preferences")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .single();
 
       if (error) throw error;
+      return data;
+    },
+  });
 
-      if (data) {
-        console.log("Preferences found:", data);
-        setPushEnabled(data.push_enabled);
-      } else {
-        console.log("No preferences found, creating default preferences");
-        await supabase
-          .from('user_notification_preferences')
-          .insert({
-            user_id: session.user.id,
-            push_enabled: false
-          });
-        setPushEnabled(false);
-      }
-    } catch (error) {
-      console.error('Error loading preferences:', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de charger vos préférences de notification.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const updatePreferencesMutation = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) throw new Error("No user session");
+
+      const { error } = await supabase
+        .from("user_notification_preferences")
+        .upsert({
+          user_id: session.user.id,
+          push_enabled: enabled,
+        });
+
+      if (error) throw error;
+    },
+  });
 
   const handleToggleNotifications = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.log("No session found for toggle");
-        return;
-      }
-
       if (!pushEnabled) {
-        console.log("Requesting notification permission...");
-        
-        if (!('Notification' in window)) {
-          console.log("Notifications not supported in this browser");
-          toast({
-            title: "Non supporté",
-            description: "Votre navigateur ne supporte pas les notifications push.",
-            variant: "destructive",
-          });
-          return;
+        if (!isFirebaseSupported) {
+          throw new Error("Les notifications ne sont pas supportées sur votre appareil");
         }
 
         const permission = await Notification.requestPermission();
-        console.log("Notification permission:", permission);
-        
-        if (permission !== 'granted') {
-          console.log("Notification permission denied");
+        if (permission === "granted") {
+          const token = await getToken(messaging, {
+            vapidKey: "BKagOny0KF_2pCJQ3m0I4iFi1-ALtZqgxCph6Zr_sYqtxGt_DxRrPaYZOGz7XY6nFjDzCrVVJ4dWJL_zUcpEQQ4"
+          });
+          
+          if (token) {
+            await updatePreferencesMutation.mutateAsync(true);
+            setPushEnabled(true);
+            toast({
+              title: "Notifications activées",
+              description: "Vous recevrez désormais des notifications push.",
+            });
+          }
+        } else {
           toast({
             title: "Permission refusée",
             description: isIOS() 
@@ -113,63 +91,20 @@ export const useNotificationPreferences = () => {
               : "Vous devez autoriser les notifications dans votre navigateur.",
             variant: "destructive",
           });
-          return;
         }
-
-        if (isFirebaseSupported) {
-          try {
-            const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-            console.log("Service Worker registered:", registration);
-
-            const messaging = getMessaging(app);
-            const currentToken = await getToken(messaging, {
-              vapidKey: "BHgwOxwsVYoWgxqkF4jGZkSDPHtqL_1pdZs-Q_H5SPezvQn1XGbPpKGAuYZqgafUgKX2F7P_YOHwuQoVXyQ6qYk",
-              serviceWorkerRegistration: registration,
-            });
-
-            console.log("FCM token obtained:", currentToken);
-
-            if (!currentToken) {
-              throw new Error("No registration token available");
-            }
-
-            const { error: tokenError } = await supabase
-              .from('user_fcm_tokens')
-              .upsert({
-                user_id: session.user.id,
-                token: currentToken,
-                device_type: isIOS() ? 'ios' : 'web',
-              });
-
-            if (tokenError) throw tokenError;
-          } catch (error) {
-            console.error("Error during FCM setup:", error);
-            throw error;
-          }
-        }
-      }
-
-      const { error: prefError } = await supabase
-        .from('user_notification_preferences')
-        .upsert({
-          user_id: session.user.id,
-          push_enabled: !pushEnabled,
+      } else {
+        await updatePreferencesMutation.mutateAsync(false);
+        setPushEnabled(false);
+        toast({
+          title: "Notifications désactivées",
+          description: "Vous ne recevrez plus de notifications push.",
         });
-
-      if (prefError) throw prefError;
-
-      setPushEnabled(!pushEnabled);
-      toast({
-        title: !pushEnabled ? "Notifications activées" : "Notifications désactivées",
-        description: !pushEnabled 
-          ? "Vous recevrez désormais des notifications pour les entraînements."
-          : "Vous ne recevrez plus de notifications.",
-      });
+      }
     } catch (error) {
-      console.error('Error toggling notifications:', error);
+      console.error("Error toggling notifications:", error);
       toast({
         title: "Erreur",
-        description: "Une erreur est survenue lors de la modification des préférences.",
+        description: error instanceof Error ? error.message : "Une erreur est survenue",
         variant: "destructive",
       });
     }
@@ -177,13 +112,16 @@ export const useNotificationPreferences = () => {
 
   useEffect(() => {
     checkFirebaseSupport();
-    loadPreferences();
-  }, []);
+    if (preferences) {
+      setPushEnabled(preferences.push_enabled);
+      setLoading(false);
+    }
+  }, [preferences]);
 
   return {
     pushEnabled,
     loading,
     isFirebaseSupported,
-    handleToggleNotifications
+    handleToggleNotifications,
   };
-};
+}
