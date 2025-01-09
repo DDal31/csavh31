@@ -58,11 +58,12 @@ serve(async (req) => {
             day: 'numeric',
             month: 'long'
           });
-          return `${date} (${training.registrations?.length || 0} joueurs inscrits)`;
+          const players = training.registrations?.length || 0;
+          return `${date} (${players} joueurs inscrits)`;
         });
 
       if (lowAttendanceTrainings.length > 0) {
-        trainingPrompt = `\nJe vois qu'il y a des entraînements à venir qui manquent de joueurs. Tu pourrais t'inscrire aux dates suivantes : ${lowAttendanceTrainings.join(', ')}. N'hésite pas à t'inscrire pour renforcer l'équipe !`;
+        trainingPrompt = `\n\nJe vois que certains entraînements manquent de joueurs. Tu pourrais t'inscrire aux dates suivantes :\n• ${lowAttendanceTrainings.join('\n• ')}`;
       }
     }
 
@@ -98,7 +99,7 @@ serve(async (req) => {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: finalMessage }
         ],
-        max_tokens: 150,
+        max_tokens: 500,
         temperature: 0.7,
       }),
     });
