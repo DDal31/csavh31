@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Loader2, Send, Bot } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { startOfMonth, subMonths, endOfMonth, startOfDay, endOfDay } from "date-fns";
 import type { Database } from "@/integrations/supabase/types";
+import { ChatHeader } from "./chatbot/ChatHeader";
+import { ChatMessage } from "./chatbot/ChatMessage";
+import { ChatInput } from "./chatbot/ChatInput";
 
 type TrainingType = Database["public"]["Enums"]["training_type"];
 
@@ -36,13 +37,12 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user?.id) return;
 
-      const today = new Date();
       const { data, error } = await supabase
         .from("chat_messages")
         .select("id")
         .eq("user_id", session.user.id)
-        .gte("created_at", startOfDay(today).toISOString())
-        .lte("created_at", endOfDay(today).toISOString())
+        .gte("created_at", startOfDay(new Date()).toISOString())
+        .lte("created_at", endOfDay(new Date()).toISOString())
         .eq("status", "active");
 
       if (error) {
@@ -106,8 +106,21 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
       const statsMessage = `Pour ce mois-ci, il y a eu ${currentMonthStats.present} présences sur ${currentMonthStats.total} entraînements (${currentPercentage.toFixed(1)}%). Sur l'année, il y a ${yearlyStats.present} présences sur ${yearlyStats.total} entraînements (${yearlyPercentage.toFixed(1)}%). Par rapport au mois dernier, ${percentageDifference > 0 ? 'augmentation' : 'diminution'} de ${Math.abs(percentageDifference).toFixed(1)}% du taux de présence.`;
 
       try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", session?.user?.id)
+          .single();
+
+        const isVisuallyImpaired = profile?.club_role === "joueur";
+
         const { data, error } = await supabase.functions.invoke('chat-with-coach', {
-          body: { message: statsMessage, sport }
+          body: { 
+            message: statsMessage, 
+            sport,
+            isVisuallyImpaired 
+          }
         });
 
         if (error) throw error;
@@ -145,7 +158,14 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
         throw new Error("User not authenticated");
       }
 
-      // First store the message
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", session.user.id)
+        .single();
+
+      const isVisuallyImpaired = profile?.club_role === "joueur";
+
       const { error: insertError } = await supabase
         .from("chat_messages")
         .insert({
@@ -157,9 +177,12 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
 
       if (insertError) throw insertError;
 
-      // Then send it to the coach
       const { data, error } = await supabase.functions.invoke('chat-with-coach', {
-        body: { message, sport }
+        body: { 
+          message, 
+          sport,
+          isVisuallyImpaired 
+        }
       });
 
       if (error) throw error;
@@ -181,26 +204,14 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
 
   return (
     <div className="p-6 h-full" role="complementary" aria-label="Coach virtuel">
-      <div className="flex items-center gap-3 mb-6">
-        <Bot className="h-6 w-6 text-primary" aria-hidden="true" />
-        <h3 className="text-lg font-semibold text-white">
-          Coach Virtuel {sport}
-        </h3>
-        <span className="text-sm text-gray-400 ml-auto">
-          {messageCount}/{DAILY_MESSAGE_LIMIT} messages aujourd'hui
-        </span>
-      </div>
+      <ChatHeader 
+        sport={sport} 
+        messageCount={messageCount} 
+        maxMessages={DAILY_MESSAGE_LIMIT} 
+      />
       
       <div className="space-y-4 min-h-[200px] mb-6">
-        {response && (
-          <div 
-            className="bg-gray-700/50 p-4 rounded-lg text-white animate-fade-in"
-            role="log" 
-            aria-label="Réponse du coach"
-          >
-            {response}
-          </div>
-        )}
+        {response && <ChatMessage message={response} />}
         {!response && !isLoading && (
           <p className="text-gray-400 text-center py-8">
             Posez une question à votre coach virtuel !
@@ -213,25 +224,14 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="flex gap-3">
-        <Input
-          type="text"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder={messageCount >= DAILY_MESSAGE_LIMIT ? "Limite de messages atteinte pour aujourd'hui" : "Posez votre question..."}
-          className="flex-grow bg-gray-700/50 border-gray-600 focus:border-primary text-white placeholder:text-gray-400"
-          aria-label="Votre question au coach virtuel"
-          disabled={isLoading || messageCount >= DAILY_MESSAGE_LIMIT}
-        />
-        <Button 
-          type="submit" 
-          disabled={isLoading || !message.trim() || messageCount >= DAILY_MESSAGE_LIMIT}
-          aria-label="Envoyer la question"
-          className="bg-primary hover:bg-primary/90 text-white"
-        >
-          <Send className="h-4 w-4" />
-        </Button>
-      </form>
+      <ChatInput 
+        message={message}
+        setMessage={setMessage}
+        onSubmit={handleSubmit}
+        isLoading={isLoading}
+        messageCount={messageCount}
+        maxMessages={DAILY_MESSAGE_LIMIT}
+      />
     </div>
   );
 }

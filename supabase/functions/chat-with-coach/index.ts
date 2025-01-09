@@ -19,11 +19,13 @@ serve(async (req) => {
       throw new Error('DeepSeek API key not configured');
     }
 
-    const { message, sport } = await req.json();
+    const { message, sport, isVisuallyImpaired } = await req.json();
     console.log('Received request for sport:', sport);
     console.log('User message:', message);
+    console.log('Is visually impaired:', isVisuallyImpaired);
 
     const systemPrompt = `Tu es un coach sportif spécialisé en ${sport}. 
+    ${isVisuallyImpaired ? "Tu t'adresses à une personne malvoyante ou non-voyante, donc tu adaptes systématiquement tous les exercices et conseils pour qu'ils soient réalisables en toute sécurité par une personne ayant une déficience visuelle. Tu donnes des repères sonores et tactiles plutôt que visuels." : ""}
     Tu donnes des conseils personnalisés, encourageants et bienveillants aux athlètes.
     Tes réponses sont concises (maximum 3 phrases) et toujours positives.
     Tu t'adresses directement à l'athlète de manière amicale.`;
