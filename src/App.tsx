@@ -21,10 +21,10 @@ function App() {
       <Router>
         <Routes>
           <Route>
-            {PublicRoutes}
-            {MemberRoutes}
-            {AdminRoutes}
-            {AdminSettingsRoutes}
+            {PublicRoutes()}
+            {MemberRoutes()}
+            {AdminRoutes()}
+            {AdminSettingsRoutes()}
           </Route>
         </Routes>
         <Toaster />
