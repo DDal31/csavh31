@@ -6,9 +6,10 @@ interface MonthlyTrainingChartProps {
     total: number;
   };
   sport: string;
+  subtitle?: string;
 }
 
-export function MonthlyTrainingChart({ currentMonthStats, sport }: MonthlyTrainingChartProps) {
+export function MonthlyTrainingChart({ currentMonthStats, sport, subtitle }: MonthlyTrainingChartProps) {
   const percentage = currentMonthStats.total > 0 
     ? (currentMonthStats.present / currentMonthStats.total) * 100 
     : 0;
@@ -48,6 +49,9 @@ export function MonthlyTrainingChart({ currentMonthStats, sport }: MonthlyTraini
       <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
         <span className="text-3xl font-bold">{percentage.toFixed(1)}%</span>
         <span className="text-sm mt-2">de présence</span>
+        {subtitle && (
+          <span className="text-sm mt-1 text-gray-400">{subtitle}</span>
+        )}
       </div>
     </div>
   );

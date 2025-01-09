@@ -270,14 +270,11 @@ export function AdminAttendanceCharts() {
               <h3 className="text-lg font-semibold text-white mb-4">
                 Meilleur mois de présence
               </h3>
-              <div className="flex flex-col items-center justify-center h-full">
-                <p className="text-2xl font-bold text-white mb-2">
-                  {stats.bestMonth.month}
-                </p>
-                <p className="text-lg text-gray-300">
-                  {Math.round(stats.bestMonth.percentage)}% de présence
-                </p>
-              </div>
+              <MonthlyTrainingChart 
+                currentMonthStats={{ present: stats.bestMonth.percentage, total: 100 }} 
+                sport={sport as TrainingType}
+                subtitle={stats.bestMonth.month}
+              />
             </div>
           </div>
         </div>
