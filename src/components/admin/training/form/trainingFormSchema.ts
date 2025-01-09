@@ -1,7 +1,4 @@
 import * as z from "zod";
-import type { Database } from "@/integrations/supabase/types";
-
-type TrainingType = Database["public"]["Enums"]["training_type"];
 
 export const formSchema = z.object({
   type: z.string(),

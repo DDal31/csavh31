@@ -15,8 +15,6 @@ type Props = {
 };
 
 export function AccessibleTrainingDateField({ form }: Props) {
-  const today = new Date().toISOString().split('T')[0];
-  
   return (
     <FormField
       control={form.control}
@@ -31,7 +29,6 @@ export function AccessibleTrainingDateField({ form }: Props) {
               type="date"
               {...field}
               value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
-              min={today}
               className="bg-white/10 border-white/20 text-gray-200"
               aria-label="Sélectionnez la date de l'entraînement"
               onChange={(e) => {
