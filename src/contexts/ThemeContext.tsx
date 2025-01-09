@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Template } from "@/types/template";
+import { Template, templates } from "@/types/template";
 
 interface ThemeContextType {
   currentTemplate: Template | null;
