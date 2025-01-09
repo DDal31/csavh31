@@ -10,6 +10,11 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
+// Map theme to valid template style
+const themeToStyle = (theme: 'light' | 'dark'): 'default' | 'modern' | 'minimal' | 'playful' | 'professional' => {
+  return theme === 'light' ? 'default' : 'modern';
+};
+
 const AdminTemplateSettings = () => {
   const navigate = useNavigate();
   const [selectedTemplate, setSelectedTemplate] = useState('classic-light');
@@ -70,7 +75,7 @@ const AdminTemplateSettings = () => {
         .upsert({
           name: template.id,
           description: template.description,
-          style: template.theme,
+          style: themeToStyle(template.theme),
           color_scheme: {
             primary: template.primaryColor,
             secondary: template.secondaryColor
