@@ -180,8 +180,16 @@ export function useNotificationPreferences() {
         if (permission === "granted") {
           try {
             console.log("Requesting FCM token...");
+            // Récupérer la VAPID key depuis l'API
+            const { data: vapidKeyResponse, error: vapidKeyError } = await supabase.functions.invoke('get-vapid-key');
+            
+            if (vapidKeyError) {
+              console.error("Error getting VAPID key:", vapidKeyError);
+              throw new Error("Erreur lors de la récupération de la clé VAPID");
+            }
+
             const token = await getToken(messaging, {
-              vapidKey: "BEpTfcfcPXLCo6KKmODVDfZETR_YPcsQJGD8hs_eQRAInu0el6Rz3Df6_7EacaL0CGkxJqZtiB4Sb_n5RM3WpQA"
+              vapidKey: vapidKeyResponse.vapidKey
             });
             console.log("FCM Token obtained:", token);
             
