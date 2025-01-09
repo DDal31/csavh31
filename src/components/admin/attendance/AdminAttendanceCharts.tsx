@@ -43,7 +43,6 @@ export function AdminAttendanceCharts() {
       setLoading(true);
       console.log("Calculating attendance stats...");
 
-      // First, fetch all available sports from the database
       const { data: sportsData, error: sportsError } = await supabase
         .from("sports")
         .select("name")
@@ -59,7 +58,7 @@ export function AdminAttendanceCharts() {
       const startOfCurrentYear = startOfYear(now);
       const endOfCurrentYear = endOfYear(now);
 
-      // Initialize stats object with default values for all sport types
+      // Initialize stats object with default values
       const stats: Record<TrainingType, {
         currentMonth: TrainingStats;
         yearlyStats: TrainingStats;
@@ -87,11 +86,9 @@ export function AdminAttendanceCharts() {
         }
       };
 
-      // Process each sport from the database
       for (const sport of sportsData) {
         const sportType = sport.name.toLowerCase() as TrainingType;
         if (stats[sportType]) {  // Only process if it's a valid sport type
-          // For this example, we'll use 12 as the total number of players
           const totalPlayers = 12;
           console.log(`Total players for ${sportType}:`, totalPlayers);
 
@@ -111,12 +108,18 @@ export function AdminAttendanceCharts() {
             .lte("date", endOfCurrentMonth.toISOString());
 
           if (currentMonthTrainings && currentMonthTrainings.length > 0) {
-            let monthlyAttendanceSum = 0;
+            let monthlyPercentagesSum = 0;
             currentMonthTrainings.forEach(training => {
               const presentPlayers = training.registrations?.length || 0;
-              monthlyAttendanceSum += (presentPlayers / totalPlayers) * 100;
+              const trainingPercentage = (presentPlayers / totalPlayers) * 100;
+              console.log(`Training ${training.date}: ${presentPlayers}/${totalPlayers} = ${trainingPercentage}%`);
+              monthlyPercentagesSum += trainingPercentage;
             });
-            const monthlyAverage = monthlyAttendanceSum / currentMonthTrainings.length;
+            
+            // Calculate the average percentage for the month
+            const monthlyAverage = monthlyPercentagesSum / currentMonthTrainings.length;
+            console.log(`Monthly average for ${sportType}: ${monthlyAverage}%`);
+            
             stats[sportType].currentMonth = {
               present: Math.round(monthlyAverage),
               total: 100
@@ -155,12 +158,12 @@ export function AdminAttendanceCharts() {
             });
 
             // Calculate monthly averages and find the best month
-            let yearlySum = 0;
+            let yearlyPercentagesSum = 0;
             let monthCount = 0;
             
             Object.entries(monthlyStats).forEach(([monthKey, data]) => {
               const monthlyAverage = data.sum / data.count;
-              yearlySum += monthlyAverage;
+              yearlyPercentagesSum += monthlyAverage;
               monthCount += 1;
 
               if (monthlyAverage > (stats[sportType].bestMonth.percentage || 0)) {
@@ -174,7 +177,7 @@ export function AdminAttendanceCharts() {
             // Calculate yearly average
             if (monthCount > 0) {
               stats[sportType].yearlyStats = {
-                present: Math.round(yearlySum / monthCount),
+                present: Math.round(yearlyPercentagesSum / monthCount),
                 total: 100
               };
             }
