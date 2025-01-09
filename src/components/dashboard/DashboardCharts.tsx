@@ -5,6 +5,7 @@ import { fr } from "date-fns/locale";
 import { Loader2 } from "lucide-react";
 import { isValidTrainingType } from "@/utils/trainingTypes";
 import { MonthlyTrainingChart } from "./charts/MonthlyTrainingChart";
+import { SportsChatbot } from "./SportsChatbot";
 
 export function DashboardCharts({ sport }: { sport: string }) {
   const [currentMonthStats, setCurrentMonthStats] = useState<{ present: number; total: number }>({ present: 0, total: 0 });
@@ -94,7 +95,7 @@ export function DashboardCharts({ sport }: { sport: string }) {
 
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div 
           className="bg-gray-800 p-6 rounded-lg"
           role="region"
@@ -123,6 +124,10 @@ export function DashboardCharts({ sport }: { sport: string }) {
             Sur {yearlyStats.total} entraînements programmés cette année, 
             il y a eu des présences à {yearlyStats.present} entraînements
           </div>
+        </div>
+
+        <div className="lg:col-span-1">
+          <SportsChatbot sport={sport} />
         </div>
       </div>
     </div>
