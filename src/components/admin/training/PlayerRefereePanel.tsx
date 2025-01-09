@@ -61,16 +61,18 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
     queryFn: async () => {
       if (!training?.id) return [];
 
+      console.log("Fetching registrations for training:", training.id);
       const { data, error } = await supabase
         .from("registrations")
-        .select("user_id")
-        .eq("training_id", training.id)
-        .order("created_at", { ascending: true });
+        .select("id, user_id")
+        .eq("training_id", training.id);
 
       if (error) {
         console.error("Error fetching registrations:", error);
         throw error;
       }
+
+      console.log("Fetched registrations:", data);
       return data.map(reg => reg.user_id);
     },
     enabled: isOpen && !!training?.id,
@@ -84,6 +86,7 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
       const isRegistered = registrations.includes(userId);
       
       if (isRegistered) {
+        console.log("Deleting registration for user:", userId);
         const { error } = await supabase
           .from("registrations")
           .delete()
@@ -92,6 +95,7 @@ export function PlayerRefereePanel({ training, isOpen, onClose }: PlayerRefereeP
         
         if (error) throw error;
       } else {
+        console.log("Creating registration for user:", userId);
         const { error } = await supabase
           .from("registrations")
           .insert([{ 
