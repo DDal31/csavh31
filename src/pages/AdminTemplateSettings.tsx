@@ -27,12 +27,16 @@ const AdminTemplateSettings = () => {
           .from('template_settings')
           .select('name')
           .eq('is_active', true)
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
+        
         if (data) {
           setSelectedTemplate(data.name);
           console.log("Template actif chargé:", data.name);
+        } else {
+          // Si aucun template n'est actif, on garde le template par défaut
+          console.log("Aucun template actif trouvé, utilisation du template par défaut");
         }
       } catch (error) {
         console.error("Erreur lors du chargement du template:", error);
