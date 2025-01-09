@@ -577,7 +577,9 @@ export type Database = {
           notification_missing_players: string | null
           notification_week_before: string | null
           other_type_details: string | null
+          registered_players_count: number | null
           start_time: string
+          total_sport_players_count: number | null
           type: Database["public"]["Enums"]["training_type"]
         }
         Insert: {
@@ -589,7 +591,9 @@ export type Database = {
           notification_missing_players?: string | null
           notification_week_before?: string | null
           other_type_details?: string | null
+          registered_players_count?: number | null
           start_time: string
+          total_sport_players_count?: number | null
           type: Database["public"]["Enums"]["training_type"]
         }
         Update: {
@@ -601,7 +605,9 @@ export type Database = {
           notification_missing_players?: string | null
           notification_week_before?: string | null
           other_type_details?: string | null
+          registered_players_count?: number | null
           start_time?: string
+          total_sport_players_count?: number | null
           type?: Database["public"]["Enums"]["training_type"]
         }
         Relationships: []
