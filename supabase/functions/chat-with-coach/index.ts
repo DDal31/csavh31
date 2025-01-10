@@ -7,6 +7,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -22,6 +23,9 @@ serve(async (req) => {
     if (!DEEPSEEK_API_KEY) {
       throw new Error('Missing DEEPSEEK_API_KEY')
     }
+
+    console.log('Sending request to Perplexity API with prompt:', systemPrompt)
+    console.log('User message:', message)
 
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
@@ -46,7 +50,14 @@ serve(async (req) => {
       }),
     })
 
+    if (!response.ok) {
+      const errorData = await response.text()
+      console.error('Perplexity API error:', errorData)
+      throw new Error(`Perplexity API error: ${response.status} ${response.statusText}`)
+    }
+
     const data = await response.json()
+    console.log('Perplexity API response:', data)
 
     // Store the chat message
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
@@ -63,7 +74,7 @@ serve(async (req) => {
       .insert({
         user_id: userId,
         message: message,
-        sport: 'admin',
+        sport: isAdmin ? 'admin' : 'all',
         status: 'active'
       })
 
