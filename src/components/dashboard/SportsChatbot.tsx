@@ -96,18 +96,52 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
     const sendInitialStats = async () => {
       if (currentMonthStats.total === 0) return;
 
-      const currentPercentage = (currentMonthStats.present / currentMonthStats.total) * 100;
-      const yearlyPercentage = (yearlyStats.present / yearlyStats.total) * 100;
-      const previousPercentage = previousMonthStats.total > 0 
-        ? (previousMonthStats.present / previousMonthStats.total) * 100 
-        : 0;
-      const percentageDifference = currentPercentage - previousPercentage;
-
-      const statsMessage = `Pour ce mois-ci, il y a eu ${currentMonthStats.present} présences sur ${currentMonthStats.total} entraînements (${currentPercentage.toFixed(1)}%). Sur l'année, il y a ${yearlyStats.present} présences sur ${yearlyStats.total} entraînements (${yearlyPercentage.toFixed(1)}%). Par rapport au mois dernier, ${percentageDifference > 0 ? 'augmentation' : 'diminution'} de ${Math.abs(percentageDifference).toFixed(1)}% du taux de présence.`;
-
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user?.id) return;
+
+        // Fetch upcoming trainings that need players
+        const { data: upcomingTrainings, error: trainingsError } = await supabase
+          .from("trainings")
+          .select(`
+            *,
+            registrations (
+              id,
+              user_id
+            )
+          `)
+          .eq("type", sport)
+          .gte("date", new Date().toISOString())
+          .order("date", { ascending: true });
+
+        if (trainingsError) throw trainingsError;
+
+        // Filter trainings that need players and where user is not registered
+        const trainingsNeedingPlayers = upcomingTrainings
+          ?.filter(training => {
+            const registeredCount = training.registrations?.length || 0;
+            const userIsRegistered = training.registrations?.some(reg => reg.user_id === session.user.id);
+            return registeredCount < 6 && !userIsRegistered;
+          })
+          .slice(0, 3); // Limit to next 3 trainings needing players
+
+        const currentPercentage = (currentMonthStats.present / currentMonthStats.total) * 100;
+        const yearlyPercentage = (yearlyStats.present / yearlyStats.total) * 100;
+        const previousPercentage = previousMonthStats.total > 0 
+          ? (previousMonthStats.present / previousMonthStats.total) * 100 
+          : 0;
+        const percentageDifference = currentPercentage - previousPercentage;
+
+        let statsMessage = `Pour ce mois-ci, il y a eu ${currentMonthStats.present} présences sur ${currentMonthStats.total} entraînements (${currentPercentage.toFixed(1)}%). Sur l'année, il y a ${yearlyStats.present} présences sur ${yearlyStats.total} entraînements (${yearlyPercentage.toFixed(1)}%). Par rapport au mois dernier, ${percentageDifference > 0 ? 'augmentation' : 'diminution'} de ${Math.abs(percentageDifference).toFixed(1)}% du taux de présence.`;
+
+        // Add information about trainings needing players
+        if (trainingsNeedingPlayers && trainingsNeedingPlayers.length > 0) {
+          statsMessage += "\n\nEntraînements ayant besoin de joueurs où tu n'es pas encore inscrit :";
+          trainingsNeedingPlayers.forEach(training => {
+            const registeredCount = training.registrations?.length || 0;
+            statsMessage += `\n- ${training.date} (${registeredCount}/6 joueurs inscrits)`;
+          });
+        }
 
         const { data: profile } = await supabase
           .from("profiles")
@@ -238,4 +272,4 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
       />
     </div>
   );
-}
+};
