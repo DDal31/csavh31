@@ -1,161 +1,92 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    console.log('Checking DeepSeek API key:', !!DEEPSEEK_API_KEY);
+    const { message, statsContext, isAdmin, userId } = await req.json()
+
+    const systemPrompt = isAdmin 
+      ? `Tu es un assistant administratif spécialisé dans la gestion de club sportif. Tu as accès aux statistiques de présence suivantes:\n${statsContext}\n\nUtilise ces données pour donner des conseils pertinents sur la gestion du club, l'amélioration des taux de présence et la motivation des joueurs. Sois proactif dans tes suggestions et n'hésite pas à pointer du doigt les problèmes potentiels tout en proposant des solutions concrètes.`
+      : "Tu es un coach sportif virtuel qui aide les joueurs à rester motivés et à s'améliorer. Tu donnes des conseils personnalisés basés sur leurs statistiques de présence aux entraînements."
+
+    const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY')
     if (!DEEPSEEK_API_KEY) {
-      throw new Error('DeepSeek API key not configured');
+      throw new Error('Missing DEEPSEEK_API_KEY')
     }
 
-    const { message, sport, isVisuallyImpaired, userId } = await req.json();
-    console.log('Received request for sport:', sport);
-    console.log('User message:', message);
-    console.log('Is visually impaired:', isVisuallyImpaired);
-    console.log('User ID:', userId);
-
-    // Initialize Supabase client with service role key
-    const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
-
-    // Get upcoming trainings
-    const { data: upcomingTrainings, error: trainingsError } = await supabase
-      .from('trainings')
-      .select(`
-        *,
-        registrations (
-          id,
-          user_id
-        )
-      `)
-      .eq('type', sport)
-      .gte('date', new Date().toISOString().split('T')[0])
-      .order('date', { ascending: true });
-
-    if (trainingsError) {
-      console.error('Error fetching trainings:', trainingsError);
-      throw trainingsError;
-    }
-
-    console.log('Found upcoming trainings:', upcomingTrainings?.length);
-
-    let trainingPrompt = '';
-    if (upcomingTrainings && upcomingTrainings.length > 0) {
-      const lowAttendanceTrainings = upcomingTrainings
-        .filter(training => {
-          const registeredPlayers = training.registrations?.length || 0;
-          const userIsRegistered = training.registrations?.some(reg => reg.user_id === userId);
-          return registeredPlayers < 6;
-        });
-
-      console.log('Low attendance trainings:', lowAttendanceTrainings);
-
-      if (lowAttendanceTrainings.length > 0) {
-        const trainingsList = lowAttendanceTrainings.map(training => {
-          const date = new Date(training.date).toLocaleDateString('fr-FR', {
-            weekday: 'long',
-            day: 'numeric',
-            month: 'long'
-          });
-          const players = training.registrations?.length || 0;
-          const userIsRegistered = training.registrations?.some(reg => reg.user_id === userId);
-          const timeInfo = `${training.start_time.slice(0, 5)} à ${training.end_time.slice(0, 5)}`;
-          
-          return {
-            date,
-            timeInfo,
-            players,
-            userIsRegistered,
-            trainingId: training.id
-          };
-        });
-
-        trainingPrompt = `\n\nJ'ai analysé les prochains entraînements et voici ce que je constate :\n\n`;
-        
-        trainingsList.forEach(training => {
-          trainingPrompt += `🏃‍♂️ L'entraînement du ${training.date} (${training.timeInfo}) n'a que ${training.players} joueur${training.players > 1 ? 's' : ''} inscrit${training.players > 1 ? 's' : ''}. ${!training.userIsRegistered ? "Tu n'es pas encore inscrit(e) - ce serait super que tu puisses nous rejoindre !" : ''}\n\n`;
-        });
-
-        trainingPrompt += `\nQue dirais-tu de t'inscrire à l'un de ces entraînements ? Ta présence ferait vraiment la différence ! 💪`;
-      } else {
-        trainingPrompt = `\n\nBravo ! Tous les entraînements à venir ont suffisamment de participants. Continue comme ça, c'est grâce à l'engagement de chacun que nous progressons ensemble ! 🌟`;
-      }
-    }
-
-    let systemPrompt = `Tu es un coach sportif spécialisé en ${sport}, passionné et motivant. 
-    ${isVisuallyImpaired ? "Tu t'adresses à une personne malvoyante ou non-voyante, donc tu adaptes systématiquement tous les exercices et conseils pour qu'ils soient réalisables en toute sécurité par une personne ayant une déficience visuelle. Tu donnes des repères sonores et tactiles plutôt que visuels." : ""}
-    Tu donnes des conseils personnalisés, encourageants et bienveillants aux athlètes.
-    Tes réponses sont concises (maximum 3 phrases) et toujours positives.
-    Tu t'adresses directement à l'athlète de manière amicale.`;
-
-    // If this is the first message (stats message), add suggestions for improvement
-    if (message.includes("Pour ce mois-ci")) {
-      systemPrompt += `
-      Après avoir analysé les statistiques, propose 3 axes d'amélioration possibles parmi:
-      - Technique (passes, tirs, défense)
-      - Physique (endurance, force, vitesse)
-      - Mental (concentration, gestion du stress)
-      - Tactique (placement, lecture du jeu)
-      Demande ensuite à l'athlète sur quel axe il/elle aimerait travailler en priorité.`;
-    }
-
-    // Add training prompt to the message if available
-    const finalMessage = message + trainingPrompt;
-
-    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    const response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'deepseek-chat',
+        model: 'llama-3.1-sonar-small-128k-online',
         messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: finalMessage }
+          {
+            role: 'system',
+            content: systemPrompt
+          },
+          {
+            role: 'user',
+            content: message
+          }
         ],
-        max_tokens: 500,
         temperature: 0.7,
+        max_tokens: 1000,
       }),
-    });
+    })
 
-    if (!response.ok) {
-      console.error('DeepSeek API error:', await response.text());
-      throw new Error(`DeepSeek API error: ${response.status}`);
+    const data = await response.json()
+
+    // Store the chat message
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Missing Supabase environment variables')
     }
 
-    const data = await response.json();
-    console.log('DeepSeek response:', data);
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    if (!data.choices?.[0]?.message?.content) {
-      throw new Error('Invalid response format from DeepSeek API');
-    }
+    await supabase
+      .from('chat_messages')
+      .insert({
+        user_id: userId,
+        message: message,
+        sport: 'admin',
+        status: 'active'
+      })
 
-    return new Response(JSON.stringify({ 
-      response: data.choices[0].message.content 
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ response: data.choices[0].message.content }),
+      { 
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
+      },
+    )
   } catch (error) {
-    console.error('Error in chat-with-coach function:', error);
-    return new Response(JSON.stringify({ 
-      error: "Désolé, je ne peux pas répondre pour le moment. Essayez plus tard." 
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    console.error('Error:', error)
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { 
+        status: 500,
+        headers: { 
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
+      },
+    )
   }
-});
+})

@@ -4,6 +4,7 @@ import { format, startOfMonth, endOfMonth, startOfYear, endOfYear, parseISO } fr
 import { fr } from "date-fns/locale";
 import { Loader2 } from "lucide-react";
 import { MonthlyTrainingChart } from "@/components/dashboard/charts/MonthlyTrainingChart";
+import { AdminChatbot } from "@/components/admin/chatbot/AdminChatbot";
 import type { Database } from "@/integrations/supabase/types";
 
 type TrainingType = Database["public"]["Enums"]["training_type"];
@@ -207,6 +208,10 @@ export function AdminAttendanceCharts() {
 
   return (
     <div className="space-y-8">
+      <div className="max-w-4xl mx-auto">
+        <AdminChatbot sportStats={sportStats} />
+      </div>
+
       {activeTrainingTypes.map((sport) => (
         <div key={sport} className="space-y-4">
           <h2 className="text-xl font-bold text-white capitalize">
