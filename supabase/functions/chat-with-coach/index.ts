@@ -16,8 +16,8 @@ serve(async (req) => {
     const { message, statsContext, isAdmin, userId } = await req.json()
 
     const systemPrompt = isAdmin 
-      ? `Tu es un assistant administratif spécialisé dans la gestion de club sportif. Tu as accès aux statistiques de présence suivantes:\n${statsContext}\n\nUtilise ces données pour donner des conseils pertinents sur la gestion du club, l'amélioration des taux de présence et la motivation des joueurs. Sois proactif dans tes suggestions et n'hésite pas à pointer du doigt les problèmes potentiels tout en proposant des solutions concrètes.`
-      : "Tu es un coach sportif virtuel qui aide les joueurs à rester motivés et à s'améliorer. Tu donnes des conseils personnalisés basés sur leurs statistiques de présence aux entraînements."
+      ? `Tu es un assistant administratif spécialisé dans la gestion de club sportif. Tu as accès aux statistiques de présence suivantes:\n${statsContext}\n\nUtilise ces données pour donner des conseils pertinents sur la gestion du club, l'amélioration des taux de présence et la motivation des joueurs. Sois proactif dans tes suggestions et n'hésite pas à pointer du doigt les problèmes potentiels tout en proposant des solutions concrètes. IMPORTANT: Ta réponse doit être concise et ne pas dépasser 500 tokens.`
+      : "Tu es un coach sportif virtuel qui aide les joueurs à rester motivés et à s'améliorer. Tu donnes des conseils personnalisés basés sur leurs statistiques de présence aux entraînements. IMPORTANT: Incite fortement le joueur à s'inscrire aux entraînements où il y a moins de six joueurs inscrits et où il n'est pas encore inscrit."
 
     const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY')
     if (!DEEPSEEK_API_KEY) {
@@ -46,7 +46,7 @@ serve(async (req) => {
           }
         ],
         temperature: 0.7,
-        max_tokens: 1000,
+        max_tokens: isAdmin ? 500 : 1000,
       }),
     })
 
