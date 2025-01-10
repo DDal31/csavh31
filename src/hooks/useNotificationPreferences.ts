@@ -27,22 +27,46 @@ export function useNotificationPreferences() {
 
   const checkFirebaseSupport = async () => {
     try {
+      // Vérifier d'abord si le navigateur supporte les notifications
+      if (!("Notification" in window)) {
+        console.log("Ce navigateur ne supporte pas les notifications");
+        setIsFirebaseSupported(false);
+        return;
+      }
+
+      // Vérifier le cas spécifique de Safari iOS
       if (isIOS() && isSafari() && !isPWA()) {
         console.log("Notifications non supportées sur Safari iOS");
         setIsFirebaseSupported(false);
         return;
       }
 
+      // Vérifier le support de Firebase Messaging
       const supported = await isSupported();
       console.log("Firebase Messaging supported:", supported);
       console.log("Is iOS device:", isIOS());
       console.log("Is Safari browser:", isSafari());
       console.log("Is PWA mode:", isPWA());
       console.log("User Agent:", window.navigator.userAgent);
+      
+      if (!supported) {
+        console.log("Firebase Messaging n'est pas supporté sur ce navigateur");
+        toast({
+          title: "Notifications non supportées",
+          description: "Votre navigateur ne supporte pas les notifications push. Veuillez utiliser un navigateur compatible ou installer l'application.",
+          variant: "destructive",
+        });
+      }
+      
       setIsFirebaseSupported(supported);
     } catch (error) {
       console.error("Error checking Firebase support:", error);
       setIsFirebaseSupported(false);
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la vérification du support des notifications",
+        variant: "destructive",
+      });
     }
   };
 
@@ -230,11 +254,15 @@ export function useNotificationPreferences() {
   };
 
   useEffect(() => {
-    checkFirebaseSupport();
-    if (preferences) {
-      setPushEnabled(preferences.push_enabled);
-      setLoading(false);
-    }
+    const init = async () => {
+      await checkFirebaseSupport();
+      if (preferences) {
+        setPushEnabled(preferences.push_enabled);
+        setLoading(false);
+      }
+    };
+    
+    init();
   }, [preferences]);
 
   return {
