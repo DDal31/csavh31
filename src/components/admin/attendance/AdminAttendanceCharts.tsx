@@ -11,32 +11,12 @@ type TrainingStats = { present: number; total: number };
 
 export function AdminAttendanceCharts() {
   const [loading, setLoading] = useState(true);
+  const [activeTrainingTypes, setActiveTrainingTypes] = useState<TrainingType[]>([]);
   const [sportStats, setSportStats] = useState<Record<TrainingType, {
     currentMonth: TrainingStats;
     yearlyStats: TrainingStats;
     bestMonth: { month: string; percentage: number };
-  }>>({
-    goalball: {
-      currentMonth: { present: 0, total: 0 },
-      yearlyStats: { present: 0, total: 0 },
-      bestMonth: { month: "", percentage: 0 }
-    },
-    torball: {
-      currentMonth: { present: 0, total: 0 },
-      yearlyStats: { present: 0, total: 0 },
-      bestMonth: { month: "", percentage: 0 }
-    },
-    other: {
-      currentMonth: { present: 0, total: 0 },
-      yearlyStats: { present: 0, total: 0 },
-      bestMonth: { month: "", percentage: 0 }
-    },
-    showdown: {
-      currentMonth: { present: 0, total: 0 },
-      yearlyStats: { present: 0, total: 0 },
-      bestMonth: { month: "", percentage: 0 }
-    }
-  });
+  }>>({} as Record<TrainingType, any>);
 
   const calculateAttendanceStats = async () => {
     try {
@@ -49,40 +29,39 @@ export function AdminAttendanceCharts() {
       const startOfCurrentYear = startOfYear(now);
       const endOfCurrentYear = endOfYear(now);
 
-      console.log("Période analysée:", {
-        début_mois: startOfCurrentMonth,
-        fin_mois: endOfCurrentMonth
-      });
+      // First, get all training types that have trainings
+      const { data: distinctTypes, error: typesError } = await supabase
+        .from("trainings")
+        .select('type')
+        .not('type', 'is', null);
+
+      if (typesError) {
+        console.error("Erreur lors de la récupération des types d'entraînement:", typesError);
+        return;
+      }
+
+      // Get unique training types
+      const uniqueTypes = [...new Set(distinctTypes.map(t => t.type))];
+      console.log("Types d'entraînement actifs:", uniqueTypes);
+      setActiveTrainingTypes(uniqueTypes);
 
       const stats: Record<TrainingType, {
         currentMonth: TrainingStats;
         yearlyStats: TrainingStats;
         bestMonth: { month: string; percentage: number };
-      }> = {
-        goalball: {
-          currentMonth: { present: 0, total: 0 },
-          yearlyStats: { present: 0, total: 0 },
-          bestMonth: { month: "", percentage: 0 }
-        },
-        torball: {
-          currentMonth: { present: 0, total: 0 },
-          yearlyStats: { present: 0, total: 0 },
-          bestMonth: { month: "", percentage: 0 }
-        },
-        other: {
-          currentMonth: { present: 0, total: 0 },
-          yearlyStats: { present: 0, total: 0 },
-          bestMonth: { month: "", percentage: 0 }
-        },
-        showdown: {
-          currentMonth: { present: 0, total: 0 },
-          yearlyStats: { present: 0, total: 0 },
-          bestMonth: { month: "", percentage: 0 }
-        }
-      };
+      }> = {} as Record<TrainingType, any>;
 
-      // Get current month trainings for each sport type
-      for (const sportType of Object.keys(stats) as TrainingType[]) {
+      // Initialize stats only for active training types
+      uniqueTypes.forEach(type => {
+        stats[type] = {
+          currentMonth: { present: 0, total: 0 },
+          yearlyStats: { present: 0, total: 0 },
+          bestMonth: { month: "", percentage: 0 }
+        };
+      });
+
+      // Get current month trainings for each active sport type
+      for (const sportType of uniqueTypes) {
         console.log(`\nAnalyse du sport: ${sportType}`);
 
         // Get current month trainings
@@ -103,23 +82,17 @@ export function AdminAttendanceCharts() {
           continue;
         }
 
-        console.log(`Nombre d'entraînements trouvés pour ${sportType} ce mois-ci:`, currentMonthTrainings?.length);
-
         if (currentMonthTrainings && currentMonthTrainings.length > 0) {
           let monthlyPercentagesSum = 0;
           
-          console.log(`\nDétail des présences pour ${sportType}:`);
           currentMonthTrainings.forEach(training => {
             const presentPlayers = training.registered_players_count || 0;
             const totalPlayers = training.total_sport_players_count || 0;
             const trainingPercentage = totalPlayers > 0 ? (presentPlayers / totalPlayers) * 100 : 0;
-            console.log(`Entraînement du ${format(parseISO(training.date), 'dd/MM/yyyy')}: ${presentPlayers}/${totalPlayers} joueurs = ${trainingPercentage.toFixed(1)}%`);
             monthlyPercentagesSum += trainingPercentage;
           });
           
           const monthlyAverage = monthlyPercentagesSum / currentMonthTrainings.length;
-          console.log(`\nMoyenne mensuelle pour ${sportType}: ${monthlyAverage.toFixed(1)}% (somme: ${monthlyPercentagesSum.toFixed(1)} / nombre d'entraînements: ${currentMonthTrainings.length})`);
-          
           stats[sportType].currentMonth = {
             present: Math.round(monthlyAverage),
             total: 100
@@ -234,7 +207,7 @@ export function AdminAttendanceCharts() {
 
   return (
     <div className="space-y-8">
-      {Object.entries(sportStats).map(([sport, stats]) => (
+      {activeTrainingTypes.map((sport) => (
         <div key={sport} className="space-y-4">
           <h2 className="text-xl font-bold text-white capitalize">
             Statistiques de présence - {sport}
@@ -248,7 +221,7 @@ export function AdminAttendanceCharts() {
               <h3 className="text-lg font-semibold text-white mb-4">
                 Présences du mois en cours
               </h3>
-              <MonthlyTrainingChart currentMonthStats={stats.currentMonth} sport={sport as TrainingType} />
+              <MonthlyTrainingChart currentMonthStats={sportStats[sport].currentMonth} sport={sport} />
             </div>
 
             <div 
@@ -259,7 +232,7 @@ export function AdminAttendanceCharts() {
               <h3 className="text-lg font-semibold text-white mb-4">
                 Présences de l'année en cours
               </h3>
-              <MonthlyTrainingChart currentMonthStats={stats.yearlyStats} sport={sport as TrainingType} />
+              <MonthlyTrainingChart currentMonthStats={sportStats[sport].yearlyStats} sport={sport} />
             </div>
 
             <div 
@@ -271,9 +244,9 @@ export function AdminAttendanceCharts() {
                 Meilleur mois de présence
               </h3>
               <MonthlyTrainingChart 
-                currentMonthStats={{ present: stats.bestMonth.percentage, total: 100 }} 
-                sport={sport as TrainingType}
-                subtitle={stats.bestMonth.month}
+                currentMonthStats={{ present: sportStats[sport].bestMonth.percentage, total: 100 }} 
+                sport={sport}
+                subtitle={sportStats[sport].bestMonth.month}
               />
             </div>
           </div>
