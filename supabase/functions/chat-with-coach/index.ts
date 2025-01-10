@@ -24,17 +24,17 @@ serve(async (req) => {
       throw new Error('Missing DEEPSEEK_API_KEY')
     }
 
-    console.log('Sending request to Perplexity API with prompt:', systemPrompt)
+    console.log('Sending request to Deepseek API with prompt:', systemPrompt)
     console.log('User message:', message)
 
-    const response = await fetch('https://api.perplexity.ai/chat/completions', {
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.1-sonar-small-128k-online',
+        model: 'deepseek-chat',
         messages: [
           {
             role: 'system',
@@ -52,12 +52,12 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorData = await response.text()
-      console.error('Perplexity API error:', errorData)
-      throw new Error(`Perplexity API error: ${response.status} ${response.statusText}`)
+      console.error('Deepseek API error:', errorData)
+      throw new Error(`Deepseek API error: ${response.status} ${response.statusText}`)
     }
 
     const data = await response.json()
-    console.log('Perplexity API response:', data)
+    console.log('Deepseek API response:', data)
 
     // Store the chat message
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
