@@ -42,25 +42,35 @@ export function useNotificationPreferences() {
       }
 
       // Vérifier le support de Firebase Messaging
-      const supported = await isSupported();
-      console.log("Firebase Messaging supported:", supported);
-      console.log("Is iOS device:", isIOS());
-      console.log("Is Safari browser:", isSafari());
-      console.log("Is PWA mode:", isPWA());
-      console.log("User Agent:", window.navigator.userAgent);
-      
-      if (!supported) {
-        console.log("Firebase Messaging n'est pas supporté sur ce navigateur");
+      try {
+        const supported = await isSupported();
+        console.log("Firebase Messaging supported:", supported);
+        console.log("Is iOS device:", isIOS());
+        console.log("Is Safari browser:", isSafari());
+        console.log("Is PWA mode:", isPWA());
+        console.log("User Agent:", window.navigator.userAgent);
+        
+        if (!supported) {
+          console.log("Firebase Messaging n'est pas supporté sur ce navigateur");
+          toast({
+            title: "Notifications non supportées",
+            description: "Votre navigateur ne supporte pas les notifications push. Veuillez utiliser un navigateur compatible ou installer l'application.",
+            variant: "destructive",
+          });
+        }
+        
+        setIsFirebaseSupported(supported);
+      } catch (error) {
+        console.error("Error checking Firebase Messaging support:", error);
+        setIsFirebaseSupported(false);
         toast({
           title: "Notifications non supportées",
           description: "Votre navigateur ne supporte pas les notifications push. Veuillez utiliser un navigateur compatible ou installer l'application.",
           variant: "destructive",
         });
       }
-      
-      setIsFirebaseSupported(supported);
     } catch (error) {
-      console.error("Error checking Firebase support:", error);
+      console.error("Error in checkFirebaseSupport:", error);
       setIsFirebaseSupported(false);
       toast({
         title: "Erreur",
@@ -168,34 +178,6 @@ export function useNotificationPreferences() {
           return;
         }
 
-        if (isIOS() && isPWA()) {
-          try {
-            const permission = await requestNotificationPermission();
-            if (permission === "granted") {
-              await updatePreferencesMutation.mutateAsync(true);
-              setPushEnabled(true);
-              toast({
-                title: "Notifications activées",
-                description: "Vous recevrez désormais des notifications push.",
-              });
-            } else {
-              toast({
-                title: "Permission refusée",
-                description: "Veuillez autoriser les notifications dans les Réglages de votre iPhone pour cette application.",
-                variant: "destructive",
-              });
-            }
-          } catch (error) {
-            console.error("Erreur lors de la demande de permission:", error);
-            toast({
-              title: "Erreur",
-              description: error instanceof Error ? error.message : "Une erreur est survenue lors de l'activation des notifications.",
-              variant: "destructive",
-            });
-          }
-          return;
-        }
-
         if (!isFirebaseSupported) {
           throw new Error("Les notifications ne sont pas supportées sur votre appareil");
         }
@@ -255,9 +237,14 @@ export function useNotificationPreferences() {
 
   useEffect(() => {
     const init = async () => {
-      await checkFirebaseSupport();
-      if (preferences) {
-        setPushEnabled(preferences.push_enabled);
+      try {
+        await checkFirebaseSupport();
+        if (preferences) {
+          setPushEnabled(preferences.push_enabled);
+        }
+      } catch (error) {
+        console.error("Error in init:", error);
+      } finally {
         setLoading(false);
       }
     };
