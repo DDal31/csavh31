@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -22,6 +22,50 @@ export function AdminChatbot({ sportStats }: AdminChatbotProps) {
   const { toast } = useToast();
 
   const DAILY_MESSAGE_LIMIT = 10;
+
+  const getInitialAnalysis = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) {
+        throw new Error("User not authenticated");
+      }
+
+      const statsMessage = Object.entries(sportStats).map(([sport, stats]) => {
+        const currentMonthPercentage = (stats.currentMonth.present / stats.currentMonth.total) * 100;
+        const yearlyPercentage = (stats.yearlyStats.present / stats.yearlyStats.total) * 100;
+        return `${sport}: ${currentMonthPercentage.toFixed(1)}% ce mois-ci, ${yearlyPercentage.toFixed(1)}% sur l'année. Meilleur mois: ${stats.bestMonth.month} avec ${stats.bestMonth.percentage}%`;
+      }).join('\n');
+
+      console.log('Requesting initial analysis with stats:', statsMessage);
+
+      const { data, error } = await supabase.functions.invoke('chat-with-coach', {
+        body: { 
+          message: "Analyse les statistiques de présence et donne-moi un résumé de la situation actuelle avec des suggestions d'amélioration si nécessaire.",
+          statsContext: statsMessage,
+          isAdmin: true,
+          userId: session.user.id
+        }
+      });
+
+      if (error) throw error;
+      
+      setResponse(data.response);
+      setMessageCount(1);
+    } catch (error) {
+      console.error('Error getting initial analysis:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de générer l'analyse initiale pour le moment.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (Object.keys(sportStats).length > 0) {
+      getInitialAnalysis();
+    }
+  }, [sportStats]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,7 +142,7 @@ export function AdminChatbot({ sportStats }: AdminChatbotProps) {
         )}
         {!response && !isLoading && (
           <p className="text-gray-400 text-center py-8">
-            Posez une question à votre assistant pour obtenir des conseils sur la gestion du club !
+            Analyse des statistiques en cours...
           </p>
         )}
         {isLoading && (
