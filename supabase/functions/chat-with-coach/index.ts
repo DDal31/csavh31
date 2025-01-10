@@ -58,26 +58,44 @@ serve(async (req) => {
         .filter(training => {
           const registeredPlayers = training.registrations?.length || 0;
           const userIsRegistered = training.registrations?.some(reg => reg.user_id === userId);
-          return registeredPlayers <= 6 && !userIsRegistered;
-        })
-        .map(training => {
+          return registeredPlayers < 6;
+        });
+
+      console.log('Low attendance trainings:', lowAttendanceTrainings);
+
+      if (lowAttendanceTrainings.length > 0) {
+        const trainingsList = lowAttendanceTrainings.map(training => {
           const date = new Date(training.date).toLocaleDateString('fr-FR', {
             weekday: 'long',
             day: 'numeric',
             month: 'long'
           });
           const players = training.registrations?.length || 0;
-          return `${date} (${players} joueur${players > 1 ? 's' : ''} inscrit${players > 1 ? 's' : ''})`;
+          const userIsRegistered = training.registrations?.some(reg => reg.user_id === userId);
+          const timeInfo = `${training.start_time.slice(0, 5)} à ${training.end_time.slice(0, 5)}`;
+          
+          return {
+            date,
+            timeInfo,
+            players,
+            userIsRegistered,
+            trainingId: training.id
+          };
         });
 
-      console.log('Low attendance trainings:', lowAttendanceTrainings);
+        trainingPrompt = `\n\nJ'ai analysé les prochains entraînements et voici ce que je constate :\n\n`;
+        
+        trainingsList.forEach(training => {
+          trainingPrompt += `🏃‍♂️ L'entraînement du ${training.date} (${training.timeInfo}) n'a que ${training.players} joueur${training.players > 1 ? 's' : ''} inscrit${training.players > 1 ? 's' : ''}. ${!training.userIsRegistered ? "Tu n'es pas encore inscrit(e) - ce serait super que tu puisses nous rejoindre !" : ''}\n\n`;
+        });
 
-      if (lowAttendanceTrainings.length > 0) {
-        trainingPrompt = `\n\nJe remarque que certains entraînements manquent de joueurs. Tu n'es pas encore inscrit aux dates suivantes :\n• ${lowAttendanceTrainings.join('\n• ')}\n\nTa présence serait vraiment appréciée ! 🏃‍♂️`;
+        trainingPrompt += `\nQue dirais-tu de t'inscrire à l'un de ces entraînements ? Ta présence ferait vraiment la différence ! 💪`;
+      } else {
+        trainingPrompt = `\n\nBravo ! Tous les entraînements à venir ont suffisamment de participants. Continue comme ça, c'est grâce à l'engagement de chacun que nous progressons ensemble ! 🌟`;
       }
     }
 
-    let systemPrompt = `Tu es un coach sportif spécialisé en ${sport}. 
+    let systemPrompt = `Tu es un coach sportif spécialisé en ${sport}, passionné et motivant. 
     ${isVisuallyImpaired ? "Tu t'adresses à une personne malvoyante ou non-voyante, donc tu adaptes systématiquement tous les exercices et conseils pour qu'ils soient réalisables en toute sécurité par une personne ayant une déficience visuelle. Tu donnes des repères sonores et tactiles plutôt que visuels." : ""}
     Tu donnes des conseils personnalisés, encourageants et bienveillants aux athlètes.
     Tes réponses sont concises (maximum 3 phrases) et toujours positives.
