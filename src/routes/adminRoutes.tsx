@@ -6,7 +6,6 @@ import AdminUserEdit from "@/pages/AdminUserEdit";
 import AdminTrainings from "@/pages/AdminTrainings";
 import AdminDocuments from "@/pages/AdminDocuments";
 import AdminSettings from "@/pages/AdminSettings";
-import AdminNotifications from "@/pages/AdminNotifications";
 
 export const AdminRoutes = () => {
   return (
@@ -56,14 +55,6 @@ export const AdminRoutes = () => {
         element={
           <ProtectedRoute requireAdmin>
             <AdminSettings />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/notifications"
-        element={
-          <ProtectedRoute requireAdmin>
-            <AdminNotifications />
           </ProtectedRoute>
         }
       />
