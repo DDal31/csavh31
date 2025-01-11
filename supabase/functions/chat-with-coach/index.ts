@@ -15,14 +15,19 @@ serve(async (req) => {
   try {
     const { message, statsContext, isAdmin, userId } = await req.json()
 
-    const systemPrompt = isAdmin 
-      ? `Tu es un assistant administratif spécialisé dans la gestion de club sportif. Tu as accès aux statistiques de présence suivantes:\n${statsContext}\n\nUtilise ces données pour donner des conseils pertinents sur la gestion du club, l'amélioration des taux de présence et la motivation des joueurs. Sois proactif dans tes suggestions et n'hésite pas à pointer du doigt les problèmes potentiels tout en proposant des solutions concrètes. IMPORTANT: Ta réponse doit être concise et ne pas dépasser 500 tokens.`
-      : "Tu es un coach sportif virtuel qui aide les joueurs à rester motivés et à s'améliorer. Tu donnes des conseils personnalisés basés sur leurs statistiques de présence aux entraînements. IMPORTANT: Incite fortement le joueur à s'inscrire aux entraînements où il y a moins de six joueurs inscrits et où il n'est pas encore inscrit."
+    console.log('Received request with:', { message, isAdmin, userId })
+    if (statsContext) {
+      console.log('Stats context:', statsContext)
+    }
 
     const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY')
     if (!DEEPSEEK_API_KEY) {
       throw new Error('Missing DEEPSEEK_API_KEY')
     }
+
+    const systemPrompt = isAdmin 
+      ? `Tu es un assistant administratif spécialisé dans la gestion de club sportif. Tu as accès aux statistiques de présence suivantes:\n${statsContext}\n\nUtilise ces données pour donner des conseils pertinents sur la gestion du club, l'amélioration des taux de présence et la motivation des joueurs. Sois proactif dans tes suggestions et n'hésite pas à pointer du doigt les problèmes potentiels tout en proposant des solutions concrètes. IMPORTANT: Ta réponse doit être concise et ne pas dépasser 500 tokens.`
+      : "Tu es un coach sportif virtuel qui aide les joueurs à rester motivés et à s'améliorer. Tu donnes des conseils personnalisés basés sur leurs statistiques de présence aux entraînements. IMPORTANT: Incite fortement le joueur à s'inscrire aux entraînements où il y a moins de six joueurs inscrits et où il n'est pas encore inscrit."
 
     console.log('Sending request to Deepseek API with prompt:', systemPrompt)
     console.log('User message:', message)
@@ -69,7 +74,7 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    await supabase
+    const { error: insertError } = await supabase
       .from('chat_messages')
       .insert({
         user_id: userId,
@@ -77,6 +82,10 @@ serve(async (req) => {
         sport: isAdmin ? 'admin' : 'all',
         status: 'active'
       })
+
+    if (insertError) {
+      console.error('Error storing chat message:', insertError)
+    }
 
     return new Response(
       JSON.stringify({ response: data.choices[0].message.content }),
