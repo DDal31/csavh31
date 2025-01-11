@@ -15,6 +15,16 @@ serve(async (req) => {
     const { message, sport, isVisuallyImpaired, userId } = await req.json()
     console.log('Received request:', { message, sport, isVisuallyImpaired, userId })
 
+    // Initialize Supabase client at the start
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Missing Supabase credentials')
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
     // Check if message contains a date and indicates willingness to register
     const dateMatch = message.match(/(\d{1,2})[/-](\d{1,2})[/-]?(\d{4})?/);
     const wantsToRegister = message.toLowerCase().includes('oui') || 
@@ -28,16 +38,6 @@ serve(async (req) => {
       const formattedDate = `${year}-${month}-${day}`;
 
       console.log('Attempting registration for date:', formattedDate);
-
-      // Initialize Supabase client
-      const supabaseUrl = Deno.env.get('SUPABASE_URL');
-      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-
-      if (!supabaseUrl || !supabaseServiceKey) {
-        throw new Error('Missing Supabase credentials');
-      }
-
-      const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
       // Find the training for the given date
       const { data: trainings, error: trainingsError } = await supabase
