@@ -2,11 +2,9 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { startOfMonth, subMonths, endOfMonth, startOfDay, endOfDay } from "date-fns";
+import { startOfMonth, subMonths, endOfMonth, startOfDay, endOfDay, format } from "date-fns";
+import { fr } from "date-fns/locale";
 import type { Database } from "@/integrations/supabase/types";
-import { ChatHeader } from "./chatbot/ChatHeader";
-import { ChatMessage } from "./chatbot/ChatMessage";
-import { ChatInput } from "./chatbot/ChatInput";
 
 type TrainingType = Database["public"]["Enums"]["training_type"];
 
@@ -175,6 +173,53 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
     sendInitialStats();
   }, [currentMonthStats, yearlyStats, previousMonthStats, sport, toast]);
 
+  const handleTrainingRegistration = async (trainingDate: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) return null;
+
+      // Find the training by date
+      const { data: trainings, error: trainingsError } = await supabase
+        .from("trainings")
+        .select("*")
+        .eq("type", sport)
+        .eq("date", trainingDate)
+        .single();
+
+      if (trainingsError || !trainings) {
+        console.error("Error finding training:", trainingsError);
+        return null;
+      }
+
+      // Check if user is already registered
+      const { data: existingReg } = await supabase
+        .from("registrations")
+        .select("id")
+        .eq("training_id", trainings.id)
+        .eq("user_id", session.user.id)
+        .single();
+
+      if (existingReg) {
+        return "Tu es déjà inscrit à cet entraînement !";
+      }
+
+      // Register the user
+      const { error: registrationError } = await supabase
+        .from("registrations")
+        .insert({
+          training_id: trainings.id,
+          user_id: session.user.id
+        });
+
+      if (registrationError) throw registrationError;
+
+      return "Super ! Je t'ai inscrit à l'entraînement du " + format(new Date(trainingDate), "dd/MM/yyyy", { locale: fr }) + ". À bientôt !";
+    } catch (error) {
+      console.error("Error registering for training:", error);
+      return "Désolé, je n'ai pas pu t'inscrire à l'entraînement. Essaie via la page des entraînements ou contacte un administrateur.";
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim()) return;
@@ -193,6 +238,22 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user?.id) {
         throw new Error("User not authenticated");
+      }
+
+      // Check if message contains a date and mentions wanting to participate
+      const dateMatch = message.match(/(\d{1,2})[/-](\d{1,2})[/-]?(\d{4})?/);
+      const wantsToParticipate = message.toLowerCase().includes("venir") || 
+                                message.toLowerCase().includes("participer") ||
+                                message.toLowerCase().includes("m'inscrire");
+
+      let registrationResponse = null;
+      if (dateMatch && wantsToParticipate) {
+        const day = dateMatch[1].padStart(2, '0');
+        const month = dateMatch[2].padStart(2, '0');
+        const year = dateMatch[3] || new Date().getFullYear();
+        const formattedDate = `${year}-${month}-${day}`;
+        
+        registrationResponse = await handleTrainingRegistration(formattedDate);
       }
 
       const { data: profile } = await supabase
@@ -214,18 +275,22 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
 
       if (insertError) throw insertError;
 
-      const { data, error } = await supabase.functions.invoke('chat-with-coach', {
-        body: { 
-          message, 
-          sport,
-          isVisuallyImpaired,
-          userId: session.user.id
-        }
-      });
+      if (registrationResponse) {
+        setResponse(registrationResponse);
+      } else {
+        const { data, error } = await supabase.functions.invoke('chat-with-coach', {
+          body: { 
+            message, 
+            sport,
+            isVisuallyImpaired,
+            userId: session.user.id
+          }
+        });
 
-      if (error) throw error;
+        if (error) throw error;
+        setResponse(data.response);
+      }
       
-      setResponse(data.response);
       setMessage("");
       setMessageCount(prev => prev + 1);
     } catch (error) {
