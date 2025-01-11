@@ -5,6 +5,9 @@ import { useToast } from "@/hooks/use-toast";
 import { startOfMonth, subMonths, endOfMonth, startOfDay, endOfDay, format } from "date-fns";
 import { fr } from "date-fns/locale";
 import type { Database } from "@/integrations/supabase/types";
+import { ChatHeader } from "./chatbot/ChatHeader";
+import { ChatMessage } from "./chatbot/ChatMessage";
+import { ChatInput } from "./chatbot/ChatInput";
 
 type TrainingType = Database["public"]["Enums"]["training_type"];
 
