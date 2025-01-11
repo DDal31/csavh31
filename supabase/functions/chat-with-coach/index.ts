@@ -15,6 +15,10 @@ serve(async (req) => {
   try {
     const { message, statsContext, isAdmin, userId } = await req.json()
 
+    if (!message || !userId) {
+      throw new Error('Missing required parameters')
+    }
+
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
@@ -110,7 +114,7 @@ serve(async (req) => {
     console.log('Deepseek API response:', data)
 
     // Store the chat message
-    await supabase
+    const { error: insertError } = await supabase
       .from('chat_messages')
       .insert({
         user_id: userId,
@@ -118,6 +122,11 @@ serve(async (req) => {
         sport: isAdmin ? 'admin' : 'all',
         status: 'active'
       })
+
+    if (insertError) {
+      console.error('Error storing chat message:', insertError)
+      // Continue execution even if message storage fails
+    }
 
     return new Response(
       JSON.stringify({ response: data.choices[0].message.content }),
@@ -131,7 +140,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error.stack
+      }),
       { 
         status: 500,
         headers: { 
