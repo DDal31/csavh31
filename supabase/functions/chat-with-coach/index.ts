@@ -1,19 +1,15 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
+import { corsHeaders } from '../_shared/cors.ts'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-serve(async (req) => {
+Deno.serve(async (req) => {
+  // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const { message, sport, isVisuallyImpaired, userId } = await req.json()
-    console.log('Received request:', { message, sport, isVisuallyImpaired, userId })
+    const { message, statsContext, isAdmin, userId } = await req.json()
+    console.log('Received request:', { message, statsContext, isAdmin, userId })
 
     // Initialize Supabase client at the start
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
@@ -25,145 +21,163 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Check if message contains a date and indicates willingness to register
-    const dateMatch = message.match(/(\d{1,2})[/-](\d{1,2})[/-]?(\d{4})?/);
-    const wantsToRegister = message.toLowerCase().includes('oui') || 
-                           message.toLowerCase().includes('inscris');
+    // For admin dashboard, analyze attendance stats and provide insights
+    if (isAdmin) {
+      console.log('Processing admin analytics request with stats context:', statsContext)
 
-    let registrationResponse = null;
-    if (dateMatch && wantsToRegister) {
-      const day = dateMatch[1].padStart(2, '0');
-      const month = dateMatch[2].padStart(2, '0');
-      const year = dateMatch[3] || new Date().getFullYear();
-      const formattedDate = `${year}-${month}-${day}`;
+      // Parse the stats context
+      const stats = statsContext.split('\n').reduce((acc, line) => {
+        const [sport, details] = line.split(':')
+        if (sport && details) {
+          const monthMatch = details.match(/(\d+\.?\d*)% ce mois-ci/)
+          const yearMatch = details.match(/(\d+\.?\d*)% sur l'année/)
+          const bestMonthMatch = details.match(/Meilleur mois: (.+) avec (\d+\.?\d*)%/)
 
-      console.log('Attempting registration for date:', formattedDate);
-
-      // Find the training for the given date
-      const { data: trainings, error: trainingsError } = await supabase
-        .from('trainings')
-        .select('*')
-        .eq('type', sport)
-        .eq('date', formattedDate)
-        .single();
-
-      if (trainingsError) {
-        console.error('Error finding training:', trainingsError);
-        registrationResponse = "Désolé, je n'ai pas trouvé d'entraînement pour cette date.";
-      } else if (trainings) {
-        // Check if user is already registered
-        const { data: existingReg } = await supabase
-          .from('registrations')
-          .select('id')
-          .eq('training_id', trainings.id)
-          .eq('user_id', userId)
-          .single();
-
-        if (existingReg) {
-          registrationResponse = "Tu es déjà inscrit à cet entraînement !";
-        } else {
-          // Register the user
-          const { error: registrationError } = await supabase
-            .from('registrations')
-            .insert({
-              training_id: trainings.id,
-              user_id: userId
-            });
-
-          if (registrationError) {
-            console.error('Error registering for training:', registrationError);
-            registrationResponse = "Désolé, je n'ai pas pu t'inscrire à l'entraînement. Essaie via la page des entraînements ou contacte un administrateur.";
-          } else {
-            registrationResponse = `Super ! Je t'ai inscrit à l'entraînement du ${day}/${month}/${year}. À bientôt !`;
+          acc[sport.trim()] = {
+            monthlyRate: monthMatch ? parseFloat(monthMatch[1]) : 0,
+            yearlyRate: yearMatch ? parseFloat(yearMatch[1]) : 0,
+            bestMonth: bestMonthMatch ? {
+              month: bestMonthMatch[1],
+              rate: parseFloat(bestMonthMatch[2])
+            } : null
           }
         }
-      }
-    }
+        return acc
+      }, {})
 
-    const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY')
-    if (!DEEPSEEK_API_KEY) {
-      throw new Error('Missing DEEPSEEK_API_KEY')
-    }
+      console.log('Parsed attendance stats:', stats)
 
-    const systemPrompt = isVisuallyImpaired
-      ? `Tu es un coach sportif virtuel spécialisé dans l'accompagnement des personnes déficientes visuelles. Tu aides les joueurs à rester motivés et à s'améliorer dans leur pratique du ${sport}. Donne des conseils personnalisés et adaptés à leur situation. IMPORTANT: Incite fortement le joueur à s'inscrire aux entraînements où il y a moins de six joueurs inscrits et où il n'est pas encore inscrit.`
-      : `Tu es un coach sportif virtuel qui aide les joueurs à rester motivés et à s'améliorer dans leur pratique du ${sport}. Tu donnes des conseils personnalisés basés sur leurs statistiques de présence aux entraînements. IMPORTANT: Incite fortement le joueur à s'inscrire aux entraînements où il y a moins de six joueurs inscrits et où il n'est pas encore inscrit.`
+      // Analyze the stats and generate insights
+      let response = "Voici mon analyse des statistiques de présence :\n\n"
 
-    console.log('System prompt:', systemPrompt)
-    console.log('User message:', message)
+      Object.entries(stats).forEach(([sport, data]) => {
+        response += `Pour le ${sport} :\n`
+        
+        // Monthly attendance analysis
+        if (data.monthlyRate < 50) {
+          response += `⚠️ Le taux de présence ce mois-ci est préoccupant (${data.monthlyRate}%). `
+          response += "Je recommande d'organiser une réunion avec les joueurs pour comprendre les raisons de cette faible participation.\n"
+        } else if (data.monthlyRate >= 80) {
+          response += `👏 Excellent taux de présence ce mois-ci (${data.monthlyRate}%). `
+          response += "La dynamique d'équipe est très positive.\n"
+        } else {
+          response += `Le taux de présence ce mois-ci est correct (${data.monthlyRate}%) mais peut être amélioré.\n`
+        }
 
-    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: message
+        // Yearly trend analysis
+        if (data.monthlyRate < data.yearlyRate) {
+          response += `📉 La tendance est à la baisse par rapport à la moyenne annuelle (${data.yearlyRate}%). `
+          response += "Il serait utile d'identifier les facteurs qui ont changé.\n"
+        } else if (data.monthlyRate > data.yearlyRate) {
+          response += `📈 La progression est positive par rapport à la moyenne annuelle (${data.yearlyRate}%).\n`
+        }
+
+        // Best month comparison
+        if (data.bestMonth) {
+          response += `Le meilleur taux de présence a été atteint en ${data.bestMonth.month} (${data.bestMonth.rate}%). `
+          if (data.monthlyRate < data.bestMonth.rate - 20) {
+            response += "Il y a un écart important avec cette période. Peut-être pouvons-nous nous inspirer des conditions qui ont permis ce succès?\n"
           }
-        ],
-        max_tokens: 500,
-        temperature: 0.7,
-      })
-    })
+        }
 
-    if (!response.ok) {
-      const errorData = await response.text()
-      console.error('DeepSeek API error:', errorData)
-      throw new Error(`DeepSeek API error: ${response.status} ${errorData}`)
-    }
-
-    const data = await response.json()
-    console.log('DeepSeek API response:', data)
-
-    // Store the message in the database
-    const { error: insertError } = await supabase
-      .from('chat_messages')
-      .insert({
-        user_id: userId,
-        message,
-        sport,
-        status: 'active'
+        response += "\n"
       })
 
-    if (insertError) {
-      console.error('Error storing chat message:', insertError)
-    }
+      // Add general recommendations
+      response += "\nRecommandations générales :\n"
+      const lowAttendanceSports = Object.entries(stats)
+        .filter(([_, data]) => data.monthlyRate < 60)
+        .map(([sport]) => sport)
 
-    // If we have a registration response, prepend it to the AI response
-    const finalResponse = registrationResponse 
-      ? `${registrationResponse}\n\n${data.choices[0].message.content}`
-      : data.choices[0].message.content;
-
-    return new Response(
-      JSON.stringify({ response: finalResponse }),
-      { 
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        } 
+      if (lowAttendanceSports.length > 0) {
+        response += `- Organiser une réunion de section pour ${lowAttendanceSports.join(' et ')} pour discuter des obstacles à la participation\n`
+        response += "- Envisager des ajustements d'horaires ou de format d'entraînement si nécessaire\n"
       }
-    )
-  } catch (error) {
-    console.error('Error in chat-with-coach function:', error)
+
+      response += "- Maintenir une communication régulière avec les joueurs\n"
+      response += "- Célébrer les progrès et les bons taux de participation\n"
+
+      console.log('Generated response:', response)
+
+      return new Response(
+        JSON.stringify({ response }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // For regular users, provide personalized training advice
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single()
+
+    if (!userProfile) {
+      throw new Error('User profile not found')
+    }
+
+    // Get user's recent training attendance
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+    const { data: recentTrainings } = await supabase
+      .from('registrations')
+      .select(`
+        *,
+        trainings (
+          type,
+          date,
+          start_time,
+          end_time
+        )
+      `)
+      .eq('user_id', userId)
+      .gte('created_at', thirtyDaysAgo.toISOString())
+      .order('created_at', { ascending: false })
+
+    // Generate personalized response based on user's message and context
+    let response = ""
+    const userSports = userProfile.sport.split(',').map((s: string) => s.trim().toLowerCase())
+    const attendedTrainings = recentTrainings?.length || 0
+
+    if (message.toLowerCase().includes('statistiques') || message.toLowerCase().includes('présence')) {
+      response = `Sur les 30 derniers jours, vous avez participé à ${attendedTrainings} entraînements. `
+      
+      if (attendedTrainings === 0) {
+        response += "Je vous encourage à reprendre les entraînements régulièrement pour maintenir votre niveau et votre intégration dans l'équipe."
+      } else if (attendedTrainings < 4) {
+        response += "C'est un bon début, mais une participation plus régulière serait bénéfique pour votre progression."
+      } else {
+        response += "Excellent niveau d'engagement ! Continuez ainsi."
+      }
+    } else if (message.toLowerCase().includes('conseil') || message.toLowerCase().includes('améliorer')) {
+      response = "Voici quelques conseils pour optimiser votre participation aux entraînements :\n"
+      response += "- Planifiez vos entraînements à l'avance\n"
+      response += "- Communiquez avec vos entraîneurs sur vos objectifs\n"
+      response += "- Maintenez une routine régulière\n"
+      
+      if (attendedTrainings < 4) {
+        response += "- Essayez d'augmenter progressivement votre fréquence de participation"
+      }
+    } else {
+      response = "Je suis là pour vous aider à optimiser votre participation aux entraînements. "
+      response += "N'hésitez pas à me poser des questions sur vos statistiques de présence ou à me demander des conseils pour vous améliorer."
+    }
+
+    console.log('Generated response:', response)
+
     return new Response(
-      JSON.stringify({ 
-        error: error.message || 'An error occurred while processing your request'
-      }),
+      JSON.stringify({ response }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+
+  } catch (error) {
+    console.error('Error:', error)
+    return new Response(
+      JSON.stringify({ error: error.message }),
       { 
         status: 500,
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     )
   }
