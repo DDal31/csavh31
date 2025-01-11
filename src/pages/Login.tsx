@@ -16,8 +16,10 @@ const Login = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
+      console.log("Checking authentication status...");
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
+        console.log("User already authenticated, redirecting to dashboard");
         navigate("/dashboard");
       }
     };
@@ -25,7 +27,9 @@ const Login = () => {
     checkAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event);
       if (event === "SIGNED_IN" && session) {
+        console.log("User signed in successfully");
         navigate("/dashboard");
       }
     });
@@ -35,25 +39,52 @@ const Login = () => {
 
   const handleSignIn = async (email: string, password: string) => {
     try {
+      console.log("Attempting sign in for email:", email);
+      if (!email) {
+        console.error("Email is required");
+        toast({
+          title: "Erreur de connexion",
+          description: "L'email est requis",
+          variant: "destructive"
+        });
+        return;
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Sign in error:", error);
+        let errorMessage = "Une erreur est survenue lors de la connexion.";
+        
+        if (error.message.includes("Invalid login credentials")) {
+          errorMessage = "Email ou mot de passe incorrect";
+        } else if (error.message.includes("Email not confirmed")) {
+          errorMessage = "Veuillez confirmer votre email avant de vous connecter";
+        }
+
+        toast({
+          title: "Erreur de connexion",
+          description: errorMessage,
+          variant: "destructive"
+        });
+        return;
+      }
 
       if (data.session) {
-        // If rememberMe is true, extend session duration
+        console.log("Sign in successful");
         if (rememberMe) {
           await supabase.auth.refreshSession();
         }
         navigate("/dashboard");
       }
     } catch (error) {
-      console.error("Erreur de connexion:", error);
+      console.error("Unexpected error during sign in:", error);
       toast({
         title: "Erreur de connexion",
-        description: "Une erreur est survenue lors de la connexion. Veuillez réessayer.",
+        description: "Une erreur inattendue est survenue. Veuillez réessayer.",
         variant: "destructive"
       });
     }
