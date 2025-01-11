@@ -35,23 +35,35 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
 
   useEffect(() => {
     const fetchMessageCount = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user?.id) return;
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user?.id) return;
 
-      const { data, error } = await supabase
-        .from("chat_messages")
-        .select("id")
-        .eq("user_id", session.user.id)
-        .gte("created_at", startOfDay(new Date()).toISOString())
-        .lte("created_at", endOfDay(new Date()).toISOString())
-        .eq("status", "active");
+        const today = new Date();
+        const startOfToday = startOfDay(today);
+        const endOfToday = endOfDay(today);
 
-      if (error) {
-        console.error("Error fetching message count:", error);
-        return;
+        console.log("Fetching message count for user:", session.user.id);
+        console.log("Date range:", startOfToday, "to", endOfToday);
+
+        const { data, error } = await supabase
+          .from("chat_messages")
+          .select("id")
+          .eq("user_id", session.user.id)
+          .eq("status", "active")
+          .gte("created_at", startOfToday.toISOString())
+          .lte("created_at", endOfToday.toISOString());
+
+        if (error) {
+          console.error("Error fetching message count:", error);
+          return;
+        }
+
+        console.log("Messages found:", data?.length || 0);
+        setMessageCount(data?.length || 0);
+      } catch (error) {
+        console.error("Error in fetchMessageCount:", error);
       }
-
-      setMessageCount(data?.length || 0);
     };
 
     fetchMessageCount();
@@ -340,4 +352,4 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
       />
     </div>
   );
-};
+}
