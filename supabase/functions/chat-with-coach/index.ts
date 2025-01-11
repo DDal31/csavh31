@@ -7,15 +7,78 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
     const { message, sport, isVisuallyImpaired, userId } = await req.json()
-    
     console.log('Received request:', { message, sport, isVisuallyImpaired, userId })
+
+    // Check if message contains a date and indicates willingness to register
+    const dateMatch = message.match(/(\d{1,2})[/-](\d{1,2})[/-]?(\d{4})?/);
+    const wantsToRegister = message.toLowerCase().includes('oui') || 
+                           message.toLowerCase().includes('inscris');
+
+    let registrationResponse = null;
+    if (dateMatch && wantsToRegister) {
+      const day = dateMatch[1].padStart(2, '0');
+      const month = dateMatch[2].padStart(2, '0');
+      const year = dateMatch[3] || new Date().getFullYear();
+      const formattedDate = `${year}-${month}-${day}`;
+
+      console.log('Attempting registration for date:', formattedDate);
+
+      // Initialize Supabase client
+      const supabaseUrl = Deno.env.get('SUPABASE_URL');
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+      if (!supabaseUrl || !supabaseServiceKey) {
+        throw new Error('Missing Supabase credentials');
+      }
+
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+      // Find the training for the given date
+      const { data: trainings, error: trainingsError } = await supabase
+        .from('trainings')
+        .select('*')
+        .eq('type', sport)
+        .eq('date', formattedDate)
+        .single();
+
+      if (trainingsError) {
+        console.error('Error finding training:', trainingsError);
+        registrationResponse = "Désolé, je n'ai pas trouvé d'entraînement pour cette date.";
+      } else if (trainings) {
+        // Check if user is already registered
+        const { data: existingReg } = await supabase
+          .from('registrations')
+          .select('id')
+          .eq('training_id', trainings.id)
+          .eq('user_id', userId)
+          .single();
+
+        if (existingReg) {
+          registrationResponse = "Tu es déjà inscrit à cet entraînement !";
+        } else {
+          // Register the user
+          const { error: registrationError } = await supabase
+            .from('registrations')
+            .insert({
+              training_id: trainings.id,
+              user_id: userId
+            });
+
+          if (registrationError) {
+            console.error('Error registering for training:', registrationError);
+            registrationResponse = "Désolé, je n'ai pas pu t'inscrire à l'entraînement. Essaie via la page des entraînements ou contacte un administrateur.";
+          } else {
+            registrationResponse = `Super ! Je t'ai inscrit à l'entraînement du ${day}/${month}/${year}. À bientôt !`;
+          }
+        }
+      }
+    }
 
     const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY')
     if (!DEEPSEEK_API_KEY) {
@@ -62,15 +125,6 @@ serve(async (req) => {
     console.log('DeepSeek API response:', data)
 
     // Store the message in the database
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-
-    if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error('Missing Supabase credentials')
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
-
     const { error: insertError } = await supabase
       .from('chat_messages')
       .insert({
@@ -84,8 +138,13 @@ serve(async (req) => {
       console.error('Error storing chat message:', insertError)
     }
 
+    // If we have a registration response, prepend it to the AI response
+    const finalResponse = registrationResponse 
+      ? `${registrationResponse}\n\n${data.choices[0].message.content}`
+      : data.choices[0].message.content;
+
     return new Response(
-      JSON.stringify({ response: data.choices[0].message.content }),
+      JSON.stringify({ response: finalResponse }),
       { 
         headers: { 
           ...corsHeaders,
