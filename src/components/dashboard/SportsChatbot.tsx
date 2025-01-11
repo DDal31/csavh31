@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { startOfMonth, subMonths, endOfMonth, startOfDay, endOfDay, format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { startOfMonth, subMonths, endOfMonth, startOfDay, endOfDay } from "date-fns";
 import type { Database } from "@/integrations/supabase/types";
 import { ChatHeader } from "./chatbot/ChatHeader";
 import { ChatMessage } from "./chatbot/ChatMessage";
@@ -28,7 +27,34 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
   const [response, setResponse] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [previousMonthStats, setPreviousMonthStats] = useState<{ present: number; total: number }>({ present: 0, total: 0 });
+  const [messageCount, setMessageCount] = useState(0);
   const { toast } = useToast();
+
+  const DAILY_MESSAGE_LIMIT = 5;
+
+  useEffect(() => {
+    const fetchMessageCount = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) return;
+
+      const { data, error } = await supabase
+        .from("chat_messages")
+        .select("id")
+        .eq("user_id", session.user.id)
+        .gte("created_at", startOfDay(new Date()).toISOString())
+        .lte("created_at", endOfDay(new Date()).toISOString())
+        .eq("status", "active");
+
+      if (error) {
+        console.error("Error fetching message count:", error);
+        return;
+      }
+
+      setMessageCount(data?.length || 0);
+    };
+
+    fetchMessageCount();
+  }, []);
 
   useEffect(() => {
     const fetchPreviousMonthStats = async () => {
@@ -149,78 +175,24 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
     sendInitialStats();
   }, [currentMonthStats, yearlyStats, previousMonthStats, sport, toast]);
 
-  const handleTrainingRegistration = async (trainingDate: string) => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user?.id) return null;
-
-      // Find the training by date
-      const { data: trainings, error: trainingsError } = await supabase
-        .from("trainings")
-        .select("*")
-        .eq("type", sport)
-        .eq("date", trainingDate)
-        .single();
-
-      if (trainingsError || !trainings) {
-        console.error("Error finding training:", trainingsError);
-        return null;
-      }
-
-      // Check if user is already registered
-      const { data: existingReg } = await supabase
-        .from("registrations")
-        .select("id")
-        .eq("training_id", trainings.id)
-        .eq("user_id", session.user.id)
-        .single();
-
-      if (existingReg) {
-        return "Tu es déjà inscrit à cet entraînement !";
-      }
-
-      // Register the user
-      const { error: registrationError } = await supabase
-        .from("registrations")
-        .insert({
-          training_id: trainings.id,
-          user_id: session.user.id
-        });
-
-      if (registrationError) throw registrationError;
-
-      return "Super ! Je t'ai inscrit à l'entraînement du " + format(new Date(trainingDate), "dd/MM/yyyy", { locale: fr }) + ". À bientôt !";
-    } catch (error) {
-      console.error("Error registering for training:", error);
-      return "Désolé, je n'ai pas pu t'inscrire à l'entraînement. Essaie via la page des entraînements ou contacte un administrateur.";
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim()) return;
+
+    if (messageCount >= DAILY_MESSAGE_LIMIT) {
+      toast({
+        title: "Limite atteinte",
+        description: "Vous avez atteint la limite de 5 messages par jour. Revenez demain !",
+        variant: "destructive"
+      });
+      return;
+    }
 
     setIsLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user?.id) {
         throw new Error("User not authenticated");
-      }
-
-      // Check if message contains a date and mentions wanting to participate
-      const dateMatch = message.match(/(\d{1,2})[/-](\d{1,2})[/-]?(\d{4})?/);
-      const wantsToParticipate = message.toLowerCase().includes("venir") || 
-                                message.toLowerCase().includes("participer") ||
-                                message.toLowerCase().includes("m'inscrire");
-
-      let registrationResponse = null;
-      if (dateMatch && wantsToParticipate) {
-        const day = dateMatch[1].padStart(2, '0');
-        const month = dateMatch[2].padStart(2, '0');
-        const year = dateMatch[3] || new Date().getFullYear();
-        const formattedDate = `${year}-${month}-${day}`;
-        
-        registrationResponse = await handleTrainingRegistration(formattedDate);
       }
 
       const { data: profile } = await supabase
@@ -242,23 +214,20 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
 
       if (insertError) throw insertError;
 
-      if (registrationResponse) {
-        setResponse(registrationResponse);
-      } else {
-        const { data, error } = await supabase.functions.invoke('chat-with-coach', {
-          body: { 
-            message, 
-            sport,
-            isVisuallyImpaired,
-            userId: session.user.id
-          }
-        });
+      const { data, error } = await supabase.functions.invoke('chat-with-coach', {
+        body: { 
+          message, 
+          sport,
+          isVisuallyImpaired,
+          userId: session.user.id
+        }
+      });
 
-        if (error) throw error;
-        setResponse(data.response);
-      }
+      if (error) throw error;
       
+      setResponse(data.response);
       setMessage("");
+      setMessageCount(prev => prev + 1);
     } catch (error) {
       console.error('Error in chat interaction:', error);
       toast({
@@ -273,7 +242,11 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
 
   return (
     <div className="p-6 h-full" role="complementary" aria-label="Coach virtuel">
-      <ChatHeader sport={sport} />
+      <ChatHeader 
+        sport={sport} 
+        messageCount={messageCount} 
+        maxMessages={DAILY_MESSAGE_LIMIT} 
+      />
       
       <div className="space-y-4 min-h-[200px] mb-6">
         {response && <ChatMessage message={response} />}
@@ -294,7 +267,9 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
         setMessage={setMessage}
         onSubmit={handleSubmit}
         isLoading={isLoading}
+        messageCount={messageCount}
+        maxMessages={DAILY_MESSAGE_LIMIT}
       />
     </div>
   );
-}
+};

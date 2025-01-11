@@ -18,7 +18,10 @@ export function AdminChatbot({ sportStats }: AdminChatbotProps) {
   const [message, setMessage] = useState("");
   const [response, setResponse] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [messageCount, setMessageCount] = useState(0);
   const { toast } = useToast();
+
+  const DAILY_MESSAGE_LIMIT = 10;
 
   const getInitialAnalysis = async () => {
     try {
@@ -47,6 +50,7 @@ export function AdminChatbot({ sportStats }: AdminChatbotProps) {
       if (error) throw error;
       
       setResponse(data.response);
+      setMessageCount(1);
     } catch (error) {
       console.error('Error getting initial analysis:', error);
       toast({
@@ -66,6 +70,15 @@ export function AdminChatbot({ sportStats }: AdminChatbotProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim()) return;
+
+    if (messageCount >= DAILY_MESSAGE_LIMIT) {
+      toast({
+        title: "Limite atteinte",
+        description: "Vous avez atteint la limite de 10 messages par jour. Revenez demain !",
+        variant: "destructive"
+      });
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -93,6 +106,7 @@ export function AdminChatbot({ sportStats }: AdminChatbotProps) {
       
       setResponse(data.response);
       setMessage("");
+      setMessageCount(prev => prev + 1);
     } catch (error) {
       console.error('Error in chat interaction:', error);
       toast({
@@ -111,6 +125,9 @@ export function AdminChatbot({ sportStats }: AdminChatbotProps) {
         <h3 className="text-lg font-semibold text-white">
           Assistant Administrateur
         </h3>
+        <span className="text-sm text-gray-400 ml-auto">
+          {messageCount}/{DAILY_MESSAGE_LIMIT} messages aujourd'hui
+        </span>
       </div>
       
       <div className="space-y-4 min-h-[200px] mb-6">
@@ -140,14 +157,14 @@ export function AdminChatbot({ sportStats }: AdminChatbotProps) {
           type="text"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Posez votre question..."
+          placeholder={messageCount >= DAILY_MESSAGE_LIMIT ? "Limite de messages atteinte pour aujourd'hui" : "Posez votre question..."}
           className="flex-grow bg-gray-700/50 border border-gray-600 focus:border-primary text-white placeholder:text-gray-400 px-4 py-2 rounded-lg"
           aria-label="Votre question à l'assistant administrateur"
-          disabled={isLoading}
+          disabled={isLoading || messageCount >= DAILY_MESSAGE_LIMIT}
         />
         <button 
           type="submit" 
-          disabled={isLoading || !message.trim()}
+          disabled={isLoading || !message.trim() || messageCount >= DAILY_MESSAGE_LIMIT}
           aria-label="Envoyer la question"
           className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >

@@ -7,13 +7,17 @@ interface ChatInputProps {
   setMessage: (message: string) => void;
   onSubmit: (e: React.FormEvent) => Promise<void>;
   isLoading: boolean;
+  messageCount: number;
+  maxMessages: number;
 }
 
 export function ChatInput({ 
   message, 
   setMessage, 
   onSubmit, 
-  isLoading
+  isLoading, 
+  messageCount,
+  maxMessages 
 }: ChatInputProps) {
   return (
     <form onSubmit={onSubmit} className="flex gap-3">
@@ -21,14 +25,14 @@ export function ChatInput({
         type="text"
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        placeholder="Posez votre question..."
+        placeholder={messageCount >= maxMessages ? "Limite de messages atteinte pour aujourd'hui" : "Posez votre question..."}
         className="flex-grow bg-gray-700/50 border-gray-600 focus:border-primary text-white placeholder:text-gray-400"
         aria-label="Votre question au coach virtuel"
-        disabled={isLoading}
+        disabled={isLoading || messageCount >= maxMessages}
       />
       <Button 
         type="submit" 
-        disabled={isLoading || !message.trim()}
+        disabled={isLoading || !message.trim() || messageCount >= maxMessages}
         aria-label="Envoyer la question"
         className="bg-primary hover:bg-primary/90 text-white"
       >
