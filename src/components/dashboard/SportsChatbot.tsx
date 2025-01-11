@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { startOfMonth, subMonths, endOfMonth, startOfDay, endOfDay } from "date-fns";
+import { startOfMonth, subMonths, endOfMonth } from "date-fns";
 import type { Database } from "@/integrations/supabase/types";
 import { ChatHeader } from "./chatbot/ChatHeader";
 import { ChatMessage } from "./chatbot/ChatMessage";
@@ -27,34 +27,7 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
   const [response, setResponse] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [previousMonthStats, setPreviousMonthStats] = useState<{ present: number; total: number }>({ present: 0, total: 0 });
-  const [messageCount, setMessageCount] = useState(0);
   const { toast } = useToast();
-
-  const DAILY_MESSAGE_LIMIT = 5;
-
-  useEffect(() => {
-    const fetchMessageCount = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user?.id) return;
-
-      const { data, error } = await supabase
-        .from("chat_messages")
-        .select("id")
-        .eq("user_id", session.user.id)
-        .gte("created_at", startOfDay(new Date()).toISOString())
-        .lte("created_at", endOfDay(new Date()).toISOString())
-        .eq("status", "active");
-
-      if (error) {
-        console.error("Error fetching message count:", error);
-        return;
-      }
-
-      setMessageCount(data?.length || 0);
-    };
-
-    fetchMessageCount();
-  }, []);
 
   useEffect(() => {
     const fetchPreviousMonthStats = async () => {
@@ -179,15 +152,6 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
     e.preventDefault();
     if (!message.trim()) return;
 
-    if (messageCount >= DAILY_MESSAGE_LIMIT) {
-      toast({
-        title: "Limite atteinte",
-        description: "Vous avez atteint la limite de 5 messages par jour. Revenez demain !",
-        variant: "destructive"
-      });
-      return;
-    }
-
     setIsLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -203,17 +167,6 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
 
       const isVisuallyImpaired = profile?.club_role === "joueur";
 
-      const { error: insertError } = await supabase
-        .from("chat_messages")
-        .insert({
-          message: message.trim(),
-          sport,
-          user_id: session.user.id,
-          status: 'active'
-        });
-
-      if (insertError) throw insertError;
-
       const { data, error } = await supabase.functions.invoke('chat-with-coach', {
         body: { 
           message, 
@@ -227,7 +180,6 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
       
       setResponse(data.response);
       setMessage("");
-      setMessageCount(prev => prev + 1);
     } catch (error) {
       console.error('Error in chat interaction:', error);
       toast({
@@ -242,11 +194,7 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
 
   return (
     <div className="p-6 h-full" role="complementary" aria-label="Coach virtuel">
-      <ChatHeader 
-        sport={sport} 
-        messageCount={messageCount} 
-        maxMessages={DAILY_MESSAGE_LIMIT} 
-      />
+      <ChatHeader sport={sport} />
       
       <div className="space-y-4 min-h-[200px] mb-6">
         {response && <ChatMessage message={response} />}
@@ -267,9 +215,7 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
         setMessage={setMessage}
         onSubmit={handleSubmit}
         isLoading={isLoading}
-        messageCount={messageCount}
-        maxMessages={DAILY_MESSAGE_LIMIT}
       />
     </div>
   );
-};
+}
