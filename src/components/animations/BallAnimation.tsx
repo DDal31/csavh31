@@ -13,7 +13,7 @@ export function BallAnimation({ type, animation, className }: BallAnimationProps
       rotate: [0, 360],
       x: [-20, 20],
       transition: {
-        duration: 1,
+        duration: 3,
         repeat: Infinity,
         repeatType: "reverse" as const,
         ease: "linear",
@@ -22,7 +22,7 @@ export function BallAnimation({ type, animation, className }: BallAnimationProps
     bounce: {
       y: [0, -20, 0],
       transition: {
-        duration: 0.6,
+        duration: 3,
         repeat: Infinity,
         repeatType: "reverse" as const,
         ease: "easeInOut",
@@ -31,7 +31,7 @@ export function BallAnimation({ type, animation, className }: BallAnimationProps
     spin: {
       rotate: [0, 360],
       transition: {
-        duration: 1,
+        duration: 3,
         repeat: Infinity,
         ease: "linear",
       },
