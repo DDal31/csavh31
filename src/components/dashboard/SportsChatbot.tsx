@@ -7,6 +7,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { ChatHeader } from "./chatbot/ChatHeader";
 import { ChatMessage } from "./chatbot/ChatMessage";
 import { ChatInput } from "./chatbot/ChatInput";
+import { TypingAnimation } from "./chatbot/TypingAnimation";
 
 type TrainingType = Database["public"]["Enums"]["training_type"];
 
@@ -153,6 +154,8 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
     if (!message.trim()) return;
 
     setIsLoading(true);
+    setResponse(""); // Reset response when sending new message
+    
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user?.id) {
@@ -204,8 +207,8 @@ export function SportsChatbot({ sport, currentMonthStats, yearlyStats }: SportsC
           </p>
         )}
         {isLoading && (
-          <div className="flex justify-center items-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <div className="flex flex-col items-center justify-center py-8 space-y-4">
+            <TypingAnimation />
           </div>
         )}
       </div>

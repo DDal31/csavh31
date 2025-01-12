@@ -1,4 +1,4 @@
-import { Bot } from "lucide-react";
+import { TypewriterText } from "./TypewriterText";
 
 interface ChatMessageProps {
   message: string;
@@ -9,11 +9,11 @@ export function ChatMessage({ message }: ChatMessageProps) {
   
   return (
     <div 
-      className="bg-gray-700/50 p-4 rounded-lg text-white animate-fade-in"
+      className="bg-gray-700/50 p-4 rounded-lg text-white"
       role="log" 
       aria-label="Réponse du coach"
     >
-      {message}
+      <TypewriterText text={message} />
     </div>
   );
 }

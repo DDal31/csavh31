@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Database } from "@/integrations/supabase/types";
+import { TypingAnimation } from "@/components/dashboard/chatbot/TypingAnimation";
+import { TypewriterText } from "@/components/dashboard/chatbot/TypewriterText";
 
 type TrainingType = Database["public"]["Enums"]["training_type"];
 
@@ -68,6 +70,8 @@ export function AdminChatbot({ sportStats }: AdminChatbotProps) {
     if (!message.trim()) return;
 
     setIsLoading(true);
+    setResponse(""); // Reset response when sending new message
+    
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user?.id) {
@@ -120,7 +124,7 @@ export function AdminChatbot({ sportStats }: AdminChatbotProps) {
             role="log" 
             aria-label="Réponse de l'assistant"
           >
-            {response}
+            <TypewriterText text={response} />
           </div>
         )}
         {!response && !isLoading && (
@@ -129,8 +133,8 @@ export function AdminChatbot({ sportStats }: AdminChatbotProps) {
           </p>
         )}
         {isLoading && (
-          <div className="flex justify-center items-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <div className="flex flex-col items-center justify-center py-8 space-y-4">
+            <TypingAnimation />
           </div>
         )}
       </div>
