@@ -1,10 +1,11 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { PublicRoutes } from "@/routes/publicRoutes";
 import { MemberRoutes } from "@/routes/memberRoutes";
 import { AdminRoutes } from "@/routes/adminRoutes";
 import { AdminSettingsRoutes } from "@/routes/adminSettingsRoutes";
+import { AnimatePresence } from "framer-motion";
 import "./App.css";
 
 const queryClient = new QueryClient({
@@ -16,16 +17,26 @@ const queryClient = new QueryClient({
   },
 });
 
+function AnimatedRoutes() {
+  const location = useLocation();
+  
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        {PublicRoutes()}
+        {MemberRoutes()}
+        {AdminRoutes()}
+        {AdminSettingsRoutes}
+      </Routes>
+    </AnimatePresence>
+  );
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <Routes>
-          {PublicRoutes()}
-          {MemberRoutes()}
-          {AdminRoutes()}
-          {AdminSettingsRoutes}
-        </Routes>
+        <AnimatedRoutes />
         <Toaster />
       </Router>
     </QueryClientProvider>
