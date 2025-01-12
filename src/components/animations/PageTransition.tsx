@@ -18,11 +18,16 @@ const PageTransition = ({ children }: PageTransitionProps) => {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+        exit={{ opacity: 1 }}
         transition={{ duration: 3 }}
         className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none"
       >
-        <div className="flex gap-4">
+        <motion.div 
+          className="flex gap-4"
+          initial={{ opacity: 1 }}
+          animate={{ opacity: 0 }}
+          transition={{ delay: 3, duration: 0 }}
+        >
           <BallAnimation 
             type="goalball" 
             animation="roll" 
@@ -31,7 +36,7 @@ const PageTransition = ({ children }: PageTransitionProps) => {
             type="torball" 
             animation="roll" 
           />
-        </div>
+        </motion.div>
       </motion.div>
       {children}
     </motion.div>

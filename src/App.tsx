@@ -23,12 +23,14 @@ function AnimatedRoutes() {
   
   return (
     <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        {PublicRoutes()}
-        {MemberRoutes()}
-        {AdminRoutes()}
-        {AdminSettingsRoutes}
-      </Routes>
+      <PageTransition>
+        <Routes location={location} key={location.pathname}>
+          {PublicRoutes()}
+          {MemberRoutes()}
+          {AdminRoutes()}
+          {AdminSettingsRoutes}
+        </Routes>
+      </PageTransition>
     </AnimatePresence>
   );
 }
@@ -37,9 +39,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <PageTransition>
-          <AnimatedRoutes />
-        </PageTransition>
+        <AnimatedRoutes />
         <Toaster />
       </Router>
     </QueryClientProvider>
