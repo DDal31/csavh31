@@ -6,6 +6,7 @@ import { MemberRoutes } from "@/routes/memberRoutes";
 import { AdminRoutes } from "@/routes/adminRoutes";
 import { AdminSettingsRoutes } from "@/routes/adminSettingsRoutes";
 import { AnimatePresence } from "framer-motion";
+import PageTransition from "@/components/animations/PageTransition";
 import "./App.css";
 
 const queryClient = new QueryClient({
@@ -36,7 +37,9 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <AnimatedRoutes />
+        <PageTransition>
+          <AnimatedRoutes />
+        </PageTransition>
         <Toaster />
       </Router>
     </QueryClientProvider>
