@@ -6,6 +6,7 @@ import { TrainingList } from "@/components/training/TrainingList";
 import { TrainingHeader } from "@/components/training/TrainingHeader";
 import { useTrainings } from "@/components/training/useTrainings";
 import { useTrainingRegistration } from "@/components/training/useTrainingRegistration";
+import PageTransition from "@/components/animations/PageTransition";
 
 const TrainingRegistration = () => {
   const { 
@@ -37,22 +38,24 @@ const TrainingRegistration = () => {
     <div className="min-h-screen bg-gray-900 text-gray-100">
       <Navbar />
       <main className="container mx-auto px-4 py-24">
-        <div className="max-w-2xl mx-auto">
-          <TrainingHeader />
-          
-          <TrainingList 
-            trainings={trainings}
-            selectedTrainings={selectedTrainings}
-            onTrainingToggle={toggleTrainingSelection}
-          />
-          
-          <Button 
-            onClick={() => handleSaveRegistrations(selectedTrainings)} 
-            className="w-full mt-6 bg-green-600 hover:bg-green-700 text-white"
-          >
-            Valider mes inscriptions
-          </Button>
-        </div>
+        <PageTransition>
+          <div className="max-w-2xl mx-auto">
+            <TrainingHeader />
+            
+            <TrainingList 
+              trainings={trainings}
+              selectedTrainings={selectedTrainings}
+              onTrainingToggle={toggleTrainingSelection}
+            />
+            
+            <Button 
+              onClick={() => handleSaveRegistrations(selectedTrainings)} 
+              className="w-full mt-6 bg-green-600 hover:bg-green-700 text-white"
+            >
+              Valider mes inscriptions
+            </Button>
+          </div>
+        </PageTransition>
       </main>
       <Footer />
     </div>
