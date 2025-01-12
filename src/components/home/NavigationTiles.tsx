@@ -10,14 +10,14 @@ export const NavigationTiles = () => {
       title: "Espace Membre",
       icon: User,
       route: "/login",
-      bgColor: "bg-blue-600 hover:bg-blue-700",
+      bgColor: "bg-purple-600 hover:bg-purple-700",
       ariaLabel: "Accéder à l'espace membre",
     },
     {
       title: "Contact",
       icon: Mail,
       route: "/contact",
-      bgColor: "bg-purple-600 hover:bg-purple-700",
+      bgColor: "bg-violet-600 hover:bg-violet-700",
       ariaLabel: "Nous contacter",
     },
   ];

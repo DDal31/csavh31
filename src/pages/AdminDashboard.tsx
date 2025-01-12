@@ -47,28 +47,28 @@ const AdminDashboard = () => {
       title: "Gestion des Utilisateurs",
       icon: Users,
       route: "/admin/users",
-      bgColor: "bg-blue-600 hover:bg-blue-700",
+      bgColor: "bg-purple-600 hover:bg-purple-700",
       ariaLabel: "Accéder à la gestion des utilisateurs"
     },
     {
       title: "Gestion des Entraînements",
       icon: Calendar,
       route: "/admin/trainings",
-      bgColor: "bg-green-600 hover:bg-green-700",
+      bgColor: "bg-violet-600 hover:bg-violet-700",
       ariaLabel: "Accéder à la gestion des entraînements"
     },
     {
       title: "Gestion des Documents",
       icon: FileText,
       route: "/admin/documents",
-      bgColor: "bg-purple-600 hover:bg-purple-700",
+      bgColor: "bg-indigo-600 hover:bg-indigo-700",
       ariaLabel: "Gérer les documents des utilisateurs"
     },
     {
       title: "Paramètres",
       icon: Settings,
       route: "/admin/settings",
-      bgColor: "bg-orange-600 hover:bg-orange-700",
+      bgColor: "bg-fuchsia-600 hover:bg-fuchsia-700",
       ariaLabel: "Accéder aux paramètres du site"
     }
   ];

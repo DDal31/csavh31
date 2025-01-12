@@ -46,49 +46,49 @@ const AdminSettings = () => {
       title: "Modifier Présentation",
       icon: FileText,
       route: "/admin/settings/presentation",
-      bgColor: "bg-blue-600 hover:bg-blue-700",
+      bgColor: "bg-purple-600 hover:bg-purple-700",
       ariaLabel: "Modifier la page de présentation"
     },
     {
       title: "Modifier Contacts",
       icon: Users,
       route: "/admin/settings/contacts",
-      bgColor: "bg-green-600 hover:bg-green-700",
+      bgColor: "bg-violet-600 hover:bg-violet-700",
       ariaLabel: "Gérer les contacts du bureau"
     },
     {
       title: "Gestion des Actualités",
       icon: Newspaper,
       route: "/admin/settings/news",
-      bgColor: "bg-purple-600 hover:bg-purple-700",
+      bgColor: "bg-indigo-600 hover:bg-indigo-700",
       ariaLabel: "Gérer les actualités"
     },
     {
       title: "Gestion des Sports et Équipes",
       icon: ListCollapse,
       route: "/admin/settings/sports-teams",
-      bgColor: "bg-indigo-600 hover:bg-indigo-700",
+      bgColor: "bg-fuchsia-600 hover:bg-fuchsia-700",
       ariaLabel: "Gérer les sports et les équipes"
     },
     {
       title: "Types de Documents",
       icon: FileStack,
       route: "/admin/settings/document-types",
-      bgColor: "bg-teal-600 hover:bg-teal-700",
+      bgColor: "bg-pink-600 hover:bg-pink-700",
       ariaLabel: "Gérer les types de documents"
     },
     {
       title: "Télécharger une feuille de présence",
       icon: FileSpreadsheet,
       route: "/admin/settings/attendance-sheets",
-      bgColor: "bg-violet-600 hover:bg-violet-700",
+      bgColor: "bg-rose-600 hover:bg-rose-700",
       ariaLabel: "Télécharger les feuilles de présence"
     },
     {
       title: "Modifier en-tête, pieds de page et icône",
       icon: Settings,
       route: "/admin/settings/site",
-      bgColor: "bg-pink-600 hover:bg-pink-700",
+      bgColor: "bg-purple-500 hover:bg-purple-600",
       ariaLabel: "Modifier l'apparence du site"
     }
   ];
