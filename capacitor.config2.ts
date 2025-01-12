@@ -1,4 +1,4 @@
-import type { CapacitorConfig } from '@capacitor/core';
+import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.csavh31.app',
@@ -10,6 +10,7 @@ const config: CapacitorConfig = {
     hostname: 'csavh31.fr'
   },
   ios: {
+    contentInset: 'always'
     contentInset: 'always',
     limitsNavigationsToAppBoundDomains: true
   },

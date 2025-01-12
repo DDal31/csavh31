@@ -1,1 +1,1 @@
-export const CLUB_LOGO_URL = "https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/club-assets/IMG_0880.jpeg";
+export const CLUB_LOGO_URL = "https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/site-assets/club-logo.png";

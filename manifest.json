@@ -1,0 +1,21 @@
+{
+  "name": "Club Sportif AVH31 Toulouse",
+  "short_name": "CSAVH31",
+  "description": "Club Sportif AVH31 Toulouse - Association sportive pour personnes déficientes visuelles",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1f2937",
+  "icons": [
+    {
+      "src": "https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/site-assets/app-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/site-assets/club-logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+} 
