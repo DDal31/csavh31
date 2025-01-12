@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useConfetti } from "@/hooks/useConfetti";
 import type { Training } from "@/types/training";
 
 type TrainingListProps = {
@@ -12,6 +13,9 @@ type TrainingListProps = {
 };
 
 export function TrainingList({ trainings, selectedTrainings, onTrainingToggle }: TrainingListProps) {
+  const { triggerConfetti } = useConfetti();
+  const [previousSelected, setPreviousSelected] = useState<string[]>([]);
+
   if (trainings.length === 0) {
     return (
       <div className="text-center text-gray-400">
@@ -19,6 +23,18 @@ export function TrainingList({ trainings, selectedTrainings, onTrainingToggle }:
       </div>
     );
   }
+
+  const handleTrainingToggle = (trainingId: string) => {
+    const wasSelected = selectedTrainings.includes(trainingId);
+    const willBeSelected = !wasSelected;
+    
+    if (willBeSelected && !previousSelected.includes(trainingId)) {
+      triggerConfetti();
+      setPreviousSelected(prev => [...prev, trainingId]);
+    }
+    
+    onTrainingToggle(trainingId);
+  };
 
   return (
     <div className="space-y-6">
@@ -41,7 +57,7 @@ export function TrainingList({ trainings, selectedTrainings, onTrainingToggle }:
               )}
               <Checkbox 
                 checked={selectedTrainings.includes(training.id)}
-                onCheckedChange={() => onTrainingToggle(training.id)}
+                onCheckedChange={() => handleTrainingToggle(training.id)}
                 className="border-gray-600 focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-purple-500"
                 aria-label={`S'inscrire à l'entraînement du ${format(new Date(training.date), "EEEE d MMMM yyyy", { locale: fr })}`}
               />
