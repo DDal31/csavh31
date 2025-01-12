@@ -3,20 +3,28 @@ import { format, isBefore, startOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PlayerRefereePanel } from "./PlayerRefereePanel";
+import { PlayerRefereePanel } from "@/components/admin/training/PlayerRefereePanel";
 import { UserPlus, PencilIcon, Trash2, Clock } from "lucide-react";
-import type { Training } from "@/types/training";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import type { Training } from "@/types/training";
 
 type TrainingListProps = {
   trainings: Training[];
-  onAddClick: () => void;
-  onEditClick: (training: Training) => void;
+  onAddClick?: () => void;
+  onEditClick?: (training: Training) => void;
+  selectedTrainings?: string[];
+  onTrainingToggle?: (trainingId: string) => void;
 };
 
-export function TrainingList({ trainings, onAddClick, onEditClick }: TrainingListProps) {
+export function TrainingList({ 
+  trainings, 
+  onAddClick, 
+  onEditClick,
+  selectedTrainings = [],
+  onTrainingToggle 
+}: TrainingListProps) {
   const [selectedTraining, setSelectedTraining] = useState<Training | null>(null);
 
   if (trainings.length === 0) {
