@@ -1,0 +1,52 @@
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
+
+interface BallAnimationProps {
+  type: "goalball" | "torball";
+  animation: "roll" | "bounce" | "spin";
+  className?: string;
+}
+
+export function BallAnimation({ type, animation, className }: BallAnimationProps) {
+  const ballVariants = {
+    roll: {
+      rotate: [0, 360],
+      x: [-20, 20],
+      transition: {
+        duration: 1,
+        repeat: Infinity,
+        repeatType: "reverse" as const,
+        ease: "linear",
+      },
+    },
+    bounce: {
+      y: [0, -20, 0],
+      transition: {
+        duration: 0.6,
+        repeat: Infinity,
+        repeatType: "reverse" as const,
+        ease: "easeInOut",
+      },
+    },
+    spin: {
+      rotate: [0, 360],
+      transition: {
+        duration: 1,
+        repeat: Infinity,
+        ease: "linear",
+      },
+    },
+  };
+
+  return (
+    <motion.div
+      className={cn(
+        "w-8 h-8 rounded-full",
+        type === "goalball" ? "bg-primary" : "bg-white border-2 border-gray-300",
+        className
+      )}
+      variants={ballVariants}
+      animate={animation}
+    />
+  );
+}

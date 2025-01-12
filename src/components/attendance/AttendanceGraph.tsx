@@ -1,6 +1,7 @@
 import { CircleCheck, CircleAlert, CircleX } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
+import { BallAnimation } from "@/components/animations/BallAnimation";
 
 interface AttendanceGraphProps {
   type: "players" | "referees";
@@ -30,21 +31,22 @@ export function AttendanceGraph({ type, count, ariaLabel }: AttendanceGraphProps
                     status === "minimal" ? "text-yellow-500" :
                     "text-red-500";
 
-  // Calculer le pourcentage pour la barre de progression
   const getProgressPercentage = () => {
     if (type === "players") {
-      return Math.min((count / 8) * 100, 100); // Maximum considéré : 8 joueurs
+      return Math.min((count / 8) * 100, 100);
     } else {
-      return Math.min((count / 2) * 100, 100); // Maximum considéré : 2 arbitres
+      return Math.min((count / 2) * 100, 100);
     }
   };
+
+  const progressValue = getProgressPercentage();
 
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="flex flex-col gap-2 p-3 rounded-lg bg-gray-700 w-full"
+      className="flex flex-col gap-2 p-3 rounded-lg bg-gray-700 w-full relative"
       role="img"
       aria-label={ariaLabel}
     >
@@ -60,10 +62,26 @@ export function AttendanceGraph({ type, count, ariaLabel }: AttendanceGraphProps
           </p>
         </div>
       </div>
-      <Progress 
-        value={getProgressPercentage()} 
-        className="h-2 bg-gray-600"
-      />
+      <div className="relative">
+        <Progress 
+          value={progressValue} 
+          className="h-2 bg-gray-600"
+        />
+        {progressValue > 0 && (
+          <motion.div
+            initial={{ x: 0 }}
+            animate={{ x: `${progressValue}%` }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="absolute left-0 -top-3"
+          >
+            <BallAnimation 
+              type={type === "players" ? "goalball" : "torball"}
+              animation="roll"
+              className="w-4 h-4 transform -translate-x-1/2"
+            />
+          </motion.div>
+        )}
+      </div>
     </motion.div>
   );
 }
