@@ -20,7 +20,7 @@ const PageTransition = ({ children }: PageTransitionProps) => {
         animate={{ opacity: 0 }}
         exit={{ opacity: 0 }}
         transition={{ delay: 3, duration: 0 }}
-        className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none"
+        className="fixed inset-0 bg-gray-900 flex items-center justify-center z-50"
       >
         <motion.div 
           className="flex flex-col items-center gap-8"
