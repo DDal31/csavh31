@@ -10,6 +10,7 @@ import { LogoSection } from "@/components/admin/settings/LogoSection";
 import { TitleSection } from "@/components/admin/settings/TitleSection";
 import { IconsUploadSection } from "@/components/admin/settings/IconsUploadSection";
 import { SiteSettings } from "@/types/settings";
+import PageTransition from "@/components/animations/PageTransition";
 
 const AdminSiteSettings = () => {
   const navigate = useNavigate();
@@ -136,31 +137,33 @@ const AdminSiteSettings = () => {
   return (
     <div className="min-h-screen bg-gray-900">
       <Navbar />
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto space-y-8">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-white">Paramètres du site</h1>
-            <Button
-              onClick={() => navigate("/admin/settings")}
-              variant="outline"
-            >
-              Retour
-            </Button>
+      <PageTransition>
+        <main className="container mx-auto px-4 py-8">
+          <div className="max-w-4xl mx-auto space-y-8">
+            <div className="flex justify-between items-center">
+              <h1 className="text-2xl font-bold text-white">Paramètres du site</h1>
+              <Button
+                onClick={() => navigate("/admin/settings")}
+                variant="outline"
+              >
+                Retour
+              </Button>
+            </div>
+
+            <LogoSection 
+              settings={settings} 
+              onSettingChange={handleSettingChange} 
+            />
+
+            <IconsUploadSection />
+
+            <TitleSection 
+              settings={settings} 
+              onSettingChange={handleSettingChange} 
+            />
           </div>
-
-          <LogoSection 
-            settings={settings} 
-            onSettingChange={handleSettingChange} 
-          />
-
-          <IconsUploadSection />
-
-          <TitleSection 
-            settings={settings} 
-            onSettingChange={handleSettingChange} 
-          />
-        </div>
-      </main>
+        </main>
+      </PageTransition>
       <Footer />
     </div>
   );

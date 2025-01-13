@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import { AttendanceSheetsList } from "@/components/admin/attendance/AttendanceSheetsList";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import PageTransition from "@/components/animations/PageTransition";
 
 const AdminAttendanceSheets = () => {
   const navigate = useNavigate();
@@ -53,23 +54,25 @@ const AdminAttendanceSheets = () => {
   return (
     <div className="min-h-screen bg-gray-900">
       <Navbar />
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          <Button
-            onClick={() => navigate("/admin/settings")}
-            variant="ghost"
-            className="mb-6 text-gray-300 hover:text-white hover:bg-gray-800 focus:ring-2 focus:ring-gray-400 focus:outline-none"
-            aria-label="Retour aux paramètres"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Retour aux paramètres
-          </Button>
-          <h1 className="text-2xl font-bold text-white mb-8">
-            Feuilles de Présence
-          </h1>
-          <AttendanceSheetsList />
-        </div>
-      </main>
+      <PageTransition>
+        <main className="container mx-auto px-4 py-8">
+          <div className="max-w-6xl mx-auto">
+            <Button
+              onClick={() => navigate("/admin/settings")}
+              variant="ghost"
+              className="mb-6 text-gray-300 hover:text-white hover:bg-gray-800 focus:ring-2 focus:ring-gray-400 focus:outline-none"
+              aria-label="Retour aux paramètres"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Retour aux paramètres
+            </Button>
+            <h1 className="text-2xl font-bold text-white mb-8">
+              Feuilles de Présence
+            </h1>
+            <AttendanceSheetsList />
+          </div>
+        </main>
+      </PageTransition>
       <Footer />
     </div>
   );

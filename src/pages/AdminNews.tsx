@@ -9,6 +9,7 @@ import { Loader2, ArrowLeft, Plus, Pencil, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
+import PageTransition from "@/components/animations/PageTransition";
 
 interface NewsArticle {
   id: string;
@@ -146,81 +147,83 @@ const AdminNews = () => {
   return (
     <div className="min-h-screen bg-gray-900">
       <Navbar />
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
-            <Button
-              onClick={() => navigate("/admin/settings")}
-              variant="outline"
-              className="w-full sm:w-auto"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Retour aux Paramètres
-            </Button>
-            <Button
-              onClick={() => navigate("/admin/settings/news/create")}
-              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Nouvelle Actualité
-            </Button>
-          </div>
+      <PageTransition>
+        <main className="container mx-auto px-4 py-8">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
+              <Button
+                onClick={() => navigate("/admin/settings")}
+                variant="outline"
+                className="w-full sm:w-auto"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Retour aux Paramètres
+              </Button>
+              <Button
+                onClick={() => navigate("/admin/settings/news/create")}
+                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Nouvelle Actualité
+              </Button>
+            </div>
 
-          <div className="space-y-4">
-            {news.map((article) => (
-              <Card key={article.id} className="bg-gray-800 border-gray-700">
-                <CardContent className="p-6">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div className="flex-1">
-                      <h3 className="text-xl font-semibold text-white mb-2">
-                        {article.title}
-                      </h3>
-                      <div className="text-sm text-gray-400">
-                        <p>
-                          Publié le{" "}
-                          {format(new Date(article.published_at), "d MMMM yyyy", {
-                            locale: fr,
-                          })}
-                        </p>
-                        <p>
-                          Par {article.author?.first_name} {article.author?.last_name}
-                        </p>
+            <div className="space-y-4">
+              {news.map((article) => (
+                <Card key={article.id} className="bg-gray-800 border-gray-700">
+                  <CardContent className="p-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                      <div className="flex-1">
+                        <h3 className="text-xl font-semibold text-white mb-2">
+                          {article.title}
+                        </h3>
+                        <div className="text-sm text-gray-400">
+                          <p>
+                            Publié le{" "}
+                            {format(new Date(article.published_at), "d MMMM yyyy", {
+                              locale: fr,
+                            })}
+                          </p>
+                          <p>
+                            Par {article.author?.first_name} {article.author?.last_name}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 w-full sm:w-auto">
+                        <Button
+                          onClick={() =>
+                            navigate(`/admin/settings/news/${article.id}/edit`)
+                          }
+                          variant="outline"
+                          className="flex-1 sm:flex-none"
+                          aria-label={`Modifier l'actualité : ${article.title}`}
+                        >
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Modifier
+                        </Button>
+                        <Button
+                          onClick={() => handleDelete(article.id)}
+                          variant="destructive"
+                          className="flex-1 sm:flex-none"
+                          aria-label={`Supprimer l'actualité : ${article.title}`}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Supprimer
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex gap-2 w-full sm:w-auto">
-                      <Button
-                        onClick={() =>
-                          navigate(`/admin/settings/news/${article.id}/edit`)
-                        }
-                        variant="outline"
-                        className="flex-1 sm:flex-none"
-                        aria-label={`Modifier l'actualité : ${article.title}`}
-                      >
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Modifier
-                      </Button>
-                      <Button
-                        onClick={() => handleDelete(article.id)}
-                        variant="destructive"
-                        className="flex-1 sm:flex-none"
-                        aria-label={`Supprimer l'actualité : ${article.title}`}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Supprimer
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            {news.length === 0 && (
-              <div className="text-center py-8 text-gray-400">
-                Aucune actualité n'a été publiée pour le moment.
-              </div>
-            )}
+                  </CardContent>
+                </Card>
+              ))}
+              {news.length === 0 && (
+                <div className="text-center py-8 text-gray-400">
+                  Aucune actualité n'a été publiée pour le moment.
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      </main>
+        </main>
+      </PageTransition>
       <Footer />
     </div>
   );

@@ -9,6 +9,7 @@ import ContactForm from "@/components/admin/contacts/ContactForm";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, UserPlus } from "lucide-react";
 import { Loader2 } from "lucide-react";
+import PageTransition from "@/components/animations/PageTransition";
 
 const AdminContacts = () => {
   const navigate = useNavigate();
@@ -58,45 +59,47 @@ const AdminContacts = () => {
   return (
     <div className="min-h-screen bg-gray-900">
       <Navbar />
-      <main className="container mx-auto px-4 py-8 sm:py-12">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
-            <Button 
-              variant="ghost" 
-              className="text-white w-fit flex items-center gap-2 hover:text-gray-300"
-              onClick={() => navigate("/admin/settings")}
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Retour
-            </Button>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white">
-              Gestion des Contacts
-            </h1>
-            <Button
-              onClick={() => setShowForm(true)}
-              className="bg-green-600 hover:bg-green-700 text-white"
-            >
-              <UserPlus className="h-4 w-4 mr-2" />
-              Nouveau Contact
-            </Button>
-          </div>
+      <PageTransition>
+        <main className="container mx-auto px-4 py-8 sm:py-12">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
+              <Button 
+                variant="ghost" 
+                className="text-white w-fit flex items-center gap-2 hover:text-gray-300"
+                onClick={() => navigate("/admin/settings")}
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Retour
+              </Button>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white">
+                Gestion des Contacts
+              </h1>
+              <Button
+                onClick={() => setShowForm(true)}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Nouveau Contact
+              </Button>
+            </div>
 
-          {showForm ? (
-            <ContactForm 
-              onClose={() => setShowForm(false)}
-              onSuccess={() => {
-                setShowForm(false);
-                toast({
-                  title: "Succès",
-                  description: "Le contact a été ajouté avec succès",
-                });
-              }}
-            />
-          ) : (
-            <ContactsList />
-          )}
-        </div>
-      </main>
+            {showForm ? (
+              <ContactForm 
+                onClose={() => setShowForm(false)}
+                onSuccess={() => {
+                  setShowForm(false);
+                  toast({
+                    title: "Succès",
+                    description: "Le contact a été ajouté avec succès",
+                  });
+                }}
+              />
+            ) : (
+              <ContactsList />
+            )}
+          </div>
+        </main>
+      </PageTransition>
       <Footer />
     </div>
   );
