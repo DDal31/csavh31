@@ -10,6 +10,7 @@ import { useDocuments } from "@/hooks/useDocuments";
 import { useAdminDocuments } from "@/hooks/useAdminDocuments";
 import { TeamDownloads } from "@/components/admin/documents/TeamDownloads";
 import { UserDocumentsList } from "@/components/admin/documents/UserDocumentsList";
+import PageTransition from "@/components/animations/PageTransition";
 
 const AdminDocuments = () => {
   const navigate = useNavigate();
@@ -125,7 +126,8 @@ const AdminDocuments = () => {
   return (
     <div className="min-h-screen bg-gray-900">
       <Navbar />
-      <main className="container mx-auto px-4 py-8">
+      <PageTransition>
+        <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <Button
@@ -155,7 +157,8 @@ const AdminDocuments = () => {
             selectedTeam={selectedTeam}
           />
         </div>
-      </main>
+        </main>
+      </PageTransition>
       <Footer />
     </div>
   );

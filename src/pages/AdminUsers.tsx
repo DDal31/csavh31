@@ -14,6 +14,7 @@ import {
 import CreateUserForm from "@/components/admin/CreateUserForm";
 import { UsersTable } from "@/components/admin/users/UsersTable";
 import { AdminUsersHeader } from "@/components/admin/users/AdminUsersHeader";
+import PageTransition from "@/components/animations/PageTransition";
 import type { Profile } from "@/types/profile";
 import type { CreateUserData } from "@/types/auth";
 
@@ -145,7 +146,8 @@ const AdminUsers = () => {
   return (
     <div className="min-h-screen bg-gray-900">
       <Navbar />
-      <main className="container mx-auto px-4 py-24">
+      <PageTransition>
+        <main className="container mx-auto px-4 py-24">
         <div className="max-w-7xl mx-auto">
           <AdminUsersHeader onNewUser={() => setIsCreateDialogOpen(true)} />
 
@@ -167,7 +169,8 @@ const AdminUsers = () => {
             onDeleteUser={handleDeleteUser}
           />
         </div>
-      </main>
+        </main>
+      </PageTransition>
       <Footer />
     </div>
   );
