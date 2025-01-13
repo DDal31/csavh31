@@ -15,6 +15,9 @@ export function TypewriterText({ text, className = "" }: TypewriterTextProps) {
     setDisplayedText("");
     
     let currentIndex = 0;
+    // Calculate typing speed based on text length to complete in 3 seconds
+    const typingSpeed = Math.max(5, (3000 / text.length));
+    
     const typingInterval = setInterval(() => {
       if (currentIndex < text.length) {
         setDisplayedText(prev => prev + text[currentIndex]);
@@ -23,7 +26,7 @@ export function TypewriterText({ text, className = "" }: TypewriterTextProps) {
         setIsTyping(false);
         clearInterval(typingInterval);
       }
-    }, 30); // Vitesse de frappe
+    }, typingSpeed);
 
     return () => clearInterval(typingInterval);
   }, [text]);
