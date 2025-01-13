@@ -2,6 +2,8 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -10,35 +12,86 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
   const location = useLocation();
+  const { toast } = useToast();
 
-  const { data: session } = useQuery({
+  // Setup auth state listener
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event);
+      if (event === 'TOKEN_REFRESHED') {
+        console.log("Token refreshed successfully");
+      }
+      if (event === 'SIGNED_OUT') {
+        console.log("User signed out");
+        queryClient.invalidateQueries({ queryKey: ["session"] });
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const { data: session, isError: sessionError } = useQuery({
     queryKey: ["session"],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      return session;
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error("Error getting session:", error);
+          throw error;
+        }
+        return session;
+      } catch (error) {
+        console.error("Session error:", error);
+        toast({
+          title: "Erreur d'authentification",
+          description: "Veuillez vous reconnecter",
+          variant: "destructive"
+        });
+        // Force sign out on session error
+        await supabase.auth.signOut();
+        throw error;
+      }
     },
+    retry: false
   });
 
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile, isLoading, isError: profileError } = useQuery({
     queryKey: ["profile", session?.user?.id],
     enabled: !!session?.user?.id,
     queryFn: async () => {
       console.log("Fetching profile for user:", session?.user?.id);
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", session?.user?.id)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", session?.user?.id)
+          .single();
 
-      if (error) {
-        console.error("Error fetching profile:", error);
+        if (error) {
+          console.error("Error fetching profile:", error);
+          throw error;
+        }
+
+        console.log("Profile data:", data);
+        return data;
+      } catch (error) {
+        console.error("Profile fetch error:", error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger votre profil",
+          variant: "destructive"
+        });
         throw error;
       }
-
-      console.log("Profile data:", data);
-      return data;
     },
   });
+
+  // Handle authentication errors
+  if (sessionError || profileError) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
 
   if (!session) {
     console.log("No session found, redirecting to login");
