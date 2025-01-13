@@ -26,7 +26,7 @@ const PageTransition = ({ children }: PageTransitionProps) => {
           className="flex flex-col items-center gap-8"
           initial={{ opacity: 1 }}
           animate={{ opacity: 0 }}
-          transition={{ delay: 3, duration: 0 }}
+          transition={{ delay: 2.5, duration: 0.5 }}
         >
           <motion.img
             src="https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/site-assets/club-logo.png"
