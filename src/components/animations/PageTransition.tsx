@@ -20,13 +20,13 @@ const PageTransition = ({ children }: PageTransitionProps) => {
         animate={{ opacity: 0 }}
         exit={{ opacity: 0 }}
         transition={{ delay: 3, duration: 0 }}
-        className="fixed inset-0 bg-gray-900 flex items-center justify-center z-50"
+        className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none"
       >
         <motion.div 
           className="flex flex-col items-center gap-8"
           initial={{ opacity: 1 }}
           animate={{ opacity: 0 }}
-          transition={{ delay: 2.5, duration: 0.5 }}
+          transition={{ delay: 3, duration: 0 }}
         >
           <motion.img
             src="https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/site-assets/club-logo.png"
