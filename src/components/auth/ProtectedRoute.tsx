@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
@@ -13,6 +13,7 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
   const location = useLocation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Setup auth state listener
   useEffect(() => {
@@ -30,7 +31,7 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [queryClient]);
 
   const { data: session, isError: sessionError } = useQuery({
     queryKey: ["session"],
