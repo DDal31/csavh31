@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import { Loader2 } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { DashboardTiles } from "@/components/dashboard/DashboardTiles";
+import PageTransition from "@/components/animations/PageTransition";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -63,16 +64,18 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
-      <Navbar />
-      <main className="container mx-auto px-4 py-12" role="main">
-        <div className="max-w-6xl mx-auto">
-          <DashboardHeader onSignOut={handleSignOut} />
-          <DashboardTiles isAdmin={isAdmin} userSports={userSports} />
-        </div>
-      </main>
-      <Footer />
-    </div>
+    <PageTransition>
+      <div className="min-h-screen bg-gray-900">
+        <Navbar />
+        <main className="container mx-auto px-4 py-12" role="main">
+          <div className="max-w-6xl mx-auto">
+            <DashboardHeader onSignOut={handleSignOut} />
+            <DashboardTiles isAdmin={isAdmin} userSports={userSports} />
+          </div>
+        </main>
+        <Footer />
+      </div>
+    </PageTransition>
   );
 };
 
