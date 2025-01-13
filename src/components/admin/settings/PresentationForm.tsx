@@ -8,6 +8,7 @@ import { Loader2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
+import { ImageUpload } from "@/components/admin/news/ImageUpload";
 
 export const PresentationForm = () => {
   const navigate = useNavigate();
@@ -15,6 +16,8 @@ export const PresentationForm = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [images, setImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
   const { data: presentationData, isLoading } = useQuery({
     queryKey: ["presentation-content"],
@@ -22,7 +25,7 @@ export const PresentationForm = () => {
       console.log("Fetching presentation content...");
       const { data, error } = await supabase
         .from("pages_content")
-        .select("content, title")
+        .select("content, title, image_paths")
         .eq("section", "presentation")
         .maybeSingle();
       
@@ -34,23 +37,71 @@ export const PresentationForm = () => {
       if (data) {
         setTitle(data.title || "");
         setContent(data.content || "");
+        setImagePreviews(data.image_paths || []);
       }
       
       return data;
     },
   });
 
+  const handleImageChange = async (file: File | null, index: number) => {
+    if (!file) return;
+
+    const newImages = [...images];
+    newImages[index] = file;
+    setImages(newImages);
+
+    // Create preview URL
+    const previewUrl = URL.createObjectURL(file);
+    const newPreviews = [...imagePreviews];
+    newPreviews[index] = previewUrl;
+    setImagePreviews(newPreviews);
+  };
+
+  const uploadImage = async (file: File): Promise<string> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${crypto.randomUUID()}.${fileExt}`;
+    const filePath = `presentation/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('presentation-images')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('presentation-images')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
+      // Upload new images
+      const uploadPromises = images
+        .filter(Boolean)
+        .map(file => uploadImage(file));
+      
+      const newImageUrls = await Promise.all(uploadPromises);
+      
+      // Combine existing image paths (that weren't replaced) with new ones
+      const finalImagePaths = imagePreviews.map((preview, index) => 
+        images[index] ? newImageUrls[images.findIndex((_, i) => i === index)] : preview
+      );
+
       const { error } = await supabase
         .from("pages_content")
         .upsert({
           section: "presentation",
           title,
           content,
+          image_paths: finalImagePaths,
         }, {
           onConflict: "section"
         });
@@ -106,6 +157,22 @@ export const PresentationForm = () => {
                 className="bg-gray-700 border-gray-600 text-white"
                 placeholder="Titre de la présentation"
               />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-200">
+                Images
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[0, 1, 2].map((index) => (
+                  <ImageUpload
+                    key={index}
+                    label={`Image ${index + 1}`}
+                    onChange={(file) => handleImageChange(file, index)}
+                    preview={imagePreviews[index]}
+                  />
+                ))}
+              </div>
             </div>
 
             <div className="space-y-2">
