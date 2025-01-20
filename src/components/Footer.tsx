@@ -4,8 +4,11 @@ import { SiteSettings, SocialMediaLinks } from "@/types/settings";
 import { FooterLogo } from "./footer/FooterLogo";
 import { FooterNavigation } from "./footer/FooterNavigation";
 import { FooterSocial } from "./footer/FooterSocial";
+import { useToast } from "@/components/ui/use-toast";
 
 const Footer = () => {
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
   const [settings, setSettings] = useState<SiteSettings>({
     site_title: "CSAVH31 Toulouse",
     site_description: "Association dédiée au sport et au bien-être pour les personnes déficientes visuelles.",
@@ -23,14 +26,20 @@ const Footer = () => {
   });
 
   useEffect(() => {
+    let isMounted = true;
+
     const loadSettings = async () => {
-      console.log("Loading footer settings...");
+      if (!isLoading) return; // Prevent reloading if already loaded
+
       try {
+        console.log("Loading footer settings...");
         const { data: settingsData, error: settingsError } = await supabase
           .from("site_settings")
           .select("*");
 
         if (settingsError) throw settingsError;
+
+        if (!isMounted) return;
 
         console.log("Settings data received:", settingsData);
 
@@ -72,6 +81,8 @@ const Footer = () => {
 
         if (socialError) throw socialError;
 
+        if (!isMounted) return;
+
         const socialObj = socialData.reduce<SocialMediaLinks>((acc, curr) => {
           const platform = curr.platform as keyof SocialMediaLinks;
           acc[platform] = { 
@@ -86,13 +97,26 @@ const Footer = () => {
         });
 
         setSocialMedia(socialObj);
+        setIsLoading(false);
       } catch (error) {
         console.error("Erreur lors du chargement des paramètres:", error);
+        if (isMounted) {
+          toast({
+            title: "Erreur",
+            description: "Impossible de charger les paramètres du site",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+        }
       }
     };
 
     loadSettings();
-  }, []);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [toast]);
 
   return (
     <footer className="bg-gray-800 text-gray-300 border-t border-gray-700">
