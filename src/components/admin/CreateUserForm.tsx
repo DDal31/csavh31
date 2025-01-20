@@ -7,6 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import { UserBasicInfoFields } from "./users/form/UserBasicInfoFields";
 import { UserRoleFields } from "./users/form/UserRoleFields";
 import { UserSportsTeamsFields } from "./users/form/UserSportsTeamsFields";
+import { useToast } from "@/hooks/use-toast";
 import type { CreateUserData, UserFormData } from "@/types/auth";
 
 interface CreateUserFormProps {
@@ -16,6 +17,7 @@ interface CreateUserFormProps {
 }
 
 const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) => {
+  const { toast } = useToast();
   const form = useForm<UserFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -31,6 +33,58 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
     }
   });
 
+  const handleSubmit = async (data: CreateUserData) => {
+    try {
+      console.log("Tentative de création d'utilisateur avec les données:", data);
+      
+      // Validation des champs requis
+      if (!data.first_name.trim() || !data.last_name.trim() || !data.email.trim() || !data.password.trim()) {
+        toast({
+          title: "Erreur de validation",
+          description: "Tous les champs obligatoires doivent être remplis",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validation de l'email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(data.email)) {
+        toast({
+          title: "Erreur de validation",
+          description: "L'adresse email n'est pas valide",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validation du mot de passe
+      if (data.password.length < 6) {
+        toast({
+          title: "Erreur de validation",
+          description: "Le mot de passe doit contenir au moins 6 caractères",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await onSubmit(data);
+      
+      console.log("Création d'utilisateur réussie");
+      toast({
+        title: "Succès",
+        description: "L'utilisateur a été créé avec succès",
+      });
+    } catch (error) {
+      console.error("Erreur lors de la création de l'utilisateur:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de créer l'utilisateur. Veuillez réessayer.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div role="main" aria-label="Formulaire de création d'utilisateur">
       <Button 
@@ -45,7 +99,7 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
 
       <Form {...form}>
         <form 
-          onSubmit={form.handleSubmit(data => onSubmit(data as CreateUserData))} 
+          onSubmit={form.handleSubmit(handleSubmit)} 
           className="space-y-6"
           aria-label="Formulaire de création d'utilisateur"
         >
