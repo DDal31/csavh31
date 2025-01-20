@@ -21,7 +21,7 @@ import type { CreateUserData } from "@/types/auth";
 interface User {
   id: string;
   email: string;
-  profile: Profile;
+  profile?: Profile;
 }
 
 const AdminUsers = () => {
@@ -44,7 +44,7 @@ const AdminUsers = () => {
           .from("profiles")
           .select("site_role")
           .eq("id", session.user.id)
-          .single();
+          .maybeSingle();
 
         if (!profile || profile.site_role !== "admin") {
           navigate("/dashboard");
@@ -63,11 +63,17 @@ const AdminUsers = () => {
 
   const fetchUsers = async () => {
     try {
+      console.log("Fetching users...");
       const { data, error } = await supabase.functions.invoke('manage-users', {
         body: { method: 'GET_USERS' }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching users:", error);
+        throw error;
+      }
+
+      console.log("Users fetched successfully:", data);
       setUsers(data);
       setLoading(false);
     } catch (error) {
@@ -82,6 +88,7 @@ const AdminUsers = () => {
 
   const handleCreateUser = async (data: CreateUserData) => {
     try {
+      console.log("Creating user with data:", data);
       const { error } = await supabase.functions.invoke('manage-users', {
         body: {
           method: 'CREATE_USER',
@@ -91,6 +98,7 @@ const AdminUsers = () => {
 
       if (error) throw error;
 
+      console.log("User created successfully");
       toast({
         title: "Succès",
         description: "L'utilisateur a été créé avec succès",
@@ -110,6 +118,7 @@ const AdminUsers = () => {
 
   const handleDeleteUser = async (userId: string) => {
     try {
+      console.log("Deleting user:", userId);
       const { error } = await supabase.functions.invoke('manage-users', {
         body: { 
           method: 'DELETE_USER',
@@ -119,6 +128,7 @@ const AdminUsers = () => {
 
       if (error) throw error;
 
+      console.log("User deleted successfully");
       toast({
         title: "Succès",
         description: "L'utilisateur a été supprimé avec succès",
@@ -148,27 +158,27 @@ const AdminUsers = () => {
       <Navbar />
       <PageTransition>
         <main className="container mx-auto px-4 py-24">
-        <div className="max-w-7xl mx-auto">
-          <AdminUsersHeader onNewUser={() => setIsCreateDialogOpen(true)} />
+          <div className="max-w-7xl mx-auto">
+            <AdminUsersHeader onNewUser={() => setIsCreateDialogOpen(true)} />
 
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogContent className="bg-gray-800 border-gray-700">
-              <DialogHeader>
-                <DialogTitle className="text-white">Créer un nouvel utilisateur</DialogTitle>
-              </DialogHeader>
-              <CreateUserForm
-                onSubmit={handleCreateUser}
-                isLoading={false}
-                onBack={() => setIsCreateDialogOpen(false)}
-              />
-            </DialogContent>
-          </Dialog>
+            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+              <DialogContent className="bg-gray-800 border-gray-700">
+                <DialogHeader>
+                  <DialogTitle className="text-white">Créer un nouvel utilisateur</DialogTitle>
+                </DialogHeader>
+                <CreateUserForm
+                  onSubmit={handleCreateUser}
+                  isLoading={false}
+                  onBack={() => setIsCreateDialogOpen(false)}
+                />
+              </DialogContent>
+            </Dialog>
 
-          <UsersTable
-            users={users}
-            onDeleteUser={handleDeleteUser}
-          />
-        </div>
+            <UsersTable
+              users={users}
+              onDeleteUser={handleDeleteUser}
+            />
+          </div>
         </main>
       </PageTransition>
       <Footer />
