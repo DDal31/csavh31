@@ -76,6 +76,10 @@ Deno.serve(async (req) => {
 
         console.log('User created successfully:', newUser)
 
+        // Clean and prepare sports and teams data
+        const sports = sport.split(',').map(s => s.trim()).filter(Boolean)
+        const teams = team.split(',').map(t => t.trim()).filter(Boolean)
+
         // Create the profile
         const { error: profileError } = await supabaseClient
           .from('profiles')
@@ -86,8 +90,8 @@ Deno.serve(async (req) => {
             last_name: last_name.trim(),
             phone: phone?.trim(),
             club_role,
-            sport,
-            team,
+            sport: sports.join(', '),
+            team: teams.join(', '),
             site_role
           })
 
