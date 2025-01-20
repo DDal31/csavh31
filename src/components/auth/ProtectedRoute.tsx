@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { AuthError, AuthTokenResponse, User, AuthChangeEvent } from '@supabase/supabase-js';
+import { AuthError } from '@supabase/supabase-js';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -18,7 +18,7 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
 
   // Setup auth state listener
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event, "Session:", session?.user?.id);
       
       if (event === 'TOKEN_REFRESHED') {
