@@ -35,10 +35,11 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
 
   const handleSubmit = async (data: CreateUserData) => {
     try {
-      console.log("Tentative de création d'utilisateur avec les données:", data);
+      console.log("Début de la validation des données:", data);
       
       // Validation des champs requis
       if (!data.first_name.trim() || !data.last_name.trim() || !data.email.trim() || !data.password.trim()) {
+        console.log("Erreur: Champs requis manquants");
         toast({
           title: "Erreur de validation",
           description: "Tous les champs obligatoires doivent être remplis",
@@ -50,6 +51,7 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
       // Validation de l'email
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(data.email)) {
+        console.log("Erreur: Format d'email invalide");
         toast({
           title: "Erreur de validation",
           description: "L'adresse email n'est pas valide",
@@ -60,6 +62,7 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
 
       // Validation du mot de passe
       if (data.password.length < 6) {
+        console.log("Erreur: Mot de passe trop court");
         toast({
           title: "Erreur de validation",
           description: "Le mot de passe doit contenir au moins 6 caractères",
@@ -68,7 +71,14 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
         return;
       }
 
-      await onSubmit(data);
+      console.log("Toutes les validations sont passées, tentative de création...");
+      await onSubmit({
+        ...data,
+        email: data.email.trim(),
+        first_name: data.first_name.trim(),
+        last_name: data.last_name.trim(),
+        password: data.password.trim()
+      });
       
       console.log("Création d'utilisateur réussie");
       toast({
@@ -76,10 +86,10 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
         description: "L'utilisateur a été créé avec succès",
       });
     } catch (error) {
-      console.error("Erreur lors de la création de l'utilisateur:", error);
+      console.error("Erreur détaillée lors de la création de l'utilisateur:", error);
       toast({
         title: "Erreur",
-        description: "Impossible de créer l'utilisateur. Veuillez réessayer.",
+        description: error instanceof Error ? error.message : "Impossible de créer l'utilisateur. Veuillez réessayer.",
         variant: "destructive",
       });
     }
