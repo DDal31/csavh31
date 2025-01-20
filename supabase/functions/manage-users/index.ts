@@ -49,20 +49,25 @@ Deno.serve(async (req) => {
         console.log('Creating new user with data:', userData)
         const { email, password, profile } = userData
 
+        // Validate password length
+        if (password.length < 6) {
+          throw new Error('Le mot de passe doit contenir au moins 6 caractères')
+        }
+
         // Create the auth user
         const { data: newUser, error: createError } = await supabaseClient.auth.admin.createUser({
-          email,
+          email: email.trim(),
           password,
           email_confirm: true,
           user_metadata: {
-            first_name: profile.first_name,
-            last_name: profile.last_name
+            first_name: profile.first_name.trim(),
+            last_name: profile.last_name.trim()
           }
         })
         
         if (createError) {
           console.error('Error creating user:', createError)
-          throw createError
+          throw new Error(createError.message)
         }
 
         console.log('User created successfully:', newUser)
@@ -74,9 +79,9 @@ Deno.serve(async (req) => {
         const { error: updateError } = await supabaseClient
           .from('profiles')
           .update({
-            first_name: profile.first_name,
-            last_name: profile.last_name,
-            phone: profile.phone,
+            first_name: profile.first_name.trim(),
+            last_name: profile.last_name.trim(),
+            phone: profile.phone?.trim(),
             club_role: profile.club_role,
             sport: profile.sport,
             team: profile.team,
@@ -86,7 +91,7 @@ Deno.serve(async (req) => {
 
         if (updateError) {
           console.error('Error updating profile:', updateError)
-          throw updateError
+          throw new Error(updateError.message)
         }
 
         console.log('Profile updated successfully')
