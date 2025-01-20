@@ -22,7 +22,10 @@ Deno.serve(async (req) => {
     switch (method) {
       case 'GET_USERS':
         const { data: users, error: usersError } = await supabaseClient.auth.admin.listUsers()
-        if (usersError) throw usersError
+        if (usersError) {
+          console.error('Error fetching users:', usersError)
+          throw usersError
+        }
 
         const userIds = users.users.map(user => user.id)
         const { data: profiles, error: profilesError } = await supabaseClient
@@ -30,7 +33,10 @@ Deno.serve(async (req) => {
           .select('*')
           .in('id', userIds)
         
-        if (profilesError) throw profilesError
+        if (profilesError) {
+          console.error('Error fetching profiles:', profilesError)
+          throw profilesError
+        }
 
         const usersWithProfiles = users.users.map(user => ({
           id: user.id,
@@ -48,33 +54,37 @@ Deno.serve(async (req) => {
 
         // Validate required fields
         if (!email?.trim() || !password || !first_name?.trim() || !last_name?.trim()) {
+          console.error('Missing required fields')
           throw new Error('Tous les champs obligatoires doivent être remplis')
         }
 
         // Validate email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
         if (!emailRegex.test(email.trim())) {
+          console.error('Invalid email format')
           throw new Error("Format d'email invalide")
         }
 
         // Validate password length
         if (password.length < 6) {
+          console.error('Password too short')
           throw new Error('Le mot de passe doit contenir au moins 6 caractères')
         }
 
-        // First check if user already exists in auth
-        const { data: existingAuthUser } = await supabaseClient.auth.admin.listUsers()
-        const userExists = existingAuthUser.users.some(user => user.email === email.trim())
-        
-        if (userExists) {
-          throw new Error('Un utilisateur avec cet email existe déjà')
-        }
-
-        // Temporarily disable the trigger
-        await supabaseClient.rpc('disable_handle_new_user_trigger')
-        console.log('Disabled handle_new_user trigger')
-
         try {
+          // First check if user already exists in auth
+          const { data: existingAuthUser } = await supabaseClient.auth.admin.listUsers()
+          const userExists = existingAuthUser.users.some(user => user.email === email.trim())
+          
+          if (userExists) {
+            console.error('User already exists')
+            throw new Error('Un utilisateur avec cet email existe déjà')
+          }
+
+          // Temporarily disable the trigger
+          await supabaseClient.rpc('disable_handle_new_user_trigger')
+          console.log('Disabled handle_new_user trigger')
+
           // Create the auth user
           const { data: newUser, error: createError } = await supabaseClient.auth.admin.createUser({
             email: email.trim(),
@@ -92,28 +102,11 @@ Deno.serve(async (req) => {
           }
 
           if (!newUser.user) {
+            console.error('User creation failed - no user returned')
             throw new Error("Échec de la création de l'utilisateur")
           }
 
           console.log('Auth user created successfully:', newUser.user.id)
-
-          // Validate and clean sports data
-          if (!sport) {
-            throw new Error('Le sport est requis')
-          }
-          const sports = sport.split(',').map(s => s.trim()).filter(Boolean)
-          if (sports.length === 0) {
-            throw new Error('Au moins un sport doit être sélectionné')
-          }
-
-          // Validate and clean teams data
-          if (!team) {
-            throw new Error("L'équipe est requise")
-          }
-          const teams = team.split(',').map(t => t.trim()).filter(Boolean)
-          if (teams.length === 0) {
-            throw new Error('Au moins une équipe doit être sélectionnée')
-          }
 
           // Wait to ensure auth user is fully created
           await new Promise(resolve => setTimeout(resolve, 2000))
@@ -121,6 +114,7 @@ Deno.serve(async (req) => {
           // Double check the user ID exists and is valid
           const { data: checkUser, error: checkError } = await supabaseClient.auth.admin.getUserById(newUser.user.id)
           if (checkError || !checkUser.user) {
+            console.error('User verification failed:', checkError)
             throw new Error("L'utilisateur n'a pas été créé correctement")
           }
 
@@ -134,8 +128,8 @@ Deno.serve(async (req) => {
               last_name: last_name.trim(),
               phone: phone?.trim() || null,
               club_role,
-              sport: sports.join(', '),
-              team: teams.join(', '),
+              sport,
+              team,
               site_role
             })
 
@@ -154,6 +148,7 @@ Deno.serve(async (req) => {
 
           return new Response(JSON.stringify({ success: true, user: newUser.user }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200
           })
         } catch (error) {
           // Make sure to re-enable the trigger even if there's an error
@@ -166,7 +161,10 @@ Deno.serve(async (req) => {
         console.log('Deleting user with ID:', userId)
         const { error: deleteError } = await supabaseClient.auth.admin.deleteUser(userId)
         
-        if (deleteError) throw deleteError
+        if (deleteError) {
+          console.error('Error deleting user:', deleteError)
+          throw deleteError
+        }
 
         return new Response(JSON.stringify({ success: true }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
