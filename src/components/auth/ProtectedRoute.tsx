@@ -18,47 +18,73 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
   // Setup auth state listener
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event);
+      console.log("Auth state changed:", event, "Session:", session?.user?.id);
+      
       if (event === 'TOKEN_REFRESHED') {
         console.log("Token refreshed successfully");
-      }
-      if (event === 'SIGNED_OUT') {
-        console.log("User signed out");
         queryClient.invalidateQueries({ queryKey: ["session"] });
+      }
+      
+      if (event === 'SIGNED_OUT') {
+        console.log("User signed out, clearing session");
+        queryClient.invalidateQueries({ queryKey: ["session"] });
+        queryClient.clear();
+      }
+
+      // Handle token refresh errors
+      if (event === 'TOKEN_REFRESH_FAILED') {
+        console.error("Token refresh failed, signing out user");
+        await supabase.auth.signOut();
+        queryClient.clear();
+        toast({
+          title: "Session expirée",
+          description: "Veuillez vous reconnecter",
+          variant: "destructive"
+        });
       }
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [queryClient]);
+  }, [queryClient, toast]);
 
-  const { data: session, isError: sessionError } = useQuery({
+  const { data: session, isError: sessionError, isLoading: sessionLoading } = useQuery({
     queryKey: ["session"],
     queryFn: async () => {
       try {
+        console.log("Fetching current session");
         const { data: { session }, error } = await supabase.auth.getSession();
+        
         if (error) {
           console.error("Error getting session:", error);
           throw error;
         }
+
+        if (!session) {
+          console.log("No active session found");
+          return null;
+        }
+
+        console.log("Valid session found for user:", session.user.id);
         return session;
       } catch (error) {
         console.error("Session error:", error);
+        // Force sign out on session error
+        await supabase.auth.signOut();
         toast({
           title: "Erreur d'authentification",
           description: "Veuillez vous reconnecter",
           variant: "destructive"
         });
-        // Force sign out on session error
-        await supabase.auth.signOut();
         throw error;
       }
     },
-    retry: false
+    retry: 1,
+    staleTime: 1000 * 60 * 5, // Consider session data stale after 5 minutes
   });
 
-  const { data: profile, isLoading, isError: profileError } = useQuery({
+  const { data: profile, isLoading: profileLoading, isError: profileError } = useQuery({
     queryKey: ["profile", session?.user?.id],
     enabled: !!session?.user?.id,
     queryFn: async () => {
@@ -89,22 +115,19 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
     },
   });
 
-  // Handle authentication errors
-  if (sessionError || profileError) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  if (!session) {
-    console.log("No session found, redirecting to login");
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  if (isLoading) {
+  // Handle loading states
+  if (sessionLoading || profileLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-white" />
       </div>
     );
+  }
+
+  // Handle authentication errors
+  if (sessionError || profileError || !session) {
+    console.log("Auth error or no session, redirecting to login");
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Vérification explicite du rôle admin
