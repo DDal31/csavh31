@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { DocumentTypesManager } from "@/components/admin/settings/DocumentTypesManager";
+import PageTransition from "@/components/animations/PageTransition";
 
 const AdminDocumentTypes = () => {
   const navigate = useNavigate();
@@ -53,20 +54,22 @@ const AdminDocumentTypes = () => {
   return (
     <div className="min-h-screen bg-gray-900">
       <Navbar />
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          <Button
-            onClick={() => navigate("/admin/settings")}
-            variant="ghost"
-            className="mb-6 text-white hover:text-gray-300"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Retour aux paramètres
-          </Button>
+      <PageTransition>
+        <main className="container mx-auto px-4 py-8">
+          <div className="max-w-6xl mx-auto">
+            <Button
+              onClick={() => navigate("/admin/settings")}
+              variant="ghost"
+              className="mb-6 text-white hover:text-gray-300"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Retour aux paramètres
+            </Button>
 
-          <DocumentTypesManager />
-        </div>
-      </main>
+            <DocumentTypesManager />
+          </div>
+        </main>
+      </PageTransition>
       <Footer />
     </div>
   );
