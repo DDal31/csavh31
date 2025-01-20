@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { AuthError, AuthTokenResponse, User, AuthResponse } from '@supabase/supabase-js';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
