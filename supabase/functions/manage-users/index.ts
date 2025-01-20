@@ -70,29 +70,33 @@ Deno.serve(async (req) => {
           throw new Error('Un utilisateur avec cet email existe déjà')
         }
 
-        // Create the auth user
-        const { data: newUser, error: createError } = await supabaseClient.auth.admin.createUser({
-          email: email.trim(),
-          password,
-          email_confirm: true,
-          user_metadata: {
-            first_name: first_name.trim(),
-            last_name: last_name.trim()
-          }
-        })
-        
-        if (createError) {
-          console.error('Error creating auth user:', createError)
-          throw createError
-        }
-
-        if (!newUser.user) {
-          throw new Error("Échec de la création de l'utilisateur")
-        }
-
-        console.log('Auth user created successfully:', newUser.user.id)
+        // Temporarily disable the trigger
+        await supabaseClient.rpc('disable_handle_new_user_trigger')
+        console.log('Disabled handle_new_user trigger')
 
         try {
+          // Create the auth user
+          const { data: newUser, error: createError } = await supabaseClient.auth.admin.createUser({
+            email: email.trim(),
+            password,
+            email_confirm: true,
+            user_metadata: {
+              first_name: first_name.trim(),
+              last_name: last_name.trim()
+            }
+          })
+          
+          if (createError) {
+            console.error('Error creating auth user:', createError)
+            throw createError
+          }
+
+          if (!newUser.user) {
+            throw new Error("Échec de la création de l'utilisateur")
+          }
+
+          console.log('Auth user created successfully:', newUser.user.id)
+
           // Validate and clean sports data
           if (!sport) {
             throw new Error('Le sport est requis')
@@ -120,7 +124,7 @@ Deno.serve(async (req) => {
             throw new Error("L'utilisateur n'a pas été créé correctement")
           }
 
-          // Create the profile
+          // Create the profile manually
           const { error: profileError } = await supabaseClient
             .from('profiles')
             .insert({
@@ -143,13 +147,18 @@ Deno.serve(async (req) => {
           }
 
           console.log('Profile created successfully')
+          
+          // Re-enable the trigger
+          await supabaseClient.rpc('enable_handle_new_user_trigger')
+          console.log('Re-enabled handle_new_user trigger')
+
           return new Response(JSON.stringify({ success: true, user: newUser.user }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           })
         } catch (error) {
-          console.error('Error in profile creation:', error)
-          // Clean up: delete the auth user if profile creation failed
-          await supabaseClient.auth.admin.deleteUser(newUser.user.id)
+          // Make sure to re-enable the trigger even if there's an error
+          await supabaseClient.rpc('enable_handle_new_user_trigger')
+          console.error('Error in user creation process:', error)
           throw error
         }
 
