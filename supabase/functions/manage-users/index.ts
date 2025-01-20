@@ -6,7 +6,6 @@ const corsHeaders = {
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -25,7 +24,6 @@ Deno.serve(async (req) => {
         const { data: users, error: usersError } = await supabaseClient.auth.admin.listUsers()
         if (usersError) throw usersError
 
-        // Get profiles for all users
         const userIds = users.users.map(user => user.id)
         const { data: profiles, error: profilesError } = await supabaseClient
           .from('profiles')
@@ -34,7 +32,6 @@ Deno.serve(async (req) => {
         
         if (profilesError) throw profilesError
 
-        // Combine users with their profiles
         const usersWithProfiles = users.users.map(user => ({
           id: user.id,
           email: user.email,
@@ -47,9 +44,12 @@ Deno.serve(async (req) => {
 
       case 'CREATE_USER':
         console.log('Creating new user with data:', userData)
-        const { email, password, profile } = userData
+        const { email, password, first_name, last_name, club_role, sport, team, site_role, phone } = userData
 
-        // Validate password length
+        if (!email || !password || !first_name || !last_name) {
+          throw new Error('Tous les champs obligatoires doivent être remplis')
+        }
+
         if (password.length < 6) {
           throw new Error('Le mot de passe doit contenir au moins 6 caractères')
         }
@@ -60,8 +60,8 @@ Deno.serve(async (req) => {
           password,
           email_confirm: true,
           user_metadata: {
-            first_name: profile.first_name.trim(),
-            last_name: profile.last_name.trim()
+            first_name: first_name.trim(),
+            last_name: last_name.trim()
           }
         })
         
@@ -70,32 +70,35 @@ Deno.serve(async (req) => {
           throw new Error(createError.message)
         }
 
-        console.log('User created successfully:', newUser)
-
-        // Wait a moment for the trigger to create the profile
-        await new Promise(resolve => setTimeout(resolve, 1000))
-
-        // Update the profile with the provided data
-        const { error: updateError } = await supabaseClient
-          .from('profiles')
-          .update({
-            first_name: profile.first_name.trim(),
-            last_name: profile.last_name.trim(),
-            phone: profile.phone?.trim(),
-            club_role: profile.club_role,
-            sport: profile.sport,
-            team: profile.team,
-            site_role: profile.site_role
-          })
-          .eq('id', newUser.user.id)
-
-        if (updateError) {
-          console.error('Error updating profile:', updateError)
-          throw new Error(updateError.message)
+        if (!newUser.user) {
+          throw new Error("Échec de la création de l'utilisateur")
         }
 
-        console.log('Profile updated successfully')
+        console.log('User created successfully:', newUser)
 
+        // Create the profile
+        const { error: profileError } = await supabaseClient
+          .from('profiles')
+          .insert({
+            id: newUser.user.id,
+            email: email.trim(),
+            first_name: first_name.trim(),
+            last_name: last_name.trim(),
+            phone: phone?.trim(),
+            club_role,
+            sport,
+            team,
+            site_role
+          })
+
+        if (profileError) {
+          console.error('Error creating profile:', profileError)
+          // If profile creation fails, delete the auth user
+          await supabaseClient.auth.admin.deleteUser(newUser.user.id)
+          throw new Error("Échec de la création du profil")
+        }
+
+        console.log('Profile created successfully')
         return new Response(JSON.stringify({ success: true, user: newUser.user }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
@@ -115,9 +118,13 @@ Deno.serve(async (req) => {
     }
   } catch (error) {
     console.error('Error:', error)
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return new Response(
+      JSON.stringify({ 
+        error: error instanceof Error ? error.message : "Une erreur inattendue s'est produite"
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    )
   }
 })

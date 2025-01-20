@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { CreateUserData, UserFormData } from "@/types/auth";
 
 interface CreateUserFormProps {
-  onSubmit: (data: CreateUserData) => void;
+  onSubmit: (data: CreateUserData) => Promise<void>;
   isLoading: boolean;
   onBack: () => void;
 }
@@ -80,11 +80,9 @@ const CreateUserForm = ({ onSubmit, isLoading, onBack }: CreateUserFormProps) =>
         password: data.password.trim()
       });
       
+      // Reset form only after successful creation
+      form.reset();
       console.log("Création d'utilisateur réussie");
-      toast({
-        title: "Succès",
-        description: "L'utilisateur a été créé avec succès",
-      });
     } catch (error) {
       console.error("Erreur détaillée lors de la création de l'utilisateur:", error);
       toast({
