@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { AuthError, AuthTokenResponse, User, AuthResponse, AuthChangeEvent } from '@supabase/supabase-js';
+import { AuthError, AuthTokenResponse, User, AuthResponse } from '@supabase/supabase-js';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -18,22 +18,22 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
 
   // Setup auth state listener
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, "Session:", session?.user?.id);
       
-      if (event === AuthChangeEvent.TOKEN_REFRESHED) {
+      if (event === 'TOKEN_REFRESHED') {
         console.log("Token refreshed successfully");
         queryClient.invalidateQueries({ queryKey: ["session"] });
       }
       
-      if (event === AuthChangeEvent.SIGNED_OUT) {
+      if (event === 'SIGNED_OUT') {
         console.log("User signed out, clearing session");
         queryClient.invalidateQueries({ queryKey: ["session"] });
         queryClient.clear();
       }
 
       // Handle token refresh errors
-      if (event === AuthChangeEvent.TOKEN_REFRESH_FAILED) {
+      if (event === 'TOKEN_REFRESH_FAILED') {
         console.error("Token refresh failed, signing out user");
         await supabase.auth.signOut();
         queryClient.clear();
