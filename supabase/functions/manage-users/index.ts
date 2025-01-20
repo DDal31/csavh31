@@ -62,6 +62,17 @@ Deno.serve(async (req) => {
           throw new Error('Le mot de passe doit contenir au moins 6 caractères')
         }
 
+        // First check if user already exists
+        const { data: existingUser } = await supabaseClient
+          .from('profiles')
+          .select('id')
+          .eq('email', email.trim())
+          .single()
+
+        if (existingUser) {
+          throw new Error('Un utilisateur avec cet email existe déjà')
+        }
+
         // Create the auth user
         const { data: newUser, error: createError } = await supabaseClient.auth.admin.createUser({
           email: email.trim(),
@@ -75,7 +86,7 @@ Deno.serve(async (req) => {
         
         if (createError) {
           console.error('Error creating user:', createError)
-          throw new Error(createError.message)
+          throw createError
         }
 
         if (!newUser.user) {
@@ -102,6 +113,9 @@ Deno.serve(async (req) => {
           if (teams.length === 0) {
             throw new Error('Au moins une équipe doit être sélectionnée')
           }
+
+          // Wait a short moment to ensure the auth user is fully created
+          await new Promise(resolve => setTimeout(resolve, 1000))
 
           // Create the profile
           const { error: profileError } = await supabaseClient
