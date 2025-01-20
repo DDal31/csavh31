@@ -12,7 +12,7 @@ import type { Profile } from "@/types/profile";
 interface User {
   id: string;
   email: string;
-  profile: Profile;
+  profile?: Profile;
 }
 
 interface UsersTableProps {
@@ -44,20 +44,20 @@ export function UsersTable({
           {users.map((user) => (
             <TableRow key={user.id} className="border-gray-700">
               <TableCell className="text-gray-300 hidden md:table-cell">{user.email}</TableCell>
-              <TableCell className="text-gray-300 hidden sm:table-cell">{user.profile?.first_name}</TableCell>
-              <TableCell className="text-gray-300 hidden sm:table-cell">{user.profile?.last_name}</TableCell>
-              <TableCell className="text-gray-300 hidden lg:table-cell">{user.profile?.club_role}</TableCell>
-              <TableCell className="text-gray-300 hidden lg:table-cell">{user.profile?.sport}</TableCell>
-              <TableCell className="text-gray-300 hidden lg:table-cell">{user.profile?.team}</TableCell>
-              <TableCell className="text-gray-300 hidden md:table-cell">{user.profile?.site_role}</TableCell>
+              <TableCell className="text-gray-300 hidden sm:table-cell">{user.profile?.first_name || '-'}</TableCell>
+              <TableCell className="text-gray-300 hidden sm:table-cell">{user.profile?.last_name || '-'}</TableCell>
+              <TableCell className="text-gray-300 hidden lg:table-cell">{user.profile?.club_role || '-'}</TableCell>
+              <TableCell className="text-gray-300 hidden lg:table-cell">{user.profile?.sport || '-'}</TableCell>
+              <TableCell className="text-gray-300 hidden lg:table-cell">{user.profile?.team || '-'}</TableCell>
+              <TableCell className="text-gray-300 hidden md:table-cell">{user.profile?.site_role || '-'}</TableCell>
               <TableCell className="text-gray-300 md:hidden">
-                <div className="space-y-1" role="region" aria-label={`Informations de ${user.profile?.first_name} ${user.profile?.last_name}`}>
+                <div className="space-y-1" role="region" aria-label={`Informations de ${user.profile?.first_name || user.email}`}>
                   <p className="font-medium">Email: {user.email}</p>
-                  <p>Nom complet: {user.profile?.first_name} {user.profile?.last_name}</p>
+                  <p>Nom complet: {user.profile ? `${user.profile.first_name} ${user.profile.last_name}` : '-'}</p>
                   <p className="text-sm text-gray-400">
-                    Rôle club: {user.profile?.club_role} - Sport: {user.profile?.sport} - Équipe: {user.profile?.team}
+                    Rôle club: {user.profile?.club_role || '-'} - Sport: {user.profile?.sport || '-'} - Équipe: {user.profile?.team || '-'}
                   </p>
-                  <p className="text-sm text-gray-400">Rôle site: {user.profile?.site_role}</p>
+                  <p className="text-sm text-gray-400">Rôle site: {user.profile?.site_role || '-'}</p>
                 </div>
               </TableCell>
               <TableCell>

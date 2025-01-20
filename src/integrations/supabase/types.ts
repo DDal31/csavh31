@@ -524,7 +524,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      disable_handle_new_user_trigger: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      enable_handle_new_user_trigger: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       chat_message_status: "active" | "deleted"

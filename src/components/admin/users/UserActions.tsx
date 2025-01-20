@@ -18,7 +18,7 @@ interface UserActionsProps {
   user: {
     id: string;
     email: string;
-    profile: Profile;
+    profile?: Profile;
   };
   onDeleteUser: (userId: string) => void;
 }
@@ -28,7 +28,9 @@ export function UserActions({
   onDeleteUser,
 }: UserActionsProps) {
   const navigate = useNavigate();
-  const fullName = `${user.profile.first_name} ${user.profile.last_name}`.trim();
+  const fullName = user.profile 
+    ? `${user.profile.first_name} ${user.profile.last_name}`.trim() 
+    : user.email;
 
   const handleEdit = () => {
     console.log("Navigating to edit user:", user.id);
