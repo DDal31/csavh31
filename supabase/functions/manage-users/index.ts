@@ -62,14 +62,11 @@ Deno.serve(async (req) => {
           throw new Error('Le mot de passe doit contenir au moins 6 caractères')
         }
 
-        // First check if user already exists
-        const { data: existingUser } = await supabaseClient
-          .from('profiles')
-          .select('id')
-          .eq('email', email.trim())
-          .single()
-
-        if (existingUser) {
+        // First check if user already exists in auth
+        const { data: existingAuthUser } = await supabaseClient.auth.admin.listUsers()
+        const userExists = existingAuthUser.users.some(user => user.email === email.trim())
+        
+        if (userExists) {
           throw new Error('Un utilisateur avec cet email existe déjà')
         }
 
@@ -85,7 +82,7 @@ Deno.serve(async (req) => {
         })
         
         if (createError) {
-          console.error('Error creating user:', createError)
+          console.error('Error creating auth user:', createError)
           throw createError
         }
 
@@ -93,7 +90,7 @@ Deno.serve(async (req) => {
           throw new Error("Échec de la création de l'utilisateur")
         }
 
-        console.log('User created successfully:', newUser)
+        console.log('Auth user created successfully:', newUser.user.id)
 
         try {
           // Validate and clean sports data
@@ -114,8 +111,14 @@ Deno.serve(async (req) => {
             throw new Error('Au moins une équipe doit être sélectionnée')
           }
 
-          // Wait a short moment to ensure the auth user is fully created
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          // Wait to ensure auth user is fully created
+          await new Promise(resolve => setTimeout(resolve, 2000))
+
+          // Double check the user ID exists and is valid
+          const { data: checkUser, error: checkError } = await supabaseClient.auth.admin.getUserById(newUser.user.id)
+          if (checkError || !checkUser.user) {
+            throw new Error("L'utilisateur n'a pas été créé correctement")
+          }
 
           // Create the profile
           const { error: profileError } = await supabaseClient
