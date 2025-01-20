@@ -46,10 +46,18 @@ Deno.serve(async (req) => {
         console.log('Creating new user with data:', userData)
         const { email, password, first_name, last_name, club_role, sport, team, site_role, phone } = userData
 
-        if (!email || !password || !first_name || !last_name) {
+        // Validate required fields
+        if (!email?.trim() || !password || !first_name?.trim() || !last_name?.trim()) {
           throw new Error('Tous les champs obligatoires doivent être remplis')
         }
 
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(email.trim())) {
+          throw new Error("Format d'email invalide")
+        }
+
+        // Validate password length
         if (password.length < 6) {
           throw new Error('Le mot de passe doit contenir au moins 6 caractères')
         }
@@ -77,9 +85,23 @@ Deno.serve(async (req) => {
         console.log('User created successfully:', newUser)
 
         try {
-          // Clean and prepare sports and teams data
+          // Validate and clean sports data
+          if (!sport) {
+            throw new Error('Le sport est requis')
+          }
           const sports = sport.split(',').map(s => s.trim()).filter(Boolean)
+          if (sports.length === 0) {
+            throw new Error('Au moins un sport doit être sélectionné')
+          }
+
+          // Validate and clean teams data
+          if (!team) {
+            throw new Error("L'équipe est requise")
+          }
           const teams = team.split(',').map(t => t.trim()).filter(Boolean)
+          if (teams.length === 0) {
+            throw new Error('Au moins une équipe doit être sélectionnée')
+          }
 
           // Create the profile
           const { error: profileError } = await supabaseClient
@@ -89,7 +111,7 @@ Deno.serve(async (req) => {
               email: email.trim(),
               first_name: first_name.trim(),
               last_name: last_name.trim(),
-              phone: phone?.trim(),
+              phone: phone?.trim() || null,
               club_role,
               sport: sports.join(', '),
               team: teams.join(', '),
@@ -100,7 +122,7 @@ Deno.serve(async (req) => {
             console.error('Error creating profile:', profileError)
             // If profile creation fails, delete the auth user
             await supabaseClient.auth.admin.deleteUser(newUser.user.id)
-            throw new Error("Échec de la création du profil")
+            throw new Error(`Échec de la création du profil: ${profileError.message}`)
           }
 
           console.log('Profile created successfully')
