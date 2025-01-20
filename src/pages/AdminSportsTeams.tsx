@@ -6,7 +6,6 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { SportsTeamsManager } from "@/components/admin/settings/SportsTeamsManager";
-import PageTransition from "@/components/animations/PageTransition";
 
 const AdminSportsTeams = () => {
   const navigate = useNavigate();
@@ -54,22 +53,20 @@ const AdminSportsTeams = () => {
   return (
     <div className="min-h-screen bg-gray-900">
       <Navbar />
-      <PageTransition>
-        <main className="container mx-auto px-4 py-8">
-          <div className="max-w-6xl mx-auto">
-            <Button
-              onClick={() => navigate("/admin/settings")}
-              variant="ghost"
-              className="mb-6 text-white hover:text-gray-300"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Retour aux paramètres
-            </Button>
+      <main className="container mx-auto px-4 py-8">
+        <div className="max-w-6xl mx-auto">
+          <Button
+            onClick={() => navigate("/admin/settings")}
+            variant="ghost"
+            className="mb-6 text-white hover:text-gray-300"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Retour aux paramètres
+          </Button>
 
-            <SportsTeamsManager />
-          </div>
-        </main>
-      </PageTransition>
+          <SportsTeamsManager />
+        </div>
+      </main>
       <Footer />
     </div>
   );

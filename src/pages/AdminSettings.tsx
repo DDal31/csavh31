@@ -5,7 +5,6 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, FileText, Mail, Newspaper, Users, ListCollapse, FileStack, FileSpreadsheet, Settings } from "lucide-react";
-import PageTransition from "@/components/animations/PageTransition";
 
 const AdminSettings = () => {
   const navigate = useNavigate();
@@ -105,8 +104,7 @@ const AdminSettings = () => {
   return (
     <div className="min-h-screen bg-gray-900">
       <Navbar />
-      <PageTransition>
-        <main className="container mx-auto px-4 py-8 sm:py-12">
+      <main className="container mx-auto px-4 py-8 sm:py-12">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
             <h1 className="text-2xl sm:text-3xl font-bold text-white text-center sm:text-left">
@@ -144,8 +142,7 @@ const AdminSettings = () => {
             ))}
           </div>
         </div>
-        </main>
-      </PageTransition>
+      </main>
       <Footer />
     </div>
   );
