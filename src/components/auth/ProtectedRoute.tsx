@@ -21,19 +21,19 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session) => {
       console.log("Auth state changed:", event, "Session:", session?.user?.id);
       
-      if (event === 'TOKEN_REFRESHED') {
+      if (event === AuthChangeEvent.TOKEN_REFRESHED) {
         console.log("Token refreshed successfully");
         queryClient.invalidateQueries({ queryKey: ["session"] });
       }
       
-      if (event === 'SIGNED_OUT') {
+      if (event === AuthChangeEvent.SIGNED_OUT) {
         console.log("User signed out, clearing session");
         queryClient.invalidateQueries({ queryKey: ["session"] });
         queryClient.clear();
       }
 
       // Handle token refresh errors
-      if (event === 'TOKEN_REFRESH_FAILED') {
+      if (event === AuthChangeEvent.TOKEN_REFRESH_FAILED) {
         console.error("Token refresh failed, signing out user");
         await supabase.auth.signOut();
         queryClient.clear();
