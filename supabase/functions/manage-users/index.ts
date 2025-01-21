@@ -159,16 +159,55 @@ Deno.serve(async (req) => {
 
       case 'DELETE_USER':
         console.log('Deleting user with ID:', userId)
-        const { error: deleteError } = await supabaseClient.auth.admin.deleteUser(userId)
         
-        if (deleteError) {
-          console.error('Error deleting user:', deleteError)
-          throw deleteError
-        }
+        try {
+          // First, delete user's profile
+          const { error: profileError } = await supabaseClient
+            .from('profiles')
+            .delete()
+            .eq('id', userId)
 
-        return new Response(JSON.stringify({ success: true }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+          if (profileError) {
+            console.error('Error deleting user profile:', profileError)
+            throw new Error(`Profile deletion failed: ${profileError.message}`)
+          }
+
+          // Then delete any related records in other tables
+          await Promise.all([
+            // Delete user's registrations
+            supabaseClient.from('registrations').delete().eq('user_id', userId),
+            // Delete user's documents
+            supabaseClient.from('user_documents').delete().eq('user_id', userId),
+            // Delete user's sport_players records
+            supabaseClient.from('sport_players').delete().eq('user_id', userId),
+            // Delete user's chat messages
+            supabaseClient.from('chat_messages').delete().eq('user_id', userId)
+          ])
+
+          // Finally delete the auth user
+          const { error: deleteError } = await supabaseClient.auth.admin.deleteUser(userId)
+          
+          if (deleteError) {
+            console.error('Error deleting auth user:', deleteError)
+            throw new Error(`Auth user deletion failed: ${deleteError.message}`)
+          }
+
+          console.log('User and related records deleted successfully')
+          return new Response(JSON.stringify({ success: true }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          })
+        } catch (error) {
+          console.error('Detailed error during user deletion:', error)
+          return new Response(
+            JSON.stringify({ 
+              error: error instanceof Error ? error.message : "Database error deleting user",
+              details: error 
+            }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          )
+        }
 
       default:
         throw new Error(`Unsupported method: ${method}`)
@@ -177,7 +216,8 @@ Deno.serve(async (req) => {
     console.error('Error:', error)
     return new Response(
       JSON.stringify({ 
-        error: error instanceof Error ? error.message : "Une erreur inattendue s'est produite"
+        error: error instanceof Error ? error.message : "Une erreur inattendue s'est produite",
+        details: error
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
