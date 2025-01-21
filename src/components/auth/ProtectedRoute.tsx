@@ -18,7 +18,8 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
 
   // Setup auth state listener
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session) => {
+    console.log("Setting up auth state listener");
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session) => {
       console.log("Auth state changed:", event, "Session:", session?.user?.id);
       
       if (event === 'TOKEN_REFRESHED') {
@@ -35,7 +36,7 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
       // Handle token refresh errors
       if (event === 'TOKEN_REFRESHED' && !session) {
         console.error("Token refresh failed, signing out user");
-        supabase.auth.signOut().catch(console.error);
+        await supabase.auth.signOut();
         queryClient.clear();
         toast({
           title: "Session expirée",
@@ -67,6 +68,26 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
           return null;
         }
 
+        // Attempt to refresh the session if it exists
+        if (session) {
+          console.log("Attempting to refresh session");
+          const { data: { session: refreshedSession }, error: refreshError } = 
+            await supabase.auth.refreshSession();
+          
+          if (refreshError) {
+            console.error("Session refresh error:", refreshError);
+            throw refreshError;
+          }
+          
+          if (!refreshedSession) {
+            console.log("Session refresh failed - no session returned");
+            return null;
+          }
+          
+          console.log("Session refreshed successfully");
+          return refreshedSession;
+        }
+
         console.log("Valid session found for user:", session.user.id);
         return session;
       } catch (error) {
@@ -95,11 +116,16 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
           .from("profiles")
           .select("*")
           .eq("id", session?.user?.id)
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.error("Error fetching profile:", error);
           throw error;
+        }
+
+        if (!data) {
+          console.log("No profile found for user");
+          return null;
         }
 
         console.log("Profile data:", data);
