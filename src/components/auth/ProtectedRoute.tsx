@@ -71,21 +71,27 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
         // Attempt to refresh the session if it exists
         if (session) {
           console.log("Attempting to refresh session");
-          const { data: { session: refreshedSession }, error: refreshError } = 
-            await supabase.auth.refreshSession();
-          
-          if (refreshError) {
-            console.error("Session refresh error:", refreshError);
-            throw refreshError;
-          }
-          
-          if (!refreshedSession) {
-            console.log("Session refresh failed - no session returned");
+          try {
+            const { data: { session: refreshedSession }, error: refreshError } = 
+              await supabase.auth.refreshSession();
+            
+            if (refreshError) {
+              console.error("Session refresh error:", refreshError);
+              // Don't throw here, just return null to trigger a redirect to login
+              return null;
+            }
+            
+            if (!refreshedSession) {
+              console.log("Session refresh failed - no session returned");
+              return null;
+            }
+            
+            console.log("Session refreshed successfully");
+            return refreshedSession;
+          } catch (refreshError) {
+            console.error("Session refresh failed with error:", refreshError);
             return null;
           }
-          
-          console.log("Session refreshed successfully");
-          return refreshedSession;
         }
 
         console.log("Valid session found for user:", session.user.id);
@@ -93,7 +99,11 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
       } catch (error) {
         console.error("Session error:", error);
         // Force sign out on session error
-        await supabase.auth.signOut();
+        try {
+          await supabase.auth.signOut();
+        } catch (signOutError) {
+          console.error("Error during sign out:", signOutError);
+        }
         toast({
           title: "Erreur d'authentification",
           description: "Veuillez vous reconnecter",
@@ -102,7 +112,7 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
         throw error;
       }
     },
-    retry: 1,
+    retry: false, // Don't retry on failure
     staleTime: 1000 * 60 * 5, // Consider session data stale after 5 minutes
   });
 
@@ -140,6 +150,7 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
         throw error;
       }
     },
+    retry: false, // Don't retry on failure
   });
 
   // Handle loading states
