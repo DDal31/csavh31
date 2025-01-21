@@ -12,7 +12,9 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Input } from "@/components/ui/input";
 
 const updatePasswordSchema = z.object({
-  password: z.string().min(6, "Le mot de passe doit contenir au moins 6 caractères"),
+  password: z.string()
+    .min(6, "Le mot de passe doit contenir au moins 6 caractères")
+    .max(72, "Le mot de passe ne peut pas dépasser 72 caractères"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Les mots de passe ne correspondent pas",
@@ -28,13 +30,20 @@ const UpdatePassword = () => {
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error } = await supabase.auth.getSession();
+      console.log("Session check:", session ? "Session exists" : "No session", error || "No error");
+      
       if (!session) {
+        toast({
+          title: "Session expirée",
+          description: "Veuillez recommencer le processus de réinitialisation",
+          variant: "destructive",
+        });
         navigate("/login");
       }
     };
     checkSession();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   const form = useForm<UpdatePasswordForm>({
     resolver: zodResolver(updatePasswordSchema),
@@ -47,22 +56,30 @@ const UpdatePassword = () => {
   const onSubmit = async (data: UpdatePasswordForm) => {
     setIsLoading(true);
     try {
+      console.log("Attempting password update...");
       const { error } = await supabase.auth.updateUser({
         password: data.password
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Password update error:", error);
+        throw error;
+      }
 
+      console.log("Password updated successfully");
       toast({
         title: "Succès",
-        description: "Votre mot de passe a été mis à jour",
+        description: "Votre mot de passe a été mis à jour. Vous pouvez maintenant vous connecter.",
       });
+      
+      // Se déconnecter après la mise à jour du mot de passe
+      await supabase.auth.signOut();
       navigate("/login");
     } catch (error) {
-      console.error("Erreur lors de la mise à jour du mot de passe:", error);
+      console.error("Error during password update:", error);
       toast({
         title: "Erreur",
-        description: "Impossible de mettre à jour le mot de passe",
+        description: "Impossible de mettre à jour le mot de passe. Veuillez réessayer.",
         variant: "destructive",
       });
     } finally {
