@@ -505,6 +505,16 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      get_player_attendance_ranking: {
+        Args: {
+          sport_type: string
+        }
+        Returns: {
+          player_name: string
+          attendance_count: number
+          rank: number
+        }[]
+      }
     }
     Enums: {
       chat_message_status: "active" | "deleted"

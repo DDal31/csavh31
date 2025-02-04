@@ -16,8 +16,7 @@ export function AttendanceRankingCard({ sport }: { sport: string }) {
   useEffect(() => {
     const fetchRankings = async () => {
       try {
-        const { data, error } = await supabase
-          .rpc('get_player_attendance_ranking', { sport_type: sport.toLowerCase() });
+        const { data, error } = await supabase.rpc('get_player_attendance_ranking', { sport_type: sport.toLowerCase() });
 
         if (error) {
           console.error('Error fetching rankings:', error);
