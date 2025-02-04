@@ -4,11 +4,13 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 serve(async (req) => {
   console.log('Request received:', req.method, req.url);
 
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     console.log('Handling CORS preflight request');
     return new Response('ok', { headers: corsHeaders });
@@ -58,14 +60,14 @@ serve(async (req) => {
       );
     }
 
-    const { message, sports, isVisuallyImpaired, userId } = body;
-    console.log('Extracted data:', { message, sports, isVisuallyImpaired, userId });
+    const { message, sports, isVisuallyImpaired, userId, statsContext, isAdmin } = body;
+    console.log('Extracted data:', { message, sports, isVisuallyImpaired, userId, isAdmin });
 
-    if (!message || !userId || !sports) {
+    if (!message || !userId) {
       return new Response(
         JSON.stringify({ 
           error: 'Missing required fields', 
-          details: 'message, userId, and sports are required' 
+          details: 'message and userId are required' 
         }), 
         { 
           status: 400, 
@@ -77,8 +79,13 @@ serve(async (req) => {
       );
     }
 
-    const sportsString = Array.isArray(sports) ? sports.join(" et ") : sports;
-    const systemPrompt = `Tu es un coach sportif virtuel spécialisé en ${sportsString} qui aide les joueurs à rester motivés et à s'améliorer. IMPORTANT: Incite fortement le joueur à s'inscrire aux entraînements où il y a moins de six joueurs inscrits et où il n'est pas encore inscrit. Adapte ton langage et tes conseils en fonction du fait que l'utilisateur ${isVisuallyImpaired ? 'est' : "n'est pas"} déficient visuel.`;
+    let systemPrompt;
+    if (isAdmin) {
+      systemPrompt = "Tu es un assistant administratif qui aide à analyser les statistiques de présence aux entraînements et à donner des suggestions d'amélioration.";
+    } else {
+      const sportsString = Array.isArray(sports) ? sports.join(" et ") : sports;
+      systemPrompt = `Tu es un coach sportif virtuel spécialisé en ${sportsString} qui aide les joueurs à rester motivés et à s'améliorer. IMPORTANT: Incite fortement le joueur à s'inscrire aux entraînements où il y a moins de six joueurs inscrits et où il n'est pas encore inscrit. Adapte ton langage et tes conseils en fonction du fait que l'utilisateur ${isVisuallyImpaired ? 'est' : "n'est pas"} déficient visuel.`;
+    }
 
     console.log('System prompt:', systemPrompt);
     console.log('Calling Deepseek API...');
@@ -98,7 +105,7 @@ serve(async (req) => {
           },
           {
             role: 'user',
-            content: message
+            content: statsContext ? `${statsContext}\n\n${message}` : message
           }
         ],
         temperature: 0.7,
@@ -142,7 +149,7 @@ serve(async (req) => {
       .insert({
         user_id: userId,
         message: message,
-        sport: sportsString,
+        sport: Array.isArray(sports) ? sports[0] : sports || 'general',
         status: 'active'
       });
 
