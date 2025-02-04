@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth, startOfYear, endOfYear } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Loader2 } from "lucide-react";
+import { Loader2, UserPlus } from "lucide-react";
 import { isValidTrainingType } from "@/utils/trainingTypes";
 import { MonthlyTrainingChart } from "./charts/MonthlyTrainingChart";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useNavigate } from "react-router-dom";
 import type { Database } from "@/integrations/supabase/types";
 
 type TrainingType = Database["public"]["Enums"]["training_type"];
@@ -13,6 +15,8 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
   const [currentMonthStats, setCurrentMonthStats] = useState<{ present: number; total: number }>({ present: 0, total: 0 });
   const [yearlyStats, setYearlyStats] = useState<{ present: number; total: number }>({ present: 0, total: 0 });
   const [loading, setLoading] = useState(true);
+  const [lowAttendanceTrainings, setLowAttendanceTrainings] = useState<number>(0);
+  const navigate = useNavigate();
 
   const fetchStats = async () => {
     try {
@@ -76,9 +80,6 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
 
       if (yearError) throw yearError;
 
-      console.log("Raw current month data:", currentMonthData);
-      console.log("Raw year data:", yearData);
-
       // Get total counts for the month
       const { data: totalMonthData, error: totalMonthError } = await supabase
         .from("trainings")
@@ -99,6 +100,19 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
 
       if (totalYearError) throw totalYearError;
 
+      // Fetch trainings with low attendance
+      const { data: lowAttendanceData, error: lowAttendanceError } = await supabase
+        .from("trainings")
+        .select("*")
+        .eq("type", normalizedSport)
+        .gte("date", now.toISOString())
+        .lt("registered_players_count", 6)
+        .not("registrations.user_id", "eq", session.user.id);
+
+      if (lowAttendanceError) throw lowAttendanceError;
+
+      setLowAttendanceTrainings(lowAttendanceData?.length || 0);
+
       const monthPresentCount = currentMonthData?.length || 0;
       const monthTotalCount = totalMonthData?.length || 0;
       const yearPresentCount = yearData?.length || 0;
@@ -106,6 +120,7 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
 
       console.log("Monthly stats - Present:", monthPresentCount, "Total:", monthTotalCount);
       console.log("Yearly stats - Present:", yearPresentCount, "Total:", yearTotalCount);
+      console.log("Low attendance trainings:", lowAttendanceData?.length || 0);
 
       setCurrentMonthStats({
         present: monthPresentCount,
@@ -167,6 +182,10 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
     };
   }, [sport]);
 
+  const handleRegistrationClick = () => {
+    navigate("/attendance");
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-48">
@@ -177,7 +196,6 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
-      {/* Statistics Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div 
           className="bg-gray-800 p-6 rounded-lg"
@@ -209,6 +227,28 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
           </div>
         </div>
       </div>
+
+      {lowAttendanceTrainings > 0 && (
+        <Alert 
+          className="bg-gray-800 border-primary text-white"
+          role="alert"
+          aria-live="polite"
+        >
+          <UserPlus className="h-5 w-5" />
+          <AlertDescription className="ml-2">
+            <button
+              onClick={handleRegistrationClick}
+              className="text-left hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-gray-800"
+            >
+              {lowAttendanceTrainings === 1 ? (
+                "Un entraînement à venir manque de joueurs. Cliquez ici pour vous inscrire et permettre son maintien !"
+              ) : (
+                `${lowAttendanceTrainings} entraînements à venir manquent de joueurs. Cliquez ici pour vous inscrire et permettre leur maintien !`
+              )}
+            </button>
+          </AlertDescription>
+        </Alert>
+      )}
     </div>
   );
 }
