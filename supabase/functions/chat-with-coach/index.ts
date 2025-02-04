@@ -30,17 +30,9 @@ serve(async (req) => {
     }
 
     // Get environment variables
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
-
-    if (!supabaseUrl || !supabaseServiceKey || !DEEPSEEK_API_KEY) {
-      console.error('Missing environment variables:', {
-        hasSupabaseUrl: !!supabaseUrl,
-        hasServiceKey: !!supabaseServiceKey,
-        hasDeepseekKey: !!DEEPSEEK_API_KEY
-      });
-      throw new Error('Missing required environment configuration');
+    if (!DEEPSEEK_API_KEY) {
+      throw new Error('Missing DEEPSEEK_API_KEY environment variable');
     }
 
     // Read and parse request body
@@ -55,15 +47,12 @@ serve(async (req) => {
       throw new Error(`Invalid JSON in request body: ${error.message}`);
     }
 
-    const { message, statsContext, isAdmin, userId } = body;
-    console.log('Parsed request payload:', { message, statsContext, isAdmin, userId });
+    const { message, statsContext, isAdmin, userId, sport } = body;
+    console.log('Parsed request payload:', { message, statsContext, isAdmin, userId, sport });
 
     if (!message || !userId) {
       throw new Error('Missing required parameters: message and userId are required');
     }
-
-    // Initialize Supabase client
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Prepare system prompt based on user type
     const systemPrompt = isAdmin 
@@ -106,13 +95,22 @@ serve(async (req) => {
     const data = await deepseekResponse.json();
     console.log('Deepseek API response:', data);
 
-    // Store the chat message
+    // Store the chat message in Supabase
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Missing Supabase environment variables');
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
     const { error: insertError } = await supabase
       .from('chat_messages')
       .insert({
         user_id: userId,
         message: message,
-        sport: isAdmin ? 'admin' : 'all',
+        sport: isAdmin ? 'admin' : (sport || 'all'),
         status: 'active'
       });
 
