@@ -83,14 +83,14 @@ const Attendance = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="flex-1 min-h-[calc(100vh-64px)] bg-gray-900 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-white" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 p-6 pb-24">
+    <div className="flex-1 min-h-[calc(100vh-64px)] bg-gray-900 p-6 pb-24">
       <div className="max-w-3xl mx-auto">
         <AttendanceHeader />
         <div className="space-y-6">
