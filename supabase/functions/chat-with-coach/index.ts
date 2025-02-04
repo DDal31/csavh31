@@ -58,10 +58,10 @@ serve(async (req) => {
       ? `Tu es un assistant administratif spécialisé dans la gestion de club sportif. Tu as accès aux statistiques de présence suivantes:\n${statsContext}\n\nUtilise ces données pour donner des conseils pertinents sur la gestion du club, l'amélioration des taux de présence et la motivation des joueurs. Sois proactif dans tes suggestions et n'hésite pas à pointer du doigt les problèmes potentiels tout en proposant des solutions concrètes. IMPORTANT: Ta réponse doit être concise et ne pas dépasser 500 tokens.`
       : `Tu es un coach sportif virtuel qui aide les joueurs à rester motivés et à s'améliorer. Voici les statistiques de présence du joueur:\n${statsContext}\n\nUtilise ces données pour donner des conseils personnalisés et motivants. IMPORTANT: Incite fortement le joueur à s'inscrire aux entraînements où il y a moins de six joueurs inscrits et où il n'est pas encore inscrit.`;
 
-    console.log('Sending request to Deepseek API with prompt:', systemPrompt);
-    console.log('User message:', message);
+    console.log('System prompt:', systemPrompt);
 
     // Call Deepseek API
+    console.log('Calling Deepseek API...');
     const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -87,8 +87,8 @@ serve(async (req) => {
 
     if (!deepseekResponse.ok) {
       const errorText = await deepseekResponse.text();
-      console.error('Deepseek API error:', errorText);
-      throw new Error(`Deepseek API error: ${deepseekResponse.status} ${deepseekResponse.statusText}`);
+      console.error('Deepseek API error:', deepseekResponse.status, errorText);
+      throw new Error(`Deepseek API error: ${deepseekResponse.status} ${errorText}`);
     }
 
     const data = await deepseekResponse.json();
@@ -97,7 +97,7 @@ serve(async (req) => {
     // Store the chat message in Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-
+    
     if (!supabaseUrl || !supabaseServiceKey) {
       throw new Error('Missing Supabase environment variables');
     }
@@ -123,24 +123,25 @@ serve(async (req) => {
       { 
         headers: { 
           ...corsHeaders,
-          'Content-Type': 'application/json',
-        },
+          'Content-Type': 'application/json' 
+        } 
       },
     );
+
   } catch (error) {
     console.error('Error in chat-with-coach function:', error);
     return new Response(
       JSON.stringify({ 
         error: error.message,
-        details: error.stack
+        details: error.stack 
       }),
       { 
         status: 500,
         headers: { 
           ...corsHeaders,
-          'Content-Type': 'application/json',
-        },
+          'Content-Type': 'application/json'
+        } 
       },
     );
   }
-});
+})
