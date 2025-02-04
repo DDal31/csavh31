@@ -103,7 +103,12 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
       // Fetch trainings with low attendance
       const { data: lowAttendanceData, error: lowAttendanceError } = await supabase
         .from("trainings")
-        .select("*")
+        .select(`
+          *,
+          registrations (
+            user_id
+          )
+        `)
         .eq("type", normalizedSport)
         .gte("date", now.toISOString())
         .lt("registered_players_count", 6)
