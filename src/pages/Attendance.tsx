@@ -89,25 +89,20 @@ const Attendance = () => {
     );
   }
 
-  if (trainings.length === 0) {
-    return (
-      <div className="min-h-screen bg-gray-900 p-6">
-        <AttendanceHeader />
-        <div className="max-w-3xl mx-auto text-center text-white">
-          Aucun entraînement à venir pour vos sports ({userSports.join(", ")})
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gray-900 p-6">
+    <div className="min-h-screen bg-gray-900 p-6 pb-24">
       <div className="max-w-3xl mx-auto">
         <AttendanceHeader />
         <div className="space-y-6">
-          {trainings.map((training) => (
-            <AttendanceCard key={training.id} training={training} />
-          ))}
+          {trainings.length === 0 ? (
+            <div className="text-center text-white">
+              Aucun entraînement à venir pour vos sports ({userSports.join(", ")})
+            </div>
+          ) : (
+            trainings.map((training) => (
+              <AttendanceCard key={training.id} training={training} />
+            ))
+          )}
         </div>
       </div>
     </div>
