@@ -11,11 +11,17 @@ import type { Database } from "@/integrations/supabase/types";
 
 type TrainingType = Database["public"]["Enums"]["training_type"];
 
+type LowAttendanceTraining = {
+  id: string;
+  date: string;
+  registered_players_count: number;
+};
+
 export function DashboardCharts({ sport }: { sport: TrainingType }) {
   const [currentMonthStats, setCurrentMonthStats] = useState<{ present: number; total: number }>({ present: 0, total: 0 });
   const [yearlyStats, setYearlyStats] = useState<{ present: number; total: number }>({ present: 0, total: 0 });
   const [loading, setLoading] = useState(true);
-  const [lowAttendanceTrainings, setLowAttendanceTrainings] = useState<number>(0);
+  const [lowAttendanceTrainings, setLowAttendanceTrainings] = useState<LowAttendanceTraining[]>([]);
   const navigate = useNavigate();
 
   const fetchStats = async () => {
@@ -104,7 +110,9 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
       const { data: lowAttendanceData, error: lowAttendanceError } = await supabase
         .from("trainings")
         .select(`
-          *,
+          id,
+          date,
+          registered_players_count,
           registrations (
             user_id
           )
@@ -116,7 +124,7 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
 
       if (lowAttendanceError) throw lowAttendanceError;
 
-      setLowAttendanceTrainings(lowAttendanceData?.length || 0);
+      setLowAttendanceTrainings(lowAttendanceData || []);
 
       const monthPresentCount = currentMonthData?.length || 0;
       const monthTotalCount = totalMonthData?.length || 0;
@@ -199,6 +207,23 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
     );
   }
 
+  const formatTrainingMessage = (trainings: LowAttendanceTraining[]) => {
+    if (trainings.length === 0) return null;
+
+    if (trainings.length === 1) {
+      const training = trainings[0];
+      return `L'entraînement du ${format(new Date(training.date), 'dd MMMM yyyy', { locale: fr })} 
+              n'a que ${training.registered_players_count} joueur${training.registered_players_count > 1 ? 's' : ''} inscrit${training.registered_players_count > 1 ? 's' : ''}. 
+              Cliquez ici pour vous inscrire et permettre son maintien !`;
+    }
+
+    const nextTraining = trainings[0];
+    return `${trainings.length} entraînements à venir manquent de joueurs, dont celui du 
+            ${format(new Date(nextTraining.date), 'dd MMMM yyyy', { locale: fr })} 
+            avec ${nextTraining.registered_players_count} joueur${nextTraining.registered_players_count > 1 ? 's' : ''} inscrit${nextTraining.registered_players_count > 1 ? 's' : ''}. 
+            Cliquez ici pour vous inscrire et permettre leur maintien !`;
+  };
+
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -233,7 +258,7 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
         </div>
       </div>
 
-      {lowAttendanceTrainings > 0 && (
+      {lowAttendanceTrainings.length > 0 && (
         <Alert 
           className="bg-gray-800 border-primary text-white"
           role="alert"
@@ -245,11 +270,7 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
               onClick={handleRegistrationClick}
               className="text-left hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-gray-800"
             >
-              {lowAttendanceTrainings === 1 ? (
-                "Un entraînement à venir manque de joueurs. Cliquez ici pour vous inscrire et permettre son maintien !"
-              ) : (
-                `${lowAttendanceTrainings} entraînements à venir manquent de joueurs. Cliquez ici pour vous inscrire et permettre leur maintien !`
-              )}
+              {formatTrainingMessage(lowAttendanceTrainings)}
             </button>
           </AlertDescription>
         </Alert>
