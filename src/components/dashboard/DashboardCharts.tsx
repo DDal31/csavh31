@@ -5,7 +5,6 @@ import { fr } from "date-fns/locale";
 import { Loader2 } from "lucide-react";
 import { isValidTrainingType } from "@/utils/trainingTypes";
 import { MonthlyTrainingChart } from "./charts/MonthlyTrainingChart";
-import { SportsChatbot } from "./SportsChatbot";
 import type { Database } from "@/integrations/supabase/types";
 
 type TrainingType = Database["public"]["Enums"]["training_type"];
@@ -176,21 +175,8 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
     );
   }
 
-  const sportStats = [{
-    sport,
-    currentMonthStats,
-    yearlyStats
-  }];
-
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
-      {/* Chatbot Section */}
-      <div className="w-full">
-        <div className="bg-gray-800 rounded-lg shadow-lg transform transition-all duration-300 hover:shadow-xl">
-          <SportsChatbot sports={sportStats} />
-        </div>
-      </div>
-
       {/* Statistics Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div 
