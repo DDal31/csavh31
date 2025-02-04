@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AttendanceCard } from "@/components/attendance/AttendanceCard";
 import { AttendanceHeader } from "@/components/attendance/AttendanceHeader";
 import { Loader2 } from "lucide-react";
+import Footer from "@/components/Footer";
 import type { Training } from "@/types/training";
 
 const Attendance = () => {
@@ -83,28 +84,34 @@ const Attendance = () => {
 
   if (isLoading) {
     return (
-      <div className="flex-1 min-h-[calc(100vh-64px)] bg-gray-900 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-white" />
+      <div className="flex flex-col min-h-screen bg-gray-900">
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-white" />
+        </div>
+        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="flex-1 min-h-[calc(100vh-64px)] bg-gray-900 p-6 pb-24">
-      <div className="max-w-3xl mx-auto">
-        <AttendanceHeader />
-        <div className="space-y-6">
-          {trainings.length === 0 ? (
-            <div className="text-center text-white">
-              Aucun entraînement à venir pour vos sports ({userSports.join(", ")})
-            </div>
-          ) : (
-            trainings.map((training) => (
-              <AttendanceCard key={training.id} training={training} />
-            ))
-          )}
+    <div className="flex flex-col min-h-screen bg-gray-900">
+      <div className="flex-1 p-6">
+        <div className="max-w-3xl mx-auto">
+          <AttendanceHeader />
+          <div className="space-y-6">
+            {trainings.length === 0 ? (
+              <div className="text-center text-white">
+                Aucun entraînement à venir pour vos sports ({userSports.join(", ")})
+              </div>
+            ) : (
+              trainings.map((training) => (
+                <AttendanceCard key={training.id} training={training} />
+              ))
+            )}
+          </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };
