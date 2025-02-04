@@ -31,7 +31,12 @@ export function SportsChatbot({ sports }: SportsChatbotProps) {
   const [message, setMessage] = useState("");
   const [response, setResponse] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [previousMonthStats, setPreviousMonthStats] = useState<Record<TrainingType, { present: number; total: number }>>({});
+  const [previousMonthStats, setPreviousMonthStats] = useState<Record<TrainingType, { present: number; total: number }>>({
+    goalball: { present: 0, total: 0 },
+    torball: { present: 0, total: 0 },
+    showdown: { present: 0, total: 0 },
+    other: { present: 0, total: 0 }
+  });
   const { toast } = useToast();
 
   useEffect(() => {

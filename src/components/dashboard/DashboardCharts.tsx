@@ -176,16 +176,18 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
     );
   }
 
+  const sportStats = [{
+    sport,
+    currentMonthStats,
+    yearlyStats
+  }];
+
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
       {/* Chatbot Section */}
       <div className="w-full">
         <div className="bg-gray-800 rounded-lg shadow-lg transform transition-all duration-300 hover:shadow-xl">
-          <SportsChatbot 
-            sport={sport} 
-            currentMonthStats={currentMonthStats}
-            yearlyStats={yearlyStats}
-          />
+          <SportsChatbot sports={sportStats} />
         </div>
       </div>
 
