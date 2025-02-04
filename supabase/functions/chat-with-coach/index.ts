@@ -9,32 +9,27 @@ const corsHeaders = {
 serve(async (req) => {
   console.log('Request received:', req.method, req.url);
 
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     console.log('Handling CORS preflight request');
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    // Validate request method
     if (req.method !== 'POST') {
       throw new Error(`Method ${req.method} not allowed`);
     }
 
-    // Validate content type
     const contentType = req.headers.get("content-type");
     console.log('Content-Type:', contentType);
     if (!contentType || !contentType.includes("application/json")) {
       throw new Error(`Invalid content type. Expected application/json, got ${contentType}`);
     }
 
-    // Get environment variables
     const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
     if (!DEEPSEEK_API_KEY) {
       throw new Error('Missing DEEPSEEK_API_KEY environment variable');
     }
 
-    // Read and parse request body
     const bodyText = await req.text();
     console.log('Raw request body:', bodyText);
 
@@ -46,21 +41,20 @@ serve(async (req) => {
       throw new Error(`Invalid JSON in request body: ${error.message}`);
     }
 
-    const { message, statsContext, isAdmin, userId, sport } = body;
-    console.log('Parsed request payload:', { message, statsContext, isAdmin, userId, sport });
+    const { message, statsContext, isAdmin, userId, sports } = body;
+    console.log('Parsed request payload:', { message, statsContext, isAdmin, userId, sports });
 
-    if (!message || !userId) {
-      throw new Error('Missing required parameters: message and userId are required');
+    if (!message || !userId || !sports) {
+      throw new Error('Missing required parameters: message, userId, and sports are required');
     }
 
-    // Prepare system prompt based on user type
+    const sportsString = Array.isArray(sports) ? sports.join(" et ") : sports;
     const systemPrompt = isAdmin 
       ? `Tu es un assistant administratif spécialisé dans la gestion de club sportif. Tu as accès aux statistiques de présence suivantes:\n${statsContext}\n\nUtilise ces données pour donner des conseils pertinents sur la gestion du club, l'amélioration des taux de présence et la motivation des joueurs. Sois proactif dans tes suggestions et n'hésite pas à pointer du doigt les problèmes potentiels tout en proposant des solutions concrètes. IMPORTANT: Ta réponse doit être concise et ne pas dépasser 500 tokens.`
-      : `Tu es un coach sportif virtuel qui aide les joueurs à rester motivés et à s'améliorer. Voici les statistiques de présence du joueur:\n${statsContext}\n\nUtilise ces données pour donner des conseils personnalisés et motivants. IMPORTANT: Incite fortement le joueur à s'inscrire aux entraînements où il y a moins de six joueurs inscrits et où il n'est pas encore inscrit.`;
+      : `Tu es un coach sportif virtuel spécialisé en ${sportsString} qui aide les joueurs à rester motivés et à s'améliorer. Voici les statistiques de présence du joueur:\n${statsContext}\n\nUtilise ces données pour donner des conseils personnalisés et motivants. IMPORTANT: Incite fortement le joueur à s'inscrire aux entraînements où il y a moins de six joueurs inscrits et où il n'est pas encore inscrit.`;
 
     console.log('System prompt:', systemPrompt);
 
-    // Call Deepseek API
     console.log('Calling Deepseek API...');
     const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
@@ -94,7 +88,6 @@ serve(async (req) => {
     const data = await deepseekResponse.json();
     console.log('Deepseek API response:', data);
 
-    // Store the chat message in Supabase
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     
@@ -109,13 +102,12 @@ serve(async (req) => {
       .insert({
         user_id: userId,
         message: message,
-        sport: isAdmin ? 'admin' : (sport || 'all'),
+        sport: isAdmin ? 'admin' : sportsString,
         status: 'active'
       });
 
     if (insertError) {
       console.error('Error storing chat message:', insertError);
-      // Continue execution even if message storage fails
     }
 
     return new Response(
