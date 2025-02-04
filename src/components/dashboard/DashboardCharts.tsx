@@ -227,8 +227,8 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto mb-24">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div 
             className="bg-gray-800 p-6 rounded-lg"
             role="region"
@@ -260,7 +260,7 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
           </div>
         </div>
 
-        <div className="lg:col-span-1">
+        <div className="w-full">
           <AttendanceRankingCard sport={sport} />
         </div>
       </div>
