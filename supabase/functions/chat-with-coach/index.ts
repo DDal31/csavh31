@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -32,6 +31,7 @@ serve(async (req) => {
       throw new Error('Missing DEEPSEEK_API_KEY environment variable');
     }
 
+    // Safely parse the request body
     let body;
     try {
       const bodyText = await req.text();
