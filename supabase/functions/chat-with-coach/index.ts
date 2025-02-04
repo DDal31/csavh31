@@ -30,32 +30,35 @@ serve(async (req) => {
       throw new Error('Missing DEEPSEEK_API_KEY environment variable');
     }
 
-    const bodyText = await req.text();
-    console.log('Raw request body:', bodyText);
-
     let body;
     try {
+      const bodyText = await req.text();
+      console.log('Raw request body:', bodyText);
+      
+      if (!bodyText) {
+        throw new Error('Empty request body');
+      }
+      
       body = JSON.parse(bodyText);
+      console.log('Parsed request body:', body);
     } catch (error) {
       console.error('Error parsing request JSON:', error);
       throw new Error(`Invalid JSON in request body: ${error.message}`);
     }
 
-    const { message, statsContext, isAdmin, userId, sports } = body;
-    console.log('Parsed request payload:', { message, statsContext, isAdmin, userId, sports });
+    const { message, sports, isVisuallyImpaired, userId } = body;
+    console.log('Extracted data:', { message, sports, isVisuallyImpaired, userId });
 
     if (!message || !userId || !sports) {
       throw new Error('Missing required parameters: message, userId, and sports are required');
     }
 
     const sportsString = Array.isArray(sports) ? sports.join(" et ") : sports;
-    const systemPrompt = isAdmin 
-      ? `Tu es un assistant administratif spécialisé dans la gestion de club sportif. Tu as accès aux statistiques de présence suivantes:\n${statsContext}\n\nUtilise ces données pour donner des conseils pertinents sur la gestion du club, l'amélioration des taux de présence et la motivation des joueurs. Sois proactif dans tes suggestions et n'hésite pas à pointer du doigt les problèmes potentiels tout en proposant des solutions concrètes. IMPORTANT: Ta réponse doit être concise et ne pas dépasser 500 tokens.`
-      : `Tu es un coach sportif virtuel spécialisé en ${sportsString} qui aide les joueurs à rester motivés et à s'améliorer. Voici les statistiques de présence du joueur:\n${statsContext}\n\nUtilise ces données pour donner des conseils personnalisés et motivants. IMPORTANT: Incite fortement le joueur à s'inscrire aux entraînements où il y a moins de six joueurs inscrits et où il n'est pas encore inscrit.`;
+    const systemPrompt = `Tu es un coach sportif virtuel spécialisé en ${sportsString} qui aide les joueurs à rester motivés et à s'améliorer. IMPORTANT: Incite fortement le joueur à s'inscrire aux entraînements où il y a moins de six joueurs inscrits et où il n'est pas encore inscrit. Adapte ton langage et tes conseils en fonction du fait que l'utilisateur ${isVisuallyImpaired ? 'est' : "n'est pas"} déficient visuel.`;
 
     console.log('System prompt:', systemPrompt);
-
     console.log('Calling Deepseek API...');
+
     const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -75,7 +78,7 @@ serve(async (req) => {
           }
         ],
         temperature: 0.7,
-        max_tokens: isAdmin ? 500 : 1000,
+        max_tokens: 1000,
       }),
     });
 
@@ -88,6 +91,7 @@ serve(async (req) => {
     const data = await deepseekResponse.json();
     console.log('Deepseek API response:', data);
 
+    // Store the chat message in the database
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     
@@ -102,7 +106,7 @@ serve(async (req) => {
       .insert({
         user_id: userId,
         message: message,
-        sport: isAdmin ? 'admin' : sportsString,
+        sport: sportsString,
         status: 'active'
       });
 
