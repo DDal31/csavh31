@@ -16,33 +16,25 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Setup auth state listener
   useEffect(() => {
     console.log("Setting up auth state listener");
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session) => {
       console.log("Auth state changed:", event, "Session:", session?.user?.id);
       
-      if (event === 'TOKEN_REFRESHED') {
-        console.log("Token refreshed successfully");
-        queryClient.invalidateQueries({ queryKey: ["session"] });
-      }
-      
       if (event === 'SIGNED_OUT') {
         console.log("User signed out, clearing session");
-        queryClient.invalidateQueries({ queryKey: ["session"] });
         queryClient.clear();
+        queryClient.invalidateQueries({ queryKey: ["session"] });
       }
 
-      // Handle token refresh errors
-      if (event === 'TOKEN_REFRESHED' && !session) {
-        console.error("Token refresh failed, signing out user");
-        await supabase.auth.signOut();
-        queryClient.clear();
-        toast({
-          title: "Session expirée",
-          description: "Veuillez vous reconnecter",
-          variant: "destructive"
-        });
+      if (event === 'TOKEN_REFRESHED') {
+        if (!session) {
+          console.error("Token refresh failed - no session");
+          await handleSignOut();
+          return;
+        }
+        console.log("Token refreshed successfully");
+        queryClient.invalidateQueries({ queryKey: ["session"] });
       }
     });
 
@@ -50,6 +42,20 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
       subscription.unsubscribe();
     };
   }, [queryClient, toast]);
+
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      queryClient.clear();
+      toast({
+        title: "Session expirée",
+        description: "Veuillez vous reconnecter",
+        variant: "destructive"
+      });
+    } catch (error) {
+      console.error("Error during sign out:", error);
+    }
+  };
 
   const { data: session, isError: sessionError, isLoading: sessionLoading } = useQuery({
     queryKey: ["session"],
@@ -68,51 +74,15 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
           return null;
         }
 
-        // Attempt to refresh the session if it exists
-        if (session) {
-          console.log("Attempting to refresh session");
-          try {
-            const { data: { session: refreshedSession }, error: refreshError } = 
-              await supabase.auth.refreshSession();
-            
-            if (refreshError) {
-              console.error("Session refresh error:", refreshError);
-              // Don't throw here, just return null to trigger a redirect to login
-              return null;
-            }
-            
-            if (!refreshedSession) {
-              console.log("Session refresh failed - no session returned");
-              return null;
-            }
-            
-            console.log("Session refreshed successfully");
-            return refreshedSession;
-          } catch (refreshError) {
-            console.error("Session refresh failed with error:", refreshError);
-            return null;
-          }
-        }
-
         console.log("Valid session found for user:", session.user.id);
         return session;
       } catch (error) {
         console.error("Session error:", error);
-        // Force sign out on session error
-        try {
-          await supabase.auth.signOut();
-        } catch (signOutError) {
-          console.error("Error during sign out:", signOutError);
-        }
-        toast({
-          title: "Erreur d'authentification",
-          description: "Veuillez vous reconnecter",
-          variant: "destructive"
-        });
+        await handleSignOut();
         throw error;
       }
     },
-    retry: false, // Don't retry on failure
+    retry: false,
     staleTime: 1000 * 60 * 5, // Consider session data stale after 5 minutes
   });
 
@@ -150,10 +120,9 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
         throw error;
       }
     },
-    retry: false, // Don't retry on failure
+    retry: false,
   });
 
-  // Handle loading states
   if (sessionLoading || profileLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -162,13 +131,11 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
     );
   }
 
-  // Handle authentication errors
   if (sessionError || profileError || !session) {
     console.log("Auth error or no session, redirecting to login");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Vérification explicite du rôle admin
   if (requireAdmin) {
     console.log("Checking admin role. Profile:", profile);
     console.log("Site role:", profile?.site_role);
