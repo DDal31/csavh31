@@ -4,6 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 serve(async (req) => {
@@ -14,11 +15,26 @@ serve(async (req) => {
 
   try {
     console.log('Received request:', req.method, req.url);
-    const { message, statsContext, isAdmin, userId } = await req.json()
+    
+    // Validate content type
+    if (req.headers.get("content-type") !== "application/json") {
+      throw new Error("Invalid content type. Expected application/json");
+    }
+
+    // Parse request body with error handling
+    let body;
+    try {
+      body = await req.json();
+    } catch (error) {
+      console.error('Error parsing request JSON:', error);
+      throw new Error('Invalid JSON in request body');
+    }
+
+    const { message, statsContext, isAdmin, userId } = body;
     console.log('Request payload:', { message, statsContext, isAdmin, userId });
 
     if (!message || !userId) {
-      throw new Error('Missing required parameters')
+      throw new Error('Missing required parameters: message and userId are required')
     }
 
     // Initialize Supabase client
@@ -27,7 +43,12 @@ serve(async (req) => {
     const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY')
     
     if (!supabaseUrl || !supabaseServiceKey || !DEEPSEEK_API_KEY) {
-      throw new Error('Missing environment variables')
+      console.error('Missing environment variables:', {
+        hasSupabaseUrl: !!supabaseUrl,
+        hasServiceKey: !!supabaseServiceKey,
+        hasDeepseekKey: !!DEEPSEEK_API_KEY
+      });
+      throw new Error('Missing required environment configuration')
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
@@ -79,7 +100,7 @@ serve(async (req) => {
     console.log('Sending request to Deepseek API with prompt:', systemPrompt)
     console.log('User message:', message)
 
-    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    const deepseekResponse = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
@@ -100,16 +121,16 @@ serve(async (req) => {
         temperature: 0.7,
         max_tokens: isAdmin ? 500 : 1000,
       }),
-    })
+    });
 
-    if (!response.ok) {
-      const errorData = await response.text()
-      console.error('Deepseek API error:', errorData)
-      throw new Error(`Deepseek API error: ${response.status} ${response.statusText}`)
+    if (!deepseekResponse.ok) {
+      const errorData = await deepseekResponse.text();
+      console.error('Deepseek API error:', errorData);
+      throw new Error(`Deepseek API error: ${deepseekResponse.status} ${deepseekResponse.statusText}`);
     }
 
-    const data = await response.json()
-    console.log('Deepseek API response:', data)
+    const data = await deepseekResponse.json();
+    console.log('Deepseek API response:', data);
 
     // Store the chat message
     const { error: insertError } = await supabase
@@ -119,10 +140,10 @@ serve(async (req) => {
         message: message,
         sport: isAdmin ? 'admin' : 'all',
         status: 'active'
-      })
+      });
 
     if (insertError) {
-      console.error('Error storing chat message:', insertError)
+      console.error('Error storing chat message:', insertError);
       // Continue execution even if message storage fails
     }
 
@@ -134,9 +155,9 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
       },
-    )
+    );
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error in chat-with-coach function:', error);
     return new Response(
       JSON.stringify({ 
         error: error.message,
@@ -149,6 +170,6 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
       },
-    )
+    );
   }
-})
+});
