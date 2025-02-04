@@ -43,14 +43,38 @@ serve(async (req) => {
       console.log('Parsed request body:', body);
     } catch (error) {
       console.error('Error parsing request JSON:', error);
-      throw new Error(`Invalid JSON in request body: ${error.message}`);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid JSON in request body', 
+          details: error.message 
+        }), 
+        { 
+          status: 400, 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          } 
+        }
+      );
     }
 
     const { message, sports, isVisuallyImpaired, userId } = body;
     console.log('Extracted data:', { message, sports, isVisuallyImpaired, userId });
 
     if (!message || !userId || !sports) {
-      throw new Error('Missing required parameters: message, userId, and sports are required');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Missing required fields', 
+          details: 'message, userId, and sports are required' 
+        }), 
+        { 
+          status: 400, 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          } 
+        }
+      );
     }
 
     const sportsString = Array.isArray(sports) ? sports.join(" et ") : sports;
@@ -85,7 +109,19 @@ serve(async (req) => {
     if (!deepseekResponse.ok) {
       const errorText = await deepseekResponse.text();
       console.error('Deepseek API error:', deepseekResponse.status, errorText);
-      throw new Error(`Deepseek API error: ${deepseekResponse.status} ${errorText}`);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Deepseek API error', 
+          details: errorText 
+        }), 
+        { 
+          status: deepseekResponse.status, 
+          headers: { 
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          } 
+        }
+      );
     }
 
     const data = await deepseekResponse.json();
