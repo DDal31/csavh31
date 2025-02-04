@@ -5,10 +5,12 @@ import { FooterLogo } from "./footer/FooterLogo";
 import { FooterNavigation } from "./footer/FooterNavigation";
 import { FooterSocial } from "./footer/FooterSocial";
 import { useToast } from "@/components/ui/use-toast";
+import { BottomNav } from "./navigation/BottomNav";
 
 const Footer = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [settings, setSettings] = useState<SiteSettings>({
     site_title: "CSAVH31 Toulouse",
     site_description: "Association dédiée au sport et au bien-être pour les personnes déficientes visuelles.",
@@ -26,10 +28,27 @@ const Footer = () => {
   });
 
   useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+    };
+
+    checkAuth();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
     let isMounted = true;
 
     const loadSettings = async () => {
-      if (!isLoading) return; // Prevent reloading if already loaded
+      if (!isLoading) return;
 
       try {
         console.log("Loading footer settings...");
@@ -119,26 +138,32 @@ const Footer = () => {
   }, [toast]);
 
   return (
-    <footer className="bg-gray-800 text-gray-300 border-t border-gray-700">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="space-y-4">
-            <FooterLogo settings={settings} />
-            {settings.show_description && (
-              <p className="text-sm">{settings.site_description}</p>
-            )}
+    <>
+      {isAuthenticated ? (
+        <BottomNav />
+      ) : (
+        <footer className="bg-gray-800 text-gray-300 border-t border-gray-700">
+          <div className="container mx-auto px-4 py-12">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+              <div className="space-y-4">
+                <FooterLogo settings={settings} />
+                {settings.show_description && (
+                  <p className="text-sm">{settings.site_description}</p>
+                )}
+              </div>
+              
+              {settings.show_navigation && <FooterNavigation />}
+              
+              {settings.show_social_media && <FooterSocial socialMedia={socialMedia} />}
+            </div>
+            
+            <div className="border-t border-gray-700 mt-8 pt-8 text-sm text-center">
+              <p>&copy; {new Date().getFullYear()} {settings.site_title}. Tous droits réservés.</p>
+            </div>
           </div>
-          
-          {settings.show_navigation && <FooterNavigation />}
-          
-          {settings.show_social_media && <FooterSocial socialMedia={socialMedia} />}
-        </div>
-        
-        <div className="border-t border-gray-700 mt-8 pt-8 text-sm text-center">
-          <p>&copy; {new Date().getFullYear()} {settings.site_title}. Tous droits réservés.</p>
-        </div>
-      </div>
-    </footer>
+        </footer>
+      )}
+    </>
   );
 };
 
