@@ -24,12 +24,30 @@ export default defineConfig(({ mode }) => ({
     outDir: "dist",
     assetsDir: "assets",
     emptyOutDir: true,
+    sourcemap: true,
     rollupOptions: {
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
+          ui: [
+            '@radix-ui/react-dialog', 
+            '@radix-ui/react-dropdown-menu', 
+            '@radix-ui/react-toast'
+          ],
         },
       },
     },
   },
+  // Optimisations pour Electron
+  define: {
+    'process.env.ELECTRON': process.env.ELECTRON,
+    // Éviter les erreurs de Node.js dans le navigateur
+    'process.env.NODE_ENV': JSON.stringify(mode),
+  },
+  // Empêcher Vite de remplacer process.env avec import.meta.env
+  esbuild: {
+    define: mode === 'production' ? {
+      'global': 'window'
+    } : undefined,
+  }
 }));
