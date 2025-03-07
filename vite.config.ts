@@ -20,4 +20,16 @@ export default defineConfig(({ mode }) => ({
     },
   },
   base: process.env.ELECTRON === "true" ? "./" : "/",
+  build: {
+    outDir: "dist",
+    assetsDir: "assets",
+    emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+        },
+      },
+    },
+  },
 }));
