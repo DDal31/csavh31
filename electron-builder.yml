@@ -1,0 +1,31 @@
+
+appId: com.csavh31.app
+productName: CSAVH31
+copyright: Copyright © 2024 CSAVH31
+directories:
+  output: dist_electron
+  buildResources: public
+files:
+  - from: dist
+    to: .
+  - electron/main.js
+mac:
+  category: public.app-category.sports
+  icon: public/club-logo.png
+  target:
+    - dmg
+    - zip
+win:
+  icon: public/club-logo.png
+  target:
+    - nsis
+    - portable
+linux:
+  icon: public/club-logo.png
+  target:
+    - AppImage
+    - deb
+    - rpm
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
