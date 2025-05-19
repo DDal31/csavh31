@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { format, isBefore, startOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -8,15 +9,27 @@ import { UserPlus, PencilIcon, Trash2, Clock } from "lucide-react";
 import type { Training } from "@/types/training";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type TrainingListProps = {
   trainings: Training[];
   onAddClick: () => void;
   onEditClick: (training: Training) => void;
+  onDeleteClick: (training: Training) => void;
 };
 
-export function TrainingList({ trainings, onAddClick, onEditClick }: TrainingListProps) {
+export function TrainingList({ trainings, onAddClick, onEditClick, onDeleteClick }: TrainingListProps) {
   const [selectedTraining, setSelectedTraining] = useState<Training | null>(null);
+  const [trainingToDelete, setTrainingToDelete] = useState<Training | null>(null);
 
   if (trainings.length === 0) {
     return (
@@ -32,6 +45,17 @@ export function TrainingList({ trainings, onAddClick, onEditClick }: TrainingLis
 
   const isPastTraining = (date: string) => {
     return isBefore(new Date(date), startOfDay(new Date()));
+  };
+
+  const handleDeleteClick = (training: Training) => {
+    setTrainingToDelete(training);
+  };
+
+  const confirmDelete = () => {
+    if (trainingToDelete) {
+      onDeleteClick(trainingToDelete);
+      setTrainingToDelete(null);
+    }
   };
 
   return (
@@ -97,6 +121,7 @@ export function TrainingList({ trainings, onAddClick, onEditClick }: TrainingLis
                   <Button
                     variant="ghost"
                     size="icon"
+                    onClick={() => handleDeleteClick(training)}
                     className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
                     aria-label={`Supprimer l'entraînement du ${formatTrainingDate(training.date)}`}
                   >
@@ -147,6 +172,30 @@ export function TrainingList({ trainings, onAddClick, onEditClick }: TrainingLis
         isOpen={!!selectedTraining}
         onClose={() => setSelectedTraining(null)}
       />
+
+      <AlertDialog open={!!trainingToDelete} onOpenChange={(open) => !open && setTrainingToDelete(null)}>
+        <AlertDialogContent className="bg-gray-800 border-gray-700 text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-300">
+              Êtes-vous sûr de vouloir supprimer cet entraînement
+              {trainingToDelete && (
+                <span>
+                  {' '}de {trainingToDelete.type === 'other' 
+                    ? trainingToDelete.other_type_details || 'Événement' 
+                    : trainingToDelete.type.charAt(0).toUpperCase() + trainingToDelete.type.slice(1)} 
+                  le {formatTrainingDate(trainingToDelete.date)}
+                </span>
+              )}
+              ? Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600">Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">Supprimer</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

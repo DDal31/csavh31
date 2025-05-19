@@ -1,17 +1,20 @@
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { TrainingList } from "./TrainingList";
 import { TrainingForm } from "./TrainingForm";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import type { Training } from "@/types/training";
+import { useToast } from "@/components/ui/use-toast";
 
 type DbTraining = Database["public"]["Tables"]["trainings"]["Row"];
 
 export function TrainingManagement() {
   const [showForm, setShowForm] = useState(false);
   const [editingTraining, setEditingTraining] = useState<DbTraining | null>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: trainings = [], isLoading } = useQuery({
     queryKey: ["trainings"],
@@ -50,6 +53,47 @@ export function TrainingManagement() {
     setShowForm(true);
   };
 
+  const handleDelete = async (training: Training) => {
+    try {
+      console.log("Deleting training:", training);
+      
+      // Delete all registrations for this training first
+      const { error: registrationsError } = await supabase
+        .from("registrations")
+        .delete()
+        .eq("training_id", training.id);
+        
+      if (registrationsError) {
+        throw registrationsError;
+      }
+      
+      // Then delete the training
+      const { error } = await supabase
+        .from("trainings")
+        .delete()
+        .eq("id", training.id);
+        
+      if (error) {
+        throw error;
+      }
+      
+      // Invalidate the query to refetch the data
+      queryClient.invalidateQueries({ queryKey: ["trainings"] });
+      
+      toast({
+        title: "Entraînement supprimé",
+        description: "L'entraînement a été supprimé avec succès.",
+      });
+    } catch (error) {
+      console.error("Error deleting training:", error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la suppression de l'entraînement.",
+      });
+    }
+  };
+
   const handleClose = () => {
     setShowForm(false);
     setEditingTraining(null);
@@ -73,6 +117,7 @@ export function TrainingManagement() {
           trainings={trainings}
           onAddClick={() => setShowForm(true)} 
           onEditClick={handleEdit}
+          onDeleteClick={handleDelete}
         />
       )}
     </div>
