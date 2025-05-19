@@ -99,10 +99,6 @@ export function TrainingManagement() {
     setEditingTraining(null);
   };
 
-  if (isLoading) {
-    return <div className="text-center text-gray-400">Chargement des entraînements...</div>;
-  }
-
   return (
     <div className="max-w-6xl mx-auto p-6">
       {showForm ? (
@@ -118,6 +114,7 @@ export function TrainingManagement() {
           onAddClick={() => setShowForm(true)} 
           onEditClick={handleEdit}
           onDeleteClick={handleDelete}
+          isLoading={isLoading}
         />
       )}
     </div>

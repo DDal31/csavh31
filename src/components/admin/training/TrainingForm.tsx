@@ -1,3 +1,4 @@
+
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -12,6 +13,7 @@ import { AccessibleTrainingDateField } from "./form/AccessibleTrainingDateField"
 import { AccessibleTrainingTimeFields } from "./form/AccessibleTrainingTimeFields";
 import { formSchema } from "./form/trainingFormSchema";
 import type { Database } from "@/integrations/supabase/types";
+import { useQueryClient } from "@tanstack/react-query";
 
 type Training = Database["public"]["Tables"]["trainings"]["Row"];
 type TrainingType = Database["public"]["Enums"]["training_type"];
@@ -26,6 +28,7 @@ type TrainingFormProps = {
 export function TrainingForm({ training, onSuccess, onCancel, isAdmin = false }: TrainingFormProps) {
   const { toast } = useToast();
   const isEditing = !!training;
+  const queryClient = useQueryClient();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -80,6 +83,10 @@ export function TrainingForm({ training, onSuccess, onCancel, isAdmin = false }:
       }
 
       console.log(`Training ${isEditing ? "updated" : "created"} successfully`);
+      
+      // Invalidate the trainings query to force a refetch
+      queryClient.invalidateQueries({ queryKey: ["trainings"] });
+      
       toast({
         title: `Entraînement ${isEditing ? "modifié" : "créé"}`,
         description: `L'entraînement a été ${isEditing ? "modifié" : "ajouté"} avec succès.`,

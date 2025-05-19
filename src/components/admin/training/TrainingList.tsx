@@ -25,16 +25,38 @@ type TrainingListProps = {
   onAddClick: () => void;
   onEditClick: (training: Training) => void;
   onDeleteClick: (training: Training) => void;
+  isLoading?: boolean;
 };
 
-export function TrainingList({ trainings, onAddClick, onEditClick, onDeleteClick }: TrainingListProps) {
+export function TrainingList({ 
+  trainings, 
+  onAddClick, 
+  onEditClick, 
+  onDeleteClick,
+  isLoading = false 
+}: TrainingListProps) {
   const [selectedTraining, setSelectedTraining] = useState<Training | null>(null);
   const [trainingToDelete, setTrainingToDelete] = useState<Training | null>(null);
 
-  if (trainings.length === 0) {
+  if (isLoading) {
     return (
       <div className="text-center text-gray-400">
-        Aucun entraînement disponible pour le moment.
+        Chargement des entraînements...
+      </div>
+    );
+  }
+
+  if (trainings.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-end">
+          <Button onClick={onAddClick} className="bg-purple-600 hover:bg-purple-700">
+            Ajouter un entraînement
+          </Button>
+        </div>
+        <div className="text-center text-gray-400">
+          Aucun entraînement disponible pour le moment.
+        </div>
       </div>
     );
   }

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -12,12 +13,14 @@ import { TrainingDateField } from "./form/TrainingDateField";
 import { TrainingTimeFields } from "./form/TrainingTimeFields";
 import { formSchema } from "./form/trainingFormSchema";
 import * as z from "zod";
+import { useQueryClient } from "@tanstack/react-query";
 
 type TrainingType = Database["public"]["Enums"]["training_type"];
 
 export function CreateTrainingForm() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -50,6 +53,9 @@ export function CreateTrainingForm() {
         console.error("Error creating training:", error);
         throw error;
       }
+      
+      // Invalidate the trainings query to force a refetch
+      queryClient.invalidateQueries({ queryKey: ["trainings"] });
 
       toast({
         title: "Entraînement créé",
