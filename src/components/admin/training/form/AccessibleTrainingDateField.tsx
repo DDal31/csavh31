@@ -1,3 +1,4 @@
+
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -15,6 +16,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useEffect } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import type { z } from "zod";
 import { formSchema } from "./trainingFormSchema";
@@ -26,6 +28,26 @@ type Props = {
 
 export function AccessibleTrainingDateField({ form, isAdmin = false }: Props) {
   console.log("Rendering AccessibleTrainingDateField with isAdmin:", isAdmin);
+  
+  // Function to set training times based on day of week
+  const updateTimesByDay = (date: Date) => {
+    if (!date) return;
+    
+    const dayOfWeek = date.getDay();
+    
+    // Tuesday (2) or Friday (5)
+    if (dayOfWeek === 2 || dayOfWeek === 5) {
+      form.setValue("startTime", "18:00");
+      form.setValue("endTime", "21:30");
+      console.log("Set times for Tuesday/Friday: 18:00 - 21:30");
+    } 
+    // Saturday (6)
+    else if (dayOfWeek === 6) {
+      form.setValue("startTime", "09:00");
+      form.setValue("endTime", "12:30");
+      console.log("Set times for Saturday: 09:00 - 12:30");
+    }
+  };
   
   return (
     <FormField
@@ -59,7 +81,12 @@ export function AccessibleTrainingDateField({ form, isAdmin = false }: Props) {
               <Calendar
                 mode="single"
                 selected={field.value}
-                onSelect={field.onChange}
+                onSelect={(date) => {
+                  field.onChange(date);
+                  if (date) {
+                    updateTimesByDay(date);
+                  }
+                }}
                 disabled={isAdmin ? undefined : (date) =>
                   date < new Date(new Date().setHours(0, 0, 0, 0))
                 }
