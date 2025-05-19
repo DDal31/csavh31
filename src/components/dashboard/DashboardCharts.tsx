@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth, startOfYear, endOfYear } from "date-fns";
@@ -226,7 +227,7 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
   };
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto mb-24">
+    <div className="space-y-8 max-w-5xl mx-auto mb-36">
       <div className="grid grid-cols-1 gap-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div 
@@ -267,7 +268,7 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
 
       {lowAttendanceTrainings.length > 0 && (
         <Alert 
-          className="bg-gray-800 border-primary text-white z-10 relative"
+          className="bg-gray-800 border-primary text-white z-10 relative mb-10"
           role="alert"
           aria-live="polite"
         >
@@ -275,7 +276,7 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
           <AlertDescription className="ml-2">
             <button
               onClick={handleRegistrationClick}
-              className="text-left hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-gray-800 w-full"
+              className="text-left hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-gray-800 w-full py-2"
             >
               {formatTrainingMessage(lowAttendanceTrainings)}
             </button>
