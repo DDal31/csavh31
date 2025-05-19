@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -38,43 +39,54 @@ export function TrainingList({ trainings, selectedTrainings, onTrainingToggle }:
 
   return (
     <div className="space-y-6">
-      {trainings.map((training) => (
-        <Card 
-          key={training.id} 
-          className="bg-gray-800 border-gray-700 hover:bg-gray-700 transition-colors"
-        >
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xl font-bold text-white">
-              {training.type === 'other' 
-                ? training.other_type_details || 'Événement' 
-                : training.type.charAt(0).toUpperCase() + training.type.slice(1)}
-            </CardTitle>
-            <div className="flex items-center gap-4">
-              {selectedTrainings.includes(training.id) && (
-                <span className="text-green-400 text-sm" aria-label="Vous êtes déjà inscrit à cet entraînement">
-                  Déjà inscrit
-                </span>
-              )}
-              <Checkbox 
-                checked={selectedTrainings.includes(training.id)}
-                onCheckedChange={() => handleTrainingToggle(training.id)}
-                className="border-gray-600 focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-purple-500"
-                aria-label={`S'inscrire à l'entraînement du ${format(new Date(training.date), "EEEE d MMMM yyyy", { locale: fr })}`}
-              />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-gray-300">
-              <p>
-                {format(new Date(training.date), "EEEE d MMMM yyyy", { locale: fr })}
-              </p>
-              <p>
-                {training.start_time.slice(0, 5)} - {training.end_time.slice(0, 5)}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+      {trainings.map((training) => {
+        const isSelected = selectedTrainings.includes(training.id);
+        const formattedDate = format(new Date(training.date), "EEEE d MMMM yyyy", { locale: fr });
+        
+        return (
+          <button 
+            key={training.id}
+            onClick={() => handleTrainingToggle(training.id)}
+            className="w-full text-left"
+            aria-label={`${isSelected ? 'Se désinscrire de' : 'S\'inscrire à'} l'entraînement du ${formattedDate}`}
+          >
+            <Card 
+              className={`bg-gray-800 border-gray-700 hover:bg-gray-700 transition-colors ${isSelected ? 'ring-2 ring-purple-500 ring-opacity-50' : ''}`}
+            >
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-xl font-bold text-white">
+                  {training.type === 'other' 
+                    ? training.other_type_details || 'Événement' 
+                    : training.type.charAt(0).toUpperCase() + training.type.slice(1)}
+                </CardTitle>
+                <div className="flex items-center gap-4">
+                  {isSelected && (
+                    <span className="text-green-400 text-sm" aria-label="Vous êtes déjà inscrit à cet entraînement">
+                      Déjà inscrit
+                    </span>
+                  )}
+                  <Checkbox 
+                    checked={isSelected}
+                    className="border-gray-600 focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-purple-500 pointer-events-none"
+                    aria-hidden="true"
+                    tabIndex={-1}
+                  />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-gray-300">
+                  <p>
+                    {formattedDate}
+                  </p>
+                  <p>
+                    {training.start_time.slice(0, 5)} - {training.end_time.slice(0, 5)}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </button>
+        );
+      })}
     </div>
   );
 }
