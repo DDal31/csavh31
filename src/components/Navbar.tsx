@@ -7,7 +7,7 @@ import { useToast } from "@/components/ui/use-toast";
 
 const Navbar = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [siteTitle, setSiteTitle] = useState("CSAVH31 Toulouse");
+  const [siteTitle, setSiteTitle] = useState("Club sportif AVH 31");
   const [logoUrl, setLogoUrl] = useState("/club-logo.png");
   const [logoShape, setLogoShape] = useState("round");
   const { toast } = useToast();
@@ -103,7 +103,7 @@ const Navbar = () => {
         <div className="flex justify-between h-16">
           <Link to="/" className="flex-shrink-0 flex items-center">
             <NavbarLogo 
-              siteTitle={siteTitle}
+              siteTitle="Club sportif AVH 31"
               logoUrl={logoUrl}
               logoShape={logoShape}
             />
