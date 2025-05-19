@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { TrainingList } from "./TrainingList";
@@ -31,7 +32,7 @@ export function TrainingManagement() {
             )
           )
         `)
-        .order("date", { ascending: true });
+        .order("date", { ascending: false });
 
       if (error) {
         console.error("Error fetching trainings:", error);
