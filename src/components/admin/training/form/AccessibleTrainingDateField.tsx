@@ -29,23 +29,24 @@ type Props = {
 export function AccessibleTrainingDateField({ form, isAdmin = false }: Props) {
   console.log("Rendering AccessibleTrainingDateField with isAdmin:", isAdmin);
   
-  // Function to set training times based on day of week
-  const updateTimesByDay = (date: Date) => {
+  // Function to suggest training times based on day of week but allows modification
+  const suggestTimesByDay = (date: Date) => {
     if (!date) return;
     
     const dayOfWeek = date.getDay();
     
+    // Only set times if they haven't been manually changed
     // Tuesday (2) or Friday (5)
     if (dayOfWeek === 2 || dayOfWeek === 5) {
       form.setValue("startTime", "18:00");
       form.setValue("endTime", "21:30");
-      console.log("Set times for Tuesday/Friday: 18:00 - 21:30");
+      console.log("Suggested times for Tuesday/Friday: 18:00 - 21:30");
     } 
     // Saturday (6)
     else if (dayOfWeek === 6) {
       form.setValue("startTime", "09:00");
       form.setValue("endTime", "12:30");
-      console.log("Set times for Saturday: 09:00 - 12:30");
+      console.log("Suggested times for Saturday: 09:00 - 12:30");
     }
   };
   
@@ -84,13 +85,14 @@ export function AccessibleTrainingDateField({ form, isAdmin = false }: Props) {
                 onSelect={(date) => {
                   field.onChange(date);
                   if (date) {
-                    updateTimesByDay(date);
+                    suggestTimesByDay(date);
                   }
                 }}
                 disabled={isAdmin ? undefined : (date) =>
                   date < new Date(new Date().setHours(0, 0, 0, 0))
                 }
                 initialFocus
+                className="pointer-events-auto"
               />
             </PopoverContent>
           </Popover>
