@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -14,6 +15,7 @@ const queryClient = new QueryClient({
     queries: {
       refetchOnWindowFocus: false,
       retry: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
     },
   },
 });
@@ -28,7 +30,7 @@ function AnimatedRoutes() {
           {PublicRoutes()}
           {MemberRoutes()}
           {AdminRoutes()}
-          {AdminSettingsRoutes}
+          {AdminSettingsRoutes()}
         </Routes>
       </PageTransition>
     </AnimatePresence>

@@ -38,16 +38,19 @@ export default defineConfig(({ mode }) => ({
       },
     },
   },
-  // Optimisations pour Electron
+  // Optimizations for Electron and modern browsers
   define: {
     'process.env.ELECTRON': process.env.ELECTRON,
-    // Éviter les erreurs de Node.js dans le navigateur
     'process.env.NODE_ENV': JSON.stringify(mode),
   },
-  // Empêcher Vite de remplacer process.env avec import.meta.env
+  // Prevent Vite from replacing process.env with import.meta.env
   esbuild: {
     define: mode === 'production' ? {
-      'global': 'window'
+      'global': 'globalThis'
     } : undefined,
-  }
+  },
+  // Enhanced development experience
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom'],
+  },
 }));

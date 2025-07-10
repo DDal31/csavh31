@@ -1,3 +1,4 @@
+
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
@@ -10,7 +11,6 @@ const config: CapacitorConfig = {
     hostname: 'csavh31.fr'
   },
   ios: {
-    contentInset: 'always'
     contentInset: 'always',
     limitsNavigationsToAppBoundDomains: true
   },
