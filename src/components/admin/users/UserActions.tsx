@@ -12,7 +12,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, KeyRound } from "lucide-react";
+import { PasswordChangeDialog } from "./PasswordChangeDialog";
 import type { Profile } from "@/types/profile";
 
 interface UserActionsProps {
@@ -49,6 +50,11 @@ export function UserActions({
         <Pencil className="h-4 w-4" />
         <span className="sm:hidden">Modifier</span>
       </Button>
+
+      <PasswordChangeDialog
+        userId={user.id}
+        userName={fullName}
+      />
 
       <AlertDialog>
         <AlertDialogTrigger asChild>

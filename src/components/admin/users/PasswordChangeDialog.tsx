@@ -93,11 +93,12 @@ export function PasswordChangeDialog({ userId, userName }: PasswordChangeDialogP
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          size="icon"
-          className="bg-yellow-600 hover:bg-yellow-700 text-white border-none"
+          className="bg-yellow-600 hover:bg-yellow-700 text-white border-none w-full sm:w-auto flex items-center justify-center gap-2"
+          aria-label={`Modifier le mot de passe de ${userName}`}
           title={`Modifier le mot de passe de ${userName}`}
         >
           <KeyRound className="h-4 w-4" />
+          <span className="sm:hidden">Mot de passe</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="bg-gray-800 border-gray-700">
@@ -118,6 +119,7 @@ export function PasswordChangeDialog({ userId, userName }: PasswordChangeDialogP
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="Entrez le nouveau mot de passe"
               className="bg-gray-700 text-white border-gray-600"
+              aria-describedby="password-requirements"
             />
           </div>
           <div className="space-y-2">
@@ -133,11 +135,15 @@ export function PasswordChangeDialog({ userId, userName }: PasswordChangeDialogP
               className="bg-gray-700 text-white border-gray-600"
             />
           </div>
+          <p id="password-requirements" className="text-sm text-gray-400">
+            Le mot de passe doit contenir au moins 6 caractères
+          </p>
           <div className="flex justify-end gap-2">
             <Button
               variant="outline"
               onClick={() => setIsOpen(false)}
               className="bg-gray-700 text-white hover:bg-gray-600 border-gray-600"
+              aria-label="Annuler la modification du mot de passe"
             >
               Annuler
             </Button>
@@ -145,6 +151,7 @@ export function PasswordChangeDialog({ userId, userName }: PasswordChangeDialogP
               onClick={handlePasswordChange}
               disabled={isLoading}
               className="bg-yellow-600 hover:bg-yellow-700 text-white"
+              aria-label={isLoading ? "Modification en cours..." : `Confirmer la modification du mot de passe de ${userName}`}
             >
               {isLoading ? "Modification..." : "Modifier le mot de passe"}
             </Button>
