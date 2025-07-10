@@ -21,7 +21,7 @@ import type { CreateUserData } from "@/types/auth";
 interface User {
   id: string;
   email: string;
-  profile?: Profile;
+  profile: Profile;
 }
 
 const AdminUsers = () => {
@@ -74,7 +74,9 @@ const AdminUsers = () => {
       }
 
       console.log("Users fetched successfully:", data);
-      setUsers(data);
+      // Filter out users without profiles to ensure consistent typing
+      const usersWithProfiles = data.filter((user: any) => user.profile);
+      setUsers(usersWithProfiles);
       setLoading(false);
     } catch (error) {
       console.error("Erreur lors de la récupération des utilisateurs:", error);
