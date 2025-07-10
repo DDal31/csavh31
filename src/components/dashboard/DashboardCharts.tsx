@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth, startOfYear, endOfYear } from "date-fns";
@@ -6,7 +5,6 @@ import { fr } from "date-fns/locale";
 import { Loader2, UserPlus } from "lucide-react";
 import { isValidTrainingType } from "@/utils/trainingTypes";
 import { MonthlyTrainingChart } from "./charts/MonthlyTrainingChart";
-import { AttendanceRankingCard } from "./charts/AttendanceRankingCard";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useNavigate } from "react-router-dom";
 import type { Database } from "@/integrations/supabase/types";
@@ -259,10 +257,6 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
               il y a eu des présences à {yearlyStats.present} entraînements
             </div>
           </div>
-        </div>
-
-        <div className="w-full">
-          <AttendanceRankingCard sport={sport} />
         </div>
       </div>
 
