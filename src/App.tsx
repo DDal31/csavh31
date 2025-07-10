@@ -27,10 +27,10 @@ function AnimatedRoutes() {
     <AnimatePresence mode="wait">
       <PageTransition>
         <Routes location={location} key={location.pathname}>
-          {PublicRoutes()}
-          {MemberRoutes()}
-          {AdminRoutes()}
-          {AdminSettingsRoutes()}
+          <PublicRoutes />
+          <MemberRoutes />
+          <AdminRoutes />
+          {AdminSettingsRoutes}
         </Routes>
       </PageTransition>
     </AnimatePresence>
