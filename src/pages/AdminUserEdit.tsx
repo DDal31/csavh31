@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +8,7 @@ import Footer from "@/components/Footer";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AdminUserEditForm } from "@/components/admin/users/form/AdminUserEditForm";
+import { PasswordChangeSection } from "@/components/admin/users/form/PasswordChangeSection";
 import type { Profile } from "@/types/profile";
 
 const AdminUserEdit = () => {
@@ -136,7 +138,7 @@ const AdminUserEdit = () => {
     <div className="min-h-screen bg-gray-900">
       <Navbar />
       <main className="container mx-auto px-4 py-24">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-3xl mx-auto space-y-6">
           <Button 
             variant="ghost" 
             className="text-white mb-6 hover:text-gray-300"
@@ -154,6 +156,11 @@ const AdminUserEdit = () => {
             profile={profile}
             onSubmit={handleSubmit}
             isLoading={updating}
+          />
+
+          <PasswordChangeSection
+            userId={profile.id}
+            userName={`${profile.first_name} ${profile.last_name}`}
           />
         </div>
       </main>

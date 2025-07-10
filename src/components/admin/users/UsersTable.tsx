@@ -1,3 +1,5 @@
+
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -6,13 +8,26 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { UserActions } from "./UserActions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { PasswordChangeDialog } from "./PasswordChangeDialog";
 import type { Profile } from "@/types/profile";
 
 interface User {
   id: string;
   email: string;
-  profile?: Profile;
+  profile: Profile;
 }
 
 interface UsersTableProps {
@@ -20,51 +35,81 @@ interface UsersTableProps {
   onDeleteUser: (userId: string) => void;
 }
 
-export function UsersTable({
-  users,
-  onDeleteUser,
-}: UsersTableProps) {
+export function UsersTable({ users, onDeleteUser }: UsersTableProps) {
+  const navigate = useNavigate();
+  
   return (
-    <div role="region" aria-label="Liste des utilisateurs">
+    <div className="bg-gray-800 rounded-lg shadow-lg overflow-hidden border border-gray-700">
       <Table>
         <TableHeader>
           <TableRow className="border-gray-700">
-            <TableHead className="text-gray-300 hidden md:table-cell" scope="col">Email</TableHead>
-            <TableHead className="text-gray-300 hidden sm:table-cell" scope="col">Prénom</TableHead>
-            <TableHead className="text-gray-300 hidden sm:table-cell" scope="col">Nom</TableHead>
-            <TableHead className="text-gray-300 hidden lg:table-cell" scope="col">Rôle Club</TableHead>
-            <TableHead className="text-gray-300 hidden lg:table-cell" scope="col">Sport</TableHead>
-            <TableHead className="text-gray-300 hidden lg:table-cell" scope="col">Équipe</TableHead>
-            <TableHead className="text-gray-300 hidden md:table-cell" scope="col">Rôle Site</TableHead>
-            <TableHead className="text-gray-300" scope="col">Informations</TableHead>
-            <TableHead className="text-gray-300" scope="col">Actions</TableHead>
+            <TableHead className="text-gray-300">Email</TableHead>
+            <TableHead className="text-gray-300">Prénom</TableHead>
+            <TableHead className="text-gray-300">Nom</TableHead>
+            <TableHead className="text-gray-300">Rôle Club</TableHead>
+            <TableHead className="text-gray-300">Sport</TableHead>
+            <TableHead className="text-gray-300">Équipe</TableHead>
+            <TableHead className="text-gray-300">Rôle Site</TableHead>
+            <TableHead className="text-gray-300">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {users.map((user) => (
             <TableRow key={user.id} className="border-gray-700">
-              <TableCell className="text-gray-300 hidden md:table-cell">{user.email}</TableCell>
-              <TableCell className="text-gray-300 hidden sm:table-cell">{user.profile?.first_name || '-'}</TableCell>
-              <TableCell className="text-gray-300 hidden sm:table-cell">{user.profile?.last_name || '-'}</TableCell>
-              <TableCell className="text-gray-300 hidden lg:table-cell">{user.profile?.club_role || '-'}</TableCell>
-              <TableCell className="text-gray-300 hidden lg:table-cell">{user.profile?.sport || '-'}</TableCell>
-              <TableCell className="text-gray-300 hidden lg:table-cell">{user.profile?.team || '-'}</TableCell>
-              <TableCell className="text-gray-300 hidden md:table-cell">{user.profile?.site_role || '-'}</TableCell>
-              <TableCell className="text-gray-300 md:hidden">
-                <div className="space-y-1" role="region" aria-label={`Informations de ${user.profile?.first_name || user.email}`}>
-                  <p className="font-medium">Email: {user.email}</p>
-                  <p>Nom complet: {user.profile ? `${user.profile.first_name} ${user.profile.last_name}` : '-'}</p>
-                  <p className="text-sm text-gray-400">
-                    Rôle club: {user.profile?.club_role || '-'} - Sport: {user.profile?.sport || '-'} - Équipe: {user.profile?.team || '-'}
-                  </p>
-                  <p className="text-sm text-gray-400">Rôle site: {user.profile?.site_role || '-'}</p>
-                </div>
-              </TableCell>
+              <TableCell className="text-gray-300">{user.email}</TableCell>
+              <TableCell className="text-gray-300">{user.profile?.first_name}</TableCell>
+              <TableCell className="text-gray-300">{user.profile?.last_name}</TableCell>
+              <TableCell className="text-gray-300">{user.profile?.club_role}</TableCell>
+              <TableCell className="text-gray-300">{user.profile?.sport}</TableCell>
+              <TableCell className="text-gray-300">{user.profile?.team}</TableCell>
+              <TableCell className="text-gray-300">{user.profile?.site_role}</TableCell>
               <TableCell>
-                <UserActions
-                  user={user}
-                  onDeleteUser={onDeleteUser}
-                />
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    className="bg-blue-600 hover:bg-blue-700 text-white border-none"
+                    onClick={() => navigate(`/admin/users/${user.id}/edit`)}
+                    aria-label={`Modifier le profil de ${user.profile?.first_name} ${user.profile?.last_name}`}
+                  >
+                    Modifier
+                  </Button>
+
+                  <PasswordChangeDialog
+                    userId={user.id}
+                    userName={`${user.profile?.first_name} ${user.profile?.last_name}`}
+                  />
+
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="hover:bg-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="bg-gray-800 border-gray-700">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="text-white">Confirmer la suppression</AlertDialogTitle>
+                        <AlertDialogDescription className="text-gray-400">
+                          Êtes-vous sûr de vouloir supprimer cet utilisateur ? Cette action est irréversible.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="bg-gray-700 text-white hover:bg-gray-600 border-gray-600">
+                          Annuler
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-red-600 hover:bg-red-700 text-white border-none"
+                          onClick={() => onDeleteUser(user.id)}
+                        >
+                          Supprimer
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </TableCell>
             </TableRow>
           ))}

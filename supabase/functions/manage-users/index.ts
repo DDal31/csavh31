@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { method, userData, userId } = await req.json()
+    const { method, userData, userId, newPassword } = await req.json()
     console.log('Received request with method:', method)
 
     switch (method) {
@@ -45,6 +45,32 @@ Deno.serve(async (req) => {
         }))
 
         return new Response(JSON.stringify(usersWithProfiles), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+
+      case 'UPDATE_PASSWORD':
+        console.log('Updating password for user:', userId)
+        
+        if (!userId || !newPassword) {
+          throw new Error('userId et newPassword sont requis')
+        }
+
+        if (newPassword.length < 6) {
+          throw new Error('Le mot de passe doit contenir au moins 6 caractères')
+        }
+
+        const { error: updateError } = await supabaseClient.auth.admin.updateUserById(
+          userId,
+          { password: newPassword }
+        )
+
+        if (updateError) {
+          console.error('Error updating password:', updateError)
+          throw updateError
+        }
+
+        console.log('Password updated successfully for user:', userId)
+        return new Response(JSON.stringify({ success: true }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
 
