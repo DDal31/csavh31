@@ -15,12 +15,45 @@ serve(async (req) => {
   try {
     const { monthlyStats, yearlyStats, bestMonthStats } = await req.json();
     
-    console.log('Données reçues:', { monthlyStats, yearlyStats, bestMonthStats });
+    console.log('=== DEBUT FONCTION GENERATE-ATTENDANCE-REPORT ===');
+    console.log('Données reçues:', JSON.stringify({ monthlyStats, yearlyStats, bestMonthStats }, null, 2));
     
     const deepSeekApiKey = Deno.env.get('DEEPSEEK_API_KEY');
     
     if (!deepSeekApiKey) {
+      console.error('ERREUR: DEEPSEEK_API_KEY non configurée');
       throw new Error('DEEPSEEK_API_KEY not configured');
+    }
+
+    console.log('Clé API DeepSeek trouvée:', deepSeekApiKey ? 'OUI (longueur: ' + deepSeekApiKey.length + ')' : 'NON');
+
+    // Vérifier si nous avons des données valides
+    const hasValidData = (monthlyStats.goalball?.present > 0 || monthlyStats.torball?.present > 0) ||
+                        (yearlyStats.goalball?.present > 0 || yearlyStats.torball?.present > 0);
+    
+    console.log('Données valides détectées:', hasValidData);
+
+    if (!hasValidData) {
+      console.log('Aucune donnée de présence trouvée - génération d\'un rapport par défaut');
+      return new Response(JSON.stringify({ 
+        report: `**Bilan des Présences - Aucune Donnée Disponible**
+
+Actuellement, aucune donnée de présence n'est disponible pour générer un bilan détaillé. Cela peut indiquer que :
+
+1. **Aucun entraînement n'a encore été organisé** ce mois-ci ou cette année
+2. **Les joueurs ne se sont pas encore inscrits** aux entraînements disponibles
+3. **Le système de suivi des présences** n'a pas encore été mis en place
+
+**Recommandations pour démarrer :**
+- Organiser des entraînements réguliers de Goalball et Torball
+- Encourager les joueurs à s'inscrire via la plateforme
+- Mettre en place un système de rappels pour les entraînements
+- Communiquer sur l'importance de l'assiduité pour la progression sportive
+
+Une fois que des données seront disponibles, ce bilan fournira des analyses détaillées et des recommandations personnalisées pour améliorer les taux de présence.` 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const prompt = `
@@ -57,6 +90,7 @@ Rédige un bilan complet de 4-5 paragraphes qui :
 Le ton doit être professionnel mais accessible, adapté à un contexte associatif sportif. Utilise des données chiffrées pour appuyer tes analyses et sois constructif dans tes recommandations.
 `;
 
+    console.log('Prompt préparé pour DeepSeek (longueur:', prompt.length, 'caractères)');
     console.log('Envoi de la requête à DeepSeek...');
 
     const response = await fetch('https://api.deepseek.com/chat/completions', {
@@ -82,29 +116,64 @@ Le ton doit être professionnel mais accessible, adapté à un contexte associat
       }),
     });
 
+    console.log('Statut de la réponse DeepSeek:', response.status);
+    console.log('Headers de la réponse:', Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`DeepSeek API error: ${response.status} - ${errorText}`);
-      throw new Error(`DeepSeek API error: ${response.status}`);
+      console.error(`ERREUR API DeepSeek: ${response.status} - ${errorText}`);
+      
+      // Test si c'est un problème d'authentification
+      if (response.status === 401) {
+        console.error('ERREUR D\'AUTHENTIFICATION - Vérifiez la clé API DEEPSEEK_API_KEY');
+        throw new Error(`Clé API DeepSeek invalide ou expirée (HTTP ${response.status})`);
+      }
+      
+      throw new Error(`Erreur API DeepSeek: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    console.log('Réponse DeepSeek reçue:', data);
+    console.log('Réponse DeepSeek reçue avec succès');
+    console.log('Structure de la réponse:', Object.keys(data));
+    console.log('Nombre de choix:', data.choices?.length || 0);
     
     const generatedReport = data.choices?.[0]?.message?.content;
     
     if (!generatedReport) {
+      console.error('ERREUR: Aucun contenu généré dans la réponse DeepSeek');
+      console.log('Réponse complète:', JSON.stringify(data, null, 2));
       throw new Error('Aucun contenu généré par DeepSeek');
     }
+
+    console.log('Rapport généré avec succès (longueur:', generatedReport.length, 'caractères)');
+    console.log('=== FIN FONCTION GENERATE-ATTENDANCE-REPORT ===');
 
     return new Response(JSON.stringify({ report: generatedReport }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Error in generate-attendance-report function:', error);
+    console.error('=== ERREUR DANS GENERATE-ATTENDANCE-REPORT ===');
+    console.error('Type d\'erreur:', error.constructor.name);
+    console.error('Message d\'erreur:', error.message);
+    console.error('Stack trace:', error.stack);
+    
     return new Response(JSON.stringify({ 
       error: error.message,
-      report: `Erreur lors de la génération du rapport automatique: ${error.message}. Veuillez vérifier la configuration DeepSeek et réessayer.`
+      report: `**Erreur lors de la génération du rapport automatique**
+
+Une erreur est survenue lors de la génération du bilan automatique : ${error.message}
+
+**Causes possibles :**
+- Problème de connexion avec l'API DeepSeek
+- Clé API expirée ou incorrecte
+- Données insuffisantes pour l'analyse
+
+**Actions recommandées :**
+1. Vérifier la configuration de la clé API DeepSeek
+2. S'assurer que des entraînements sont programmés et que des joueurs s'inscrivent
+3. Contacter l'administrateur technique si le problème persiste
+
+Consultez les logs de la fonction pour plus de détails techniques.`
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
