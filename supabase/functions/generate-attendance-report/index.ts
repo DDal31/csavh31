@@ -18,14 +18,24 @@ serve(async (req) => {
     console.log('=== DEBUT FONCTION GENERATE-ATTENDANCE-REPORT ===');
     console.log('Données reçues:', JSON.stringify({ monthlyStats, yearlyStats, bestMonthStats }, null, 2));
     
-    const deepSeekApiKey = Deno.env.get('DEEPSEEK_API_KEY');
+    // Vérifier différents noms possibles pour la clé API
+    const deepSeekApiKey = Deno.env.get('DEEPSEEK_API_KEY') || 
+                          Deno.env.get('DEEP_SEEK_API_KEY') || 
+                          Deno.env.get('DEEPSEEK_API') ||
+                          Deno.env.get('DEEPSEEK_KEY');
+    
+    console.log('=== VERIFICATION DES VARIABLES D\'ENVIRONNEMENT ===');
+    console.log('DEEPSEEK_API_KEY:', Deno.env.get('DEEPSEEK_API_KEY') ? 'EXISTE' : 'ABSENT');
+    console.log('DEEP_SEEK_API_KEY:', Deno.env.get('DEEP_SEEK_API_KEY') ? 'EXISTE' : 'ABSENT');
+    console.log('DEEPSEEK_API:', Deno.env.get('DEEPSEEK_API') ? 'EXISTE' : 'ABSENT');
+    console.log('DEEPSEEK_KEY:', Deno.env.get('DEEPSEEK_KEY') ? 'EXISTE' : 'ABSENT');
+    console.log('Clé API trouvée:', deepSeekApiKey ? 'OUI (longueur: ' + deepSeekApiKey.length + ')' : 'NON');
     
     if (!deepSeekApiKey) {
-      console.error('ERREUR: DEEPSEEK_API_KEY non configurée');
-      throw new Error('DEEPSEEK_API_KEY not configured');
+      console.error('ERREUR CRITIQUE: Aucune clé API DeepSeek trouvée dans les variables d\'environnement');
+      console.error('Variables d\'environnement disponibles:', Object.keys(Deno.env.toObject()));
+      throw new Error('DEEPSEEK_API_KEY not configured - vérifiez les secrets Supabase');
     }
-
-    console.log('Clé API DeepSeek trouvée:', deepSeekApiKey ? 'OUI (longueur: ' + deepSeekApiKey.length + ')' : 'NON');
 
     // Vérifier si nous avons des données valides
     const hasValidData = (monthlyStats.goalball?.present > 0 || monthlyStats.torball?.present > 0) ||
@@ -91,7 +101,9 @@ Le ton doit être professionnel mais accessible, adapté à un contexte associat
 `;
 
     console.log('Prompt préparé pour DeepSeek (longueur:', prompt.length, 'caractères)');
-    console.log('Envoi de la requête à DeepSeek...');
+    console.log('=== TENTATIVE DE CONNEXION A DEEPSEEK ===');
+    console.log('URL de l\'API:', 'https://api.deepseek.com/chat/completions');
+    console.log('Clé API utilisée (premiers caractères):', deepSeekApiKey.substring(0, 8) + '...');
 
     const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
@@ -116,43 +128,62 @@ Le ton doit être professionnel mais accessible, adapté à un contexte associat
       }),
     });
 
-    console.log('Statut de la réponse DeepSeek:', response.status);
+    console.log('=== REPONSE DE L\'API DEEPSEEK ===');
+    console.log('Statut de la réponse:', response.status);
+    console.log('Status text:', response.statusText);
     console.log('Headers de la réponse:', Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`ERREUR API DeepSeek: ${response.status} - ${errorText}`);
+      console.error('=== ERREUR DETAILLEE DE L\'API DEEPSEEK ===');
+      console.error(`Statut HTTP: ${response.status}`);
+      console.error(`Message d'erreur: ${errorText}`);
       
-      // Test si c'est un problème d'authentification
+      // Analyse plus détaillée des erreurs
       if (response.status === 401) {
-        console.error('ERREUR D\'AUTHENTIFICATION - Vérifiez la clé API DEEPSEEK_API_KEY');
-        throw new Error(`Clé API DeepSeek invalide ou expirée (HTTP ${response.status})`);
+        console.error('ERREUR 401: Clé API invalide ou expirée');
+        console.error('Clé API actuelle:', deepSeekApiKey ? 'Présente (' + deepSeekApiKey.length + ' caractères)' : 'Absente');
+        throw new Error(`Clé API DeepSeek invalide ou expirée (HTTP ${response.status}). Vérifiez votre clé API dans les secrets Supabase.`);
+      } else if (response.status === 429) {
+        console.error('ERREUR 429: Quota dépassé ou trop de requêtes');
+        throw new Error(`Quota DeepSeek dépassé (HTTP ${response.status}). Attendez avant de réessayer.`);
+      } else if (response.status === 500) {
+        console.error('ERREUR 500: Problème serveur DeepSeek');
+        throw new Error(`Erreur serveur DeepSeek (HTTP ${response.status}). Réessayez plus tard.`);
       }
       
       throw new Error(`Erreur API DeepSeek: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('=== TRAITEMENT DE LA REPONSE ===');
     console.log('Réponse DeepSeek reçue avec succès');
     console.log('Structure de la réponse:', Object.keys(data));
     console.log('Nombre de choix:', data.choices?.length || 0);
+    
+    if (data.choices && data.choices.length > 0) {
+      console.log('Premier choix - role:', data.choices[0]?.message?.role);
+      console.log('Premier choix - contenu (longueur):', data.choices[0]?.message?.content?.length || 0);
+    }
     
     const generatedReport = data.choices?.[0]?.message?.content;
     
     if (!generatedReport) {
       console.error('ERREUR: Aucun contenu généré dans la réponse DeepSeek');
       console.log('Réponse complète:', JSON.stringify(data, null, 2));
-      throw new Error('Aucun contenu généré par DeepSeek');
+      throw new Error('Aucun contenu généré par DeepSeek - réponse vide');
     }
 
+    console.log('=== SUCCES ===');
     console.log('Rapport généré avec succès (longueur:', generatedReport.length, 'caractères)');
+    console.log('Aperçu du rapport:', generatedReport.substring(0, 200) + '...');
     console.log('=== FIN FONCTION GENERATE-ATTENDANCE-REPORT ===');
 
     return new Response(JSON.stringify({ report: generatedReport }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('=== ERREUR DANS GENERATE-ATTENDANCE-REPORT ===');
+    console.error('=== ERREUR CRITIQUE DANS GENERATE-ATTENDANCE-REPORT ===');
     console.error('Type d\'erreur:', error.constructor.name);
     console.error('Message d\'erreur:', error.message);
     console.error('Stack trace:', error.stack);
@@ -167,11 +198,13 @@ Une erreur est survenue lors de la génération du bilan automatique : ${error.m
 - Problème de connexion avec l'API DeepSeek
 - Clé API expirée ou incorrecte
 - Données insuffisantes pour l'analyse
+- Quota API dépassé
 
 **Actions recommandées :**
-1. Vérifier la configuration de la clé API DeepSeek
-2. S'assurer que des entraînements sont programmés et que des joueurs s'inscrivent
-3. Contacter l'administrateur technique si le problème persiste
+1. Vérifier la configuration de la clé API DeepSeek dans les secrets Supabase
+2. S'assurer que la clé API est valide et a des crédits disponibles
+3. Vérifier que des entraînements sont programmés et que des joueurs s'inscrivent
+4. Contacter l'administrateur technique si le problème persiste
 
 Consultez les logs de la fonction pour plus de détails techniques.`
     }), {
