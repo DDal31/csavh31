@@ -24,26 +24,23 @@ serve(async (req) => {
     }
 
     const prompt = `
-Génère un bilan professionnel et détaillé des statistiques de présence pour un club de sport adapté (Goalball, Torball et Showdown).
+Génère un bilan professionnel et détaillé des statistiques de présence pour un club de sport adapté (Goalball et Torball uniquement).
 
 Données du mois en cours :
 - Goalball: ${monthlyStats.goalball?.present || 0}% de présence moyenne
 - Torball: ${monthlyStats.torball?.present || 0}% de présence moyenne
-- Showdown: ${monthlyStats.showdown?.present || 0}% de présence moyenne
 
 Données annuelles :
 - Goalball: ${yearlyStats.goalball?.present || 0}% de présence moyenne annuelle
 - Torball: ${yearlyStats.torball?.present || 0}% de présence moyenne annuelle
-- Showdown: ${yearlyStats.showdown?.present || 0}% de présence moyenne annuelle
 
 Meilleur mois de l'année :
 - Goalball: ${bestMonthStats.goalball?.percentage || 0}% en ${bestMonthStats.goalball?.month || 'N/A'}
 - Torball: ${bestMonthStats.torball?.percentage || 0}% en ${bestMonthStats.torball?.month || 'N/A'}
-- Showdown: ${bestMonthStats.showdown?.percentage || 0}% en ${bestMonthStats.showdown?.month || 'N/A'}
 
 Rédige un bilan complet de 4-5 paragraphes qui :
 
-1. **ANALYSE COMPARATIVE** : Compare les performances entre les trois sports (Goalball, Torball, Showdown) en identifiant lequel performe le mieux et pourquoi.
+1. **ANALYSE COMPARATIVE** : Compare les performances entre les deux sports (Goalball et Torball) en identifiant lequel performe le mieux et pourquoi.
 
 2. **TENDANCES TEMPORELLES** : Analyse les différences entre les présences mensuelles actuelles et les moyennes annuelles pour identifier les tendances positives ou négatives.
 

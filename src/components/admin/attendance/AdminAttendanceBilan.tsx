@@ -18,8 +18,6 @@ interface SportStats {
 interface AttendanceStats {
   goalball: SportStats;
   torball: SportStats;
-  showdown?: SportStats;
-  other?: SportStats;
 }
 
 export function AdminAttendanceBilan() {
@@ -32,11 +30,6 @@ export function AdminAttendanceBilan() {
       bestMonth: { month: "", percentage: 0 }
     },
     torball: {
-      currentMonth: { present: 0, total: 100 },
-      yearlyStats: { present: 0, total: 100 },
-      bestMonth: { month: "", percentage: 0 }
-    },
-    showdown: {
       currentMonth: { present: 0, total: 100 },
       yearlyStats: { present: 0, total: 100 },
       bestMonth: { month: "", percentage: 0 }
@@ -55,7 +48,7 @@ export function AdminAttendanceBilan() {
       const startOfCurrentYear = startOfYear(now);
       const endOfCurrentYear = endOfYear(now);
 
-      const sportTypes: TrainingType[] = ['goalball', 'torball', 'showdown', 'other'];
+      const sportTypes: TrainingType[] = ['goalball', 'torball'];
       const newStats = { ...stats };
 
       for (const sportType of sportTypes) {
@@ -177,20 +170,17 @@ export function AdminAttendanceBilan() {
       
       const monthlyStats = {
         goalball: { present: stats.goalball.currentMonth.present },
-        torball: { present: stats.torball.currentMonth.present },
-        showdown: { present: stats.showdown?.currentMonth.present || 0 }
+        torball: { present: stats.torball.currentMonth.present }
       };
       
       const yearlyStats = {
         goalball: { present: stats.goalball.yearlyStats.present },
-        torball: { present: stats.torball.yearlyStats.present },
-        showdown: { present: stats.showdown?.yearlyStats.present || 0 }
+        torball: { present: stats.torball.yearlyStats.present }
       };
       
       const bestMonthStats = {
         goalball: stats.goalball.bestMonth,
-        torball: stats.torball.bestMonth,
-        showdown: stats.showdown?.bestMonth || { month: 'N/A', percentage: 0 }
+        torball: stats.torball.bestMonth
       };
 
       console.log("Données envoyées à l'IA:", { monthlyStats, yearlyStats, bestMonthStats });
@@ -262,18 +252,6 @@ export function AdminAttendanceBilan() {
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Section de debug (à supprimer en production) */}
-      <Card className="bg-gray-900 border-gray-600">
-        <CardHeader>
-          <CardTitle className="text-sm text-gray-400">Debug - Données calculées</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <pre className="text-xs text-gray-500 overflow-auto">
-            {JSON.stringify(stats, null, 2)}
-          </pre>
         </CardContent>
       </Card>
     </div>
