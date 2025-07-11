@@ -40,7 +40,7 @@ export function AdminAttendanceBilan() {
   const calculateAttendanceStats = async () => {
     try {
       setLoading(true);
-      console.log("Calcul des statistiques de présence...");
+      console.log("=== DEBUT CALCUL STATISTIQUES ===");
 
       const now = new Date();
       const startOfCurrentMonth = startOfMonth(now);
@@ -48,11 +48,14 @@ export function AdminAttendanceBilan() {
       const startOfCurrentYear = startOfYear(now);
       const endOfCurrentYear = endOfYear(now);
 
+      console.log("Période du mois:", startOfCurrentMonth.toISOString(), "à", endOfCurrentMonth.toISOString());
+      console.log("Période de l'année:", startOfCurrentYear.toISOString(), "à", endOfCurrentYear.toISOString());
+
       const sportTypes: TrainingType[] = ['goalball', 'torball'];
       const newStats = { ...stats };
 
       for (const sportType of sportTypes) {
-        console.log(`Calcul des statistiques pour ${sportType}...`);
+        console.log(`=== CALCUL POUR ${sportType.toUpperCase()} ===`);
 
         // Statistiques du mois en cours
         const { data: currentMonthTrainings, error: monthError } = await supabase
@@ -68,9 +71,11 @@ export function AdminAttendanceBilan() {
           .lte("date", endOfCurrentMonth.toISOString());
 
         if (monthError) {
-          console.error(`Erreur lors de la récupération des données mensuelles pour ${sportType}:`, monthError);
+          console.error(`Erreur mois ${sportType}:`, monthError);
           continue;
         }
+
+        console.log(`Entraînements du mois pour ${sportType}:`, currentMonthTrainings?.length || 0);
 
         if (currentMonthTrainings && currentMonthTrainings.length > 0) {
           let monthlyPercentagesSum = 0;
@@ -79,8 +84,11 @@ export function AdminAttendanceBilan() {
             const totalPlayers = training.total_sport_players_count || 0;
             const trainingPercentage = totalPlayers > 0 ? (presentPlayers / totalPlayers) * 100 : 0;
             monthlyPercentagesSum += trainingPercentage;
+            console.log(`Entraînement ${training.id}: ${presentPlayers}/${totalPlayers} = ${trainingPercentage.toFixed(1)}%`);
           });
           const monthlyAverage = monthlyPercentagesSum / currentMonthTrainings.length;
+          console.log(`Moyenne mensuelle ${sportType}: ${monthlyAverage.toFixed(1)}%`);
+          
           newStats[sportType as keyof AttendanceStats] = {
             ...newStats[sportType as keyof AttendanceStats],
             currentMonth: {
@@ -104,9 +112,11 @@ export function AdminAttendanceBilan() {
           .lte("date", endOfCurrentYear.toISOString());
 
         if (yearError) {
-          console.error(`Erreur lors de la récupération des données annuelles pour ${sportType}:`, yearError);
+          console.error(`Erreur année ${sportType}:`, yearError);
           continue;
         }
+
+        console.log(`Entraînements de l'année pour ${sportType}:`, yearTrainings?.length || 0);
 
         if (yearTrainings && yearTrainings.length > 0) {
           const monthlyStats: Record<string, { sum: number; count: number }> = {};
@@ -142,10 +152,14 @@ export function AdminAttendanceBilan() {
           });
 
           if (monthCount > 0) {
+            const yearlyAverage = Math.round(yearlyPercentagesSum / monthCount);
+            console.log(`Moyenne annuelle ${sportType}: ${yearlyAverage}%`);
+            console.log(`Meilleur mois ${sportType}: ${bestMonthData.month} (${bestMonthData.percentage}%)`);
+            
             newStats[sportType as keyof AttendanceStats] = {
               ...newStats[sportType as keyof AttendanceStats],
               yearlyStats: {
-                present: Math.round(yearlyPercentagesSum / monthCount),
+                present: yearlyAverage,
                 total: 100
               },
               bestMonth: bestMonthData
@@ -154,11 +168,16 @@ export function AdminAttendanceBilan() {
         }
       }
 
-      console.log("Statistiques calculées:", newStats);
+      console.log("=== STATISTIQUES FINALES ===");
+      console.log("Goalball - Mois:", newStats.goalball.currentMonth.present + "%");
+      console.log("Goalball - Année:", newStats.goalball.yearlyStats.present + "%");
+      console.log("Torball - Mois:", newStats.torball.currentMonth.present + "%");
+      console.log("Torball - Année:", newStats.torball.yearlyStats.present + "%");
+      
       setStats(newStats);
       setLoading(false);
     } catch (error) {
-      console.error("Erreur lors du calcul des statistiques:", error);
+      console.error("=== ERREUR CALCUL STATISTIQUES ===", error);
       setLoading(false);
     }
   };
@@ -166,7 +185,7 @@ export function AdminAttendanceBilan() {
   const generateAIReport = async () => {
     try {
       setGeneratingReport(true);
-      console.log("Génération du rapport IA...");
+      console.log("=== DEBUT GENERATION RAPPORT IA ===");
       
       const monthlyStats = {
         goalball: { present: stats.goalball.currentMonth.present },
@@ -183,34 +202,73 @@ export function AdminAttendanceBilan() {
         torball: stats.torball.bestMonth
       };
 
-      console.log("Données envoyées à l'IA:", { monthlyStats, yearlyStats, bestMonthStats });
+      console.log("=== DONNEES ENVOYEES A L'IA ===");
+      console.log("Statistiques mensuelles:", JSON.stringify(monthlyStats, null, 2));
+      console.log("Statistiques annuelles:", JSON.stringify(yearlyStats, null, 2));
+      console.log("Meilleurs mois:", JSON.stringify(bestMonthStats, null, 2));
 
+      console.log("=== APPEL DE LA FONCTION EDGE ===");
+      console.log("Nom de la fonction: generate-attendance-report");
+      
       const { data, error } = await supabase.functions.invoke('generate-attendance-report', {
-        body: { monthlyStats, yearlyStats, bestMonthStats }
+        body: { 
+          monthlyStats, 
+          yearlyStats, 
+          bestMonthStats 
+        }
       });
 
+      console.log("=== REPONSE DE LA FONCTION EDGE ===");
       if (error) {
         console.error("Erreur lors de l'appel à la fonction:", error);
+        console.error("Code d'erreur:", error.status);
+        console.error("Message d'erreur:", error.message);
         throw error;
       }
       
-      console.log("Réponse reçue de l'IA:", data);
-      setAiReport(data.report || "Aucun rapport généré.");
+      console.log("Données reçues:", data);
+      console.log("Type de données:", typeof data);
+      console.log("Clés disponibles:", data ? Object.keys(data) : "Aucune");
+      
+      if (data && data.report) {
+        console.log("Rapport généré avec succès, longueur:", data.report.length);
+        setAiReport(data.report);
+      } else {
+        console.error("Aucun rapport dans la réponse:", data);
+        setAiReport("Erreur: Aucun rapport généré par l'IA.");
+      }
     } catch (error) {
-      console.error("Erreur lors de la génération du rapport IA:", error);
-      setAiReport("Erreur lors de la génération du rapport automatique. Veuillez réessayer plus tard.");
+      console.error("=== ERREUR GENERATION RAPPORT ===");
+      console.error("Type d'erreur:", error.constructor.name);
+      console.error("Message:", error.message);
+      console.error("Stack:", error.stack);
+      setAiReport(`Erreur lors de la génération du rapport automatique: ${error.message}. Vérifiez les logs de la console pour plus de détails.`);
     } finally {
       setGeneratingReport(false);
+      console.log("=== FIN GENERATION RAPPORT ===");
     }
   };
 
   useEffect(() => {
+    console.log("=== COMPOSANT MONTE ===");
     calculateAttendanceStats();
   }, []);
 
   useEffect(() => {
+    console.log("=== EFFECT GENERATION RAPPORT ===");
+    console.log("Loading:", loading);
+    console.log("Stats goalball mois:", stats.goalball.currentMonth.present);
+    console.log("Stats torball mois:", stats.torball.currentMonth.present);
+    
     if (!loading && (stats.goalball.currentMonth.present > 0 || stats.torball.currentMonth.present > 0)) {
+      console.log("Conditions remplies pour générer le rapport");
       generateAIReport();
+    } else {
+      console.log("Conditions non remplies pour générer le rapport");
+      if (loading) console.log("- Encore en chargement");
+      if (stats.goalball.currentMonth.present === 0 && stats.torball.currentMonth.present === 0) {
+        console.log("- Aucune donnée de présence");
+      }
     }
   }, [loading, stats]);
 
