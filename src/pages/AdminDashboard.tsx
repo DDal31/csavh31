@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -5,7 +6,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Users, Calendar, Shield, Settings, FileText } from "lucide-react";
-import { AdminAttendanceCharts } from "@/components/admin/attendance/AdminAttendanceCharts";
+import { AdminAttendanceBilan } from "@/components/admin/attendance/AdminAttendanceBilan";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -123,7 +124,7 @@ const AdminDashboard = () => {
             ))}
           </div>
 
-          <AdminAttendanceCharts />
+          <AdminAttendanceBilan />
         </div>
       </main>
       <Footer />
