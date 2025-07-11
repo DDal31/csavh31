@@ -3,24 +3,23 @@ import { useEffect, useState } from "react";
 import { format, startOfMonth, endOfMonth, startOfYear, endOfYear, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, FileText, TrendingUp, Calendar, Award } from "lucide-react";
+import { Loader2, FileText } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { Database } from "@/integrations/supabase/types";
 
 type TrainingType = Database["public"]["Enums"]["training_type"];
 
+interface SportStats {
+  currentMonth: { present: number; total: number };
+  yearlyStats: { present: number; total: number };
+  bestMonth: { month: string; percentage: number };
+}
+
 interface AttendanceStats {
-  goalball: {
-    currentMonth: { present: number; total: number };
-    yearlyStats: { present: number; total: number };
-    bestMonth: { month: string; percentage: number };
-  };
-  torball: {
-    currentMonth: { present: number; total: number };
-    yearlyStats: { present: number; total: number };
-    bestMonth: { month: string; percentage: number };
-  };
+  goalball: SportStats;
+  torball: SportStats;
+  showdown?: SportStats;
+  other?: SportStats;
 }
 
 export function AdminAttendanceBilan() {
@@ -33,6 +32,11 @@ export function AdminAttendanceBilan() {
       bestMonth: { month: "", percentage: 0 }
     },
     torball: {
+      currentMonth: { present: 0, total: 100 },
+      yearlyStats: { present: 0, total: 100 },
+      bestMonth: { month: "", percentage: 0 }
+    },
+    showdown: {
       currentMonth: { present: 0, total: 100 },
       yearlyStats: { present: 0, total: 100 },
       bestMonth: { month: "", percentage: 0 }
@@ -51,12 +55,14 @@ export function AdminAttendanceBilan() {
       const startOfCurrentYear = startOfYear(now);
       const endOfCurrentYear = endOfYear(now);
 
-      const sportTypes: TrainingType[] = ['goalball', 'torball'];
+      const sportTypes: TrainingType[] = ['goalball', 'torball', 'showdown', 'other'];
       const newStats = { ...stats };
 
       for (const sportType of sportTypes) {
+        console.log(`Calcul des statistiques pour ${sportType}...`);
+
         // Statistiques du mois en cours
-        const { data: currentMonthTrainings } = await supabase
+        const { data: currentMonthTrainings, error: monthError } = await supabase
           .from("trainings")
           .select(`
             id,
@@ -68,6 +74,11 @@ export function AdminAttendanceBilan() {
           .gte("date", startOfCurrentMonth.toISOString())
           .lte("date", endOfCurrentMonth.toISOString());
 
+        if (monthError) {
+          console.error(`Erreur lors de la récupération des données mensuelles pour ${sportType}:`, monthError);
+          continue;
+        }
+
         if (currentMonthTrainings && currentMonthTrainings.length > 0) {
           let monthlyPercentagesSum = 0;
           currentMonthTrainings.forEach(training => {
@@ -77,14 +88,17 @@ export function AdminAttendanceBilan() {
             monthlyPercentagesSum += trainingPercentage;
           });
           const monthlyAverage = monthlyPercentagesSum / currentMonthTrainings.length;
-          newStats[sportType].currentMonth = {
-            present: Math.round(monthlyAverage),
-            total: 100
+          newStats[sportType as keyof AttendanceStats] = {
+            ...newStats[sportType as keyof AttendanceStats],
+            currentMonth: {
+              present: Math.round(monthlyAverage),
+              total: 100
+            }
           };
         }
 
         // Statistiques annuelles
-        const { data: yearTrainings } = await supabase
+        const { data: yearTrainings, error: yearError } = await supabase
           .from("trainings")
           .select(`
             id,
@@ -95,6 +109,11 @@ export function AdminAttendanceBilan() {
           .eq("type", sportType)
           .gte("date", startOfCurrentYear.toISOString())
           .lte("date", endOfCurrentYear.toISOString());
+
+        if (yearError) {
+          console.error(`Erreur lors de la récupération des données annuelles pour ${sportType}:`, yearError);
+          continue;
+        }
 
         if (yearTrainings && yearTrainings.length > 0) {
           const monthlyStats: Record<string, { sum: number; count: number }> = {};
@@ -130,15 +149,19 @@ export function AdminAttendanceBilan() {
           });
 
           if (monthCount > 0) {
-            newStats[sportType].yearlyStats = {
-              present: Math.round(yearlyPercentagesSum / monthCount),
-              total: 100
+            newStats[sportType as keyof AttendanceStats] = {
+              ...newStats[sportType as keyof AttendanceStats],
+              yearlyStats: {
+                present: Math.round(yearlyPercentagesSum / monthCount),
+                total: 100
+              },
+              bestMonth: bestMonthData
             };
-            newStats[sportType].bestMonth = bestMonthData;
           }
         }
       }
 
+      console.log("Statistiques calculées:", newStats);
       setStats(newStats);
       setLoading(false);
     } catch (error) {
@@ -150,32 +173,42 @@ export function AdminAttendanceBilan() {
   const generateAIReport = async () => {
     try {
       setGeneratingReport(true);
+      console.log("Génération du rapport IA...");
       
       const monthlyStats = {
-        goalball: stats.goalball.currentMonth,
-        torball: stats.torball.currentMonth
+        goalball: { present: stats.goalball.currentMonth.present },
+        torball: { present: stats.torball.currentMonth.present },
+        showdown: { present: stats.showdown?.currentMonth.present || 0 }
       };
       
       const yearlyStats = {
-        goalball: stats.goalball.yearlyStats,
-        torball: stats.torball.yearlyStats
+        goalball: { present: stats.goalball.yearlyStats.present },
+        torball: { present: stats.torball.yearlyStats.present },
+        showdown: { present: stats.showdown?.yearlyStats.present || 0 }
       };
       
       const bestMonthStats = {
         goalball: stats.goalball.bestMonth,
-        torball: stats.torball.bestMonth
+        torball: stats.torball.bestMonth,
+        showdown: stats.showdown?.bestMonth || { month: 'N/A', percentage: 0 }
       };
+
+      console.log("Données envoyées à l'IA:", { monthlyStats, yearlyStats, bestMonthStats });
 
       const { data, error } = await supabase.functions.invoke('generate-attendance-report', {
         body: { monthlyStats, yearlyStats, bestMonthStats }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erreur lors de l'appel à la fonction:", error);
+        throw error;
+      }
       
-      setAiReport(data.report);
+      console.log("Réponse reçue de l'IA:", data);
+      setAiReport(data.report || "Aucun rapport généré.");
     } catch (error) {
       console.error("Erreur lors de la génération du rapport IA:", error);
-      setAiReport("Erreur lors de la génération du rapport automatique.");
+      setAiReport("Erreur lors de la génération du rapport automatique. Veuillez réessayer plus tard.");
     } finally {
       setGeneratingReport(false);
     }
@@ -186,138 +219,28 @@ export function AdminAttendanceBilan() {
   }, []);
 
   useEffect(() => {
-    if (!loading && stats.goalball.currentMonth.present > 0) {
+    if (!loading && (stats.goalball.currentMonth.present > 0 || stats.torball.currentMonth.present > 0)) {
       generateAIReport();
     }
-  }, [loading]);
+  }, [loading, stats]);
 
   if (loading) {
     return (
       <div className="flex justify-center items-center h-48">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-gray-300">Calcul des statistiques...</span>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Présences du mois en cours */}
-        <Card className="bg-gray-800 border-gray-700">
-          <CardHeader className="flex flex-row items-center space-y-0 pb-2">
-            <Calendar className="h-4 w-4 text-blue-400" />
-            <CardTitle className="text-sm font-medium text-white ml-2">
-              Mois en cours
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow className="border-gray-600">
-                  <TableHead className="text-gray-300">Sport</TableHead>
-                  <TableHead className="text-gray-300">Présence</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow className="border-gray-600">
-                  <TableCell className="text-white">Goalball</TableCell>
-                  <TableCell className="text-green-400 font-semibold">
-                    {stats.goalball.currentMonth.present}%
-                  </TableCell>
-                </TableRow>
-                <TableRow className="border-gray-600">
-                  <TableCell className="text-white">Torball</TableCell>
-                  <TableCell className="text-green-400 font-semibold">
-                    {stats.torball.currentMonth.present}%
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        {/* Présences annuelles */}
-        <Card className="bg-gray-800 border-gray-700">
-          <CardHeader className="flex flex-row items-center space-y-0 pb-2">
-            <TrendingUp className="h-4 w-4 text-purple-400" />
-            <CardTitle className="text-sm font-medium text-white ml-2">
-              Année en cours
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow className="border-gray-600">
-                  <TableHead className="text-gray-300">Sport</TableHead>
-                  <TableHead className="text-gray-300">Présence</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow className="border-gray-600">
-                  <TableCell className="text-white">Goalball</TableCell>
-                  <TableCell className="text-blue-400 font-semibold">
-                    {stats.goalball.yearlyStats.present}%
-                  </TableCell>
-                </TableRow>
-                <TableRow className="border-gray-600">
-                  <TableCell className="text-white">Torball</TableCell>
-                  <TableCell className="text-blue-400 font-semibold">
-                    {stats.torball.yearlyStats.present}%
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        {/* Meilleurs mois */}
-        <Card className="bg-gray-800 border-gray-700">
-          <CardHeader className="flex flex-row items-center space-y-0 pb-2">
-            <Award className="h-4 w-4 text-yellow-400" />
-            <CardTitle className="text-sm font-medium text-white ml-2">
-              Meilleurs mois
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow className="border-gray-600">
-                  <TableHead className="text-gray-300">Sport</TableHead>
-                  <TableHead className="text-gray-300">Mois</TableHead>
-                  <TableHead className="text-gray-300">%</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow className="border-gray-600">
-                  <TableCell className="text-white">Goalball</TableCell>
-                  <TableCell className="text-gray-300 text-xs">
-                    {stats.goalball.bestMonth.month || 'N/A'}
-                  </TableCell>
-                  <TableCell className="text-yellow-400 font-semibold">
-                    {stats.goalball.bestMonth.percentage}%
-                  </TableCell>
-                </TableRow>
-                <TableRow className="border-gray-600">
-                  <TableCell className="text-white">Torball</TableCell>
-                  <TableCell className="text-gray-300 text-xs">
-                    {stats.torball.bestMonth.month || 'N/A'}
-                  </TableCell>
-                  <TableCell className="text-yellow-400 font-semibold">
-                    {stats.torball.bestMonth.percentage}%
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Bilan IA */}
+      {/* Bilan IA uniquement */}
       <Card className="bg-gray-800 border-gray-700">
-        <CardHeader className="flex flex-row items-center space-y-0 pb-2">
+        <CardHeader className="flex flex-row items-center space-y-0 pb-4">
           <FileText className="h-5 w-5 text-green-400" />
-          <CardTitle className="text-lg font-medium text-white ml-2">
-            Bilan des présences
+          <CardTitle className="text-xl font-medium text-white ml-2">
+            Bilan des présences - Analyse IA
           </CardTitle>
           {generatingReport && (
             <Loader2 className="h-4 w-4 animate-spin text-green-400 ml-2" />
@@ -329,15 +252,28 @@ export function AdminAttendanceBilan() {
               <div className="text-center">
                 <Loader2 className="h-8 w-8 animate-spin text-green-400 mx-auto mb-2" />
                 <p className="text-gray-300">Génération du bilan en cours...</p>
+                <p className="text-gray-400 text-sm mt-1">Analyse des données avec DeepSeek...</p>
               </div>
             </div>
           ) : (
             <div className="prose prose-invert max-w-none">
-              <div className="text-gray-300 leading-relaxed whitespace-pre-line">
-                {aiReport || "Aucun bilan disponible pour le moment."}
+              <div className="text-gray-300 leading-relaxed whitespace-pre-line text-base">
+                {aiReport || "Aucun bilan disponible pour le moment. Vérifiez que des données d'entraînement existent."}
               </div>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Section de debug (à supprimer en production) */}
+      <Card className="bg-gray-900 border-gray-600">
+        <CardHeader>
+          <CardTitle className="text-sm text-gray-400">Debug - Données calculées</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <pre className="text-xs text-gray-500 overflow-auto">
+            {JSON.stringify(stats, null, 2)}
+          </pre>
         </CardContent>
       </Card>
     </div>

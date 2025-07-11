@@ -15,6 +15,8 @@ serve(async (req) => {
   try {
     const { monthlyStats, yearlyStats, bestMonthStats } = await req.json();
     
+    console.log('Données reçues:', { monthlyStats, yearlyStats, bestMonthStats });
+    
     const deepSeekApiKey = Deno.env.get('DEEPSEEK_API_KEY');
     
     if (!deepSeekApiKey) {
@@ -22,28 +24,43 @@ serve(async (req) => {
     }
 
     const prompt = `
-Génère un bilan professionnel et détaillé des statistiques de présence pour un club de sport adapté (Goalball et Torball).
+Génère un bilan professionnel et détaillé des statistiques de présence pour un club de sport adapté (Goalball, Torball et Showdown).
 
 Données du mois en cours :
 - Goalball: ${monthlyStats.goalball?.present || 0}% de présence moyenne
 - Torball: ${monthlyStats.torball?.present || 0}% de présence moyenne
+- Showdown: ${monthlyStats.showdown?.present || 0}% de présence moyenne
 
 Données annuelles :
-- Goalball: ${yearlyStats.goalball?.present || 0}% de présence moyenne
-- Torball: ${yearlyStats.torball?.present || 0}% de présence moyenne
+- Goalball: ${yearlyStats.goalball?.present || 0}% de présence moyenne annuelle
+- Torball: ${yearlyStats.torball?.present || 0}% de présence moyenne annuelle
+- Showdown: ${yearlyStats.showdown?.present || 0}% de présence moyenne annuelle
 
 Meilleur mois de l'année :
 - Goalball: ${bestMonthStats.goalball?.percentage || 0}% en ${bestMonthStats.goalball?.month || 'N/A'}
 - Torball: ${bestMonthStats.torball?.percentage || 0}% en ${bestMonthStats.torball?.month || 'N/A'}
+- Showdown: ${bestMonthStats.showdown?.percentage || 0}% en ${bestMonthStats.showdown?.month || 'N/A'}
 
-Rédige un bilan de 3-4 paragraphes qui :
-1. Fait une analyse comparative entre Goalball et Torball
-2. Compare les tendances mensuelles vs annuelles
-3. Identifie les points forts et axes d'amélioration
-4. Propose des recommandations concrètes pour améliorer la participation
+Rédige un bilan complet de 4-5 paragraphes qui :
 
-Le ton doit être professionnel mais accessible, adapté à un contexte associatif sportif.
+1. **ANALYSE COMPARATIVE** : Compare les performances entre les trois sports (Goalball, Torball, Showdown) en identifiant lequel performe le mieux et pourquoi.
+
+2. **TENDANCES TEMPORELLES** : Analyse les différences entre les présences mensuelles actuelles et les moyennes annuelles pour identifier les tendances positives ou négatives.
+
+3. **IDENTIFICATION DES SUCCÈS** : Met en avant les meilleurs mois et les sports qui excellent, en essayant d'identifier les facteurs de succès.
+
+4. **AXES D'AMÉLIORATION** : Identifie clairement les sports ou périodes problématiques nécessitant une attention particulière.
+
+5. **RECOMMANDATIONS CONCRÈTES** : Propose des actions spécifiques pour :
+   - Améliorer le taux de présence des sports en difficulté
+   - Motiver les joueurs démotivés
+   - Maintenir l'engagement dans les sports performants
+   - Optimiser la planification des entraînements
+
+Le ton doit être professionnel mais accessible, adapté à un contexte associatif sportif. Utilise des données chiffrées pour appuyer tes analyses et sois constructif dans tes recommandations.
 `;
+
+    console.log('Envoi de la requête à DeepSeek...');
 
     const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
@@ -56,7 +73,7 @@ Le ton doit être professionnel mais accessible, adapté à un contexte associat
         messages: [
           {
             role: 'system',
-            content: 'Tu es un expert en analyse de données sportives et en gestion associative. Tu rédiges des bilans clairs et constructifs.'
+            content: 'Tu es un expert en analyse de données sportives et en gestion associative. Tu rédiges des bilans clairs, constructifs et professionnels pour des clubs de sport adapté. Tes analyses sont basées sur des données factuelles et tes recommandations sont pratiques et réalisables.'
           },
           {
             role: 'user',
@@ -64,23 +81,34 @@ Le ton doit être professionnel mais accessible, adapté à un contexte associat
           }
         ],
         temperature: 0.7,
-        max_tokens: 1500,
+        max_tokens: 2000,
       }),
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`DeepSeek API error: ${response.status} - ${errorText}`);
       throw new Error(`DeepSeek API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const generatedReport = data.choices[0].message.content;
+    console.log('Réponse DeepSeek reçue:', data);
+    
+    const generatedReport = data.choices?.[0]?.message?.content;
+    
+    if (!generatedReport) {
+      throw new Error('Aucun contenu généré par DeepSeek');
+    }
 
     return new Response(JSON.stringify({ report: generatedReport }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('Error in generate-attendance-report function:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      report: `Erreur lors de la génération du rapport automatique: ${error.message}. Veuillez vérifier la configuration DeepSeek et réessayer.`
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
