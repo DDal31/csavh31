@@ -39,8 +39,8 @@ export function AdminAttendanceBilan() {
 
   const calculateAttendanceStats = async () => {
     try {
+      console.log("🔍 DÉBUT du calcul des statistiques d'assiduité");
       setLoading(true);
-      console.log("Calcul des statistiques...");
 
       const now = new Date();
       const startOfCurrentMonth = startOfMonth(now);
@@ -48,19 +48,29 @@ export function AdminAttendanceBilan() {
       const startOfCurrentYear = startOfYear(now);
       const endOfCurrentYear = endOfYear(now);
 
+      console.log("📅 Période du mois en cours:", startOfCurrentMonth, "à", endOfCurrentMonth);
+      console.log("📅 Période de l'année en cours:", startOfCurrentYear, "à", endOfCurrentYear);
+
       const sportTypes: TrainingType[] = ['goalball', 'torball'];
       const newStats = { ...stats };
 
       for (const sportType of sportTypes) {
-        console.log(`Calcul pour ${sportType}`);
+        console.log(`🏀 Calcul pour le sport: ${sportType}`);
 
         // Statistiques du mois en cours
-        const { data: currentMonthTrainings } = await supabase
+        const { data: currentMonthTrainings, error: monthError } = await supabase
           .from("trainings")
           .select("registered_players_count, total_sport_players_count")
           .eq("type", sportType)
           .gte("date", startOfCurrentMonth.toISOString())
           .lte("date", endOfCurrentMonth.toISOString());
+
+        if (monthError) {
+          console.error(`❌ Erreur lors de la récupération des entraînements du mois pour ${sportType}:`, monthError);
+          continue;
+        }
+
+        console.log(`📊 Entraînements du mois trouvés pour ${sportType}:`, currentMonthTrainings?.length || 0);
 
         if (currentMonthTrainings && currentMonthTrainings.length > 0) {
           let monthlyPercentagesSum = 0;
@@ -69,6 +79,7 @@ export function AdminAttendanceBilan() {
             const totalPlayers = training.total_sport_players_count || 0;
             const trainingPercentage = totalPlayers > 0 ? (presentPlayers / totalPlayers) * 100 : 0;
             monthlyPercentagesSum += trainingPercentage;
+            console.log(`📈 Entraînement ${sportType}: ${presentPlayers}/${totalPlayers} = ${trainingPercentage.toFixed(1)}%`);
           });
           const monthlyAverage = monthlyPercentagesSum / currentMonthTrainings.length;
           
@@ -79,15 +90,23 @@ export function AdminAttendanceBilan() {
               total: 100
             }
           };
+          console.log(`✅ Moyenne mensuelle pour ${sportType}: ${monthlyAverage.toFixed(1)}%`);
         }
 
         // Statistiques annuelles
-        const { data: yearTrainings } = await supabase
+        const { data: yearTrainings, error: yearError } = await supabase
           .from("trainings")
           .select("date, registered_players_count, total_sport_players_count")
           .eq("type", sportType)
           .gte("date", startOfCurrentYear.toISOString())
           .lte("date", endOfCurrentYear.toISOString());
+
+        if (yearError) {
+          console.error(`❌ Erreur lors de la récupération des entraînements de l'année pour ${sportType}:`, yearError);
+          continue;
+        }
+
+        console.log(`📊 Entraînements de l'année trouvés pour ${sportType}:`, yearTrainings?.length || 0);
 
         if (yearTrainings && yearTrainings.length > 0) {
           const monthlyStats: Record<string, { sum: number; count: number }> = {};
@@ -133,75 +152,88 @@ export function AdminAttendanceBilan() {
               },
               bestMonth: bestMonthData
             };
+            console.log(`✅ Moyenne annuelle pour ${sportType}: ${yearlyAverage}%`);
+            console.log(`🏆 Meilleur mois pour ${sportType}: ${bestMonthData.month} (${bestMonthData.percentage}%)`);
           }
         }
       }
 
-      console.log("Statistiques calculées:", newStats);
+      console.log("📊 Statistiques finales calculées:", newStats);
       setStats(newStats);
       setLoading(false);
+      
+      // Déclencher immédiatement la génération du rapport
+      console.log("🚀 Déclenchement de la génération du rapport IA...");
+      await generateAIReport(newStats);
+      
     } catch (error) {
-      console.error("Erreur calcul statistiques:", error);
+      console.error("❌ Erreur lors du calcul des statistiques:", error);
       setLoading(false);
     }
   };
 
-  const generateAIReport = async () => {
+  const generateAIReport = async (currentStats?: AttendanceStats) => {
     try {
+      console.log("🤖 DÉBUT de la génération du rapport IA");
       setGeneratingReport(true);
-      console.log("Génération du rapport IA...");
+      
+      const statsToUse = currentStats || stats;
+      console.log("📊 Données à envoyer à DeepSeek:", statsToUse);
       
       const monthlyStats = {
-        goalball: { present: stats.goalball.currentMonth.present },
-        torball: { present: stats.torball.currentMonth.present }
+        goalball: { present: statsToUse.goalball.currentMonth.present },
+        torball: { present: statsToUse.torball.currentMonth.present }
       };
       
       const yearlyStats = {
-        goalball: { present: stats.goalball.yearlyStats.present },
-        torball: { present: stats.torball.yearlyStats.present }
+        goalball: { present: statsToUse.goalball.yearlyStats.present },
+        torball: { present: statsToUse.torball.yearlyStats.present }
       };
       
       const bestMonthStats = {
-        goalball: stats.goalball.bestMonth,
-        torball: stats.torball.bestMonth
+        goalball: statsToUse.goalball.bestMonth,
+        torball: statsToUse.torball.bestMonth
       };
 
-      console.log("Données à envoyer:", { monthlyStats, yearlyStats, bestMonthStats });
+      console.log("📤 Envoi vers l'edge function generate-attendance-report...");
+      console.log("📊 Données mensuelles:", monthlyStats);
+      console.log("📊 Données annuelles:", yearlyStats);
+      console.log("📊 Meilleurs mois:", bestMonthStats);
 
       const { data, error } = await supabase.functions.invoke('generate-attendance-report', {
         body: { monthlyStats, yearlyStats, bestMonthStats }
       });
 
+      console.log("📥 Réponse de l'edge function:", { data, error });
+
       if (error) {
-        console.error("Erreur fonction:", error);
+        console.error("❌ Erreur lors de l'appel à l'edge function:", error);
         throw error;
       }
       
-      console.log("Réponse reçue:", data);
-      
       if (data && data.report) {
+        console.log("✅ Rapport généré avec succès, longueur:", data.report.length);
         setAiReport(data.report);
-        console.log("Rapport généré avec succès");
       } else {
-        throw new Error("Aucun rapport dans la réponse");
+        console.log("⚠️ Aucun rapport dans la réponse:", data);
+        setAiReport("Aucun rapport généré. Vérifiez les logs de la fonction.");
       }
     } catch (error) {
-      console.error("Erreur génération rapport:", error);
+      console.error("❌ Erreur lors de la génération du rapport:", error);
       setAiReport(`Erreur lors de la génération du rapport: ${error.message}`);
     } finally {
       setGeneratingReport(false);
+      console.log("🏁 FIN de la génération du rapport IA");
     }
   };
 
   useEffect(() => {
+    console.log("🔄 useEffect déclenché - Début du calcul des statistiques");
     calculateAttendanceStats();
   }, []);
 
-  useEffect(() => {
-    if (!loading && (stats.goalball.currentMonth.present > 0 || stats.torball.currentMonth.present > 0)) {
-      generateAIReport();
-    }
-  }, [loading, stats]);
+  console.log("🎨 Rendu du composant AdminAttendanceBilan");
+  console.log("📊 État actuel:", { loading, generatingReport, statsCalculated: stats.goalball.currentMonth.present > 0 || stats.torball.currentMonth.present > 0 });
 
   if (loading) {
     return (
