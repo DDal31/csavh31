@@ -85,7 +85,7 @@ const Championship = () => {
       .from("championship_standings")
       .select(`
         *,
-        team:team_id (
+        team:teams_championship!championship_standings_team_id_fkey (
           id,
           name
         )
@@ -106,15 +106,15 @@ const Championship = () => {
       .from("matches")
       .select(`
         *,
-        home_team:home_team_id!matches_home_team_id_fkey (
+        home_team:teams_championship!matches_home_team_id_fkey (
           id,
           name
         ),
-        away_team:away_team_id!matches_away_team_id_fkey (
+        away_team:teams_championship!matches_away_team_id_fkey (
           id,
           name
         ),
-        round:round_id (
+        round:championship_rounds!matches_round_id_fkey (
           round_number
         )
       `)
@@ -134,10 +134,10 @@ const Championship = () => {
       .from("scorer_standings")
       .select(`
         *,
-        player:player_id (
+        player:players!scorer_standings_player_id_fkey (
           id,
           name,
-          team:team_id (
+          team:teams_championship!players_team_id_fkey (
             id,
             name
           )

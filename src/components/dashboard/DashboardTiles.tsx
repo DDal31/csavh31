@@ -3,7 +3,12 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { Calendar, FileText, User, BarChart3, Trophy } from "lucide-react";
 
-const DashboardTiles = () => {
+interface DashboardTilesProps {
+  isAdmin?: boolean;
+  userSports?: string[];
+}
+
+const DashboardTiles = ({ isAdmin = false, userSports = [] }: DashboardTilesProps) => {
   const navigate = useNavigate();
 
   const tiles = [
