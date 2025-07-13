@@ -106,11 +106,11 @@ const Championship = () => {
       .from("matches")
       .select(`
         *,
-        home_team:home_team_id (
+        home_team:home_team_id!matches_home_team_id_fkey (
           id,
           name
         ),
-        away_team:away_team_id (
+        away_team:away_team_id!matches_away_team_id_fkey (
           id,
           name
         ),

@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Loader2 } from "lucide-react";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { DashboardTiles } from "@/components/dashboard/DashboardTiles";
+import DashboardTiles from "@/components/dashboard/DashboardTiles";
 import { useToast } from "@/components/ui/use-toast";
 
 const Dashboard = () => {
