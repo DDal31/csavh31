@@ -13,10 +13,10 @@ serve(async (req) => {
   }
 
   try {
-    console.log('=== DÉBUT GÉNÉRATION RAPPORT ===');
+    console.log('=== DÉBUT GÉNÉRATION RAPPORT UTILISATEUR ===');
     
-    const { monthlyStats, yearlyStats, bestMonthStats } = await req.json();
-    console.log('Données reçues:', { monthlyStats, yearlyStats, bestMonthStats });
+    const { monthlyStats, sport, sportsYear } = await req.json();
+    console.log('Données reçues:', { monthlyStats, sport, sportsYear });
     
     // Récupération de la clé API DeepSeek
     const deepSeekApiKey = Deno.env.get('DEEPSEEK_API_KEY');
@@ -28,29 +28,41 @@ serve(async (req) => {
     
     console.log('Clé API trouvée, longueur:', deepSeekApiKey.length);
     
+    // Trouver le meilleur mois
+    const bestMonth = monthlyStats.reduce((best: any, current: any) => 
+      current.percentage > best.percentage ? current : best
+    );
+    
+    // Calculer les statistiques globales
+    const totalPresent = monthlyStats.reduce((sum: number, month: any) => sum + month.present, 0);
+    const totalTrainings = monthlyStats.reduce((sum: number, month: any) => sum + month.total, 0);
+    const averageAttendance = totalTrainings > 0 ? Math.round((totalPresent / totalTrainings) * 100) : 0;
+    
+    // Créer le résumé des données mensuelles pour le prompt
+    const monthlyDataText = monthlyStats
+      .map((month: any) => `${month.month}: ${month.present}/${month.total} entraînements (${month.percentage}%)`)
+      .join('\n');
+    
     // Préparation du prompt pour DeepSeek
     const prompt = `
-Analyse les statistiques de présence suivantes pour un club de sport adapté (Goalball et Torball) et génère un bilan professionnel :
+Analyse les statistiques de présence suivantes pour un joueur de ${sport} sur l'année sportive ${sportsYear} et génère un bilan personnel et constructif :
 
-DONNÉES DU MOIS EN COURS :
-- Goalball : ${monthlyStats.goalball?.present || 0}% de présence
-- Torball : ${monthlyStats.torball?.present || 0}% de présence
+DONNÉES MENSUELLES DE PRÉSENCE :
+${monthlyDataText}
 
-DONNÉES ANNUELLES :
-- Goalball : ${yearlyStats.goalball?.present || 0}% de présence annuelle
-- Torball : ${yearlyStats.torball?.present || 0}% de présence annuelle
+STATISTIQUES GLOBALES :
+- Taux de présence moyen sur l'année : ${averageAttendance}%
+- Meilleur mois : ${bestMonth.month} avec ${bestMonth.percentage}%
+- Total : ${totalPresent} présences sur ${totalTrainings} entraînements
 
-MEILLEURS MOIS :
-- Goalball : ${bestMonthStats.goalball?.percentage || 0}% en ${bestMonthStats.goalball?.month || 'N/A'}
-- Torball : ${bestMonthStats.torball?.percentage || 0}% en ${bestMonthStats.torball?.month || 'N/A'}
+Rédige un bilan personnel de 4-5 paragraphes qui :
+1. Fait un résumé de l'année sportive avec les points forts
+2. Analyse l'évolution de la présence au fil des mois
+3. Identifie les périodes de forte et faible participation
+4. Donne des encouragements et des conseils personnalisés pour progresser
+5. Propose des objectifs pour la prochaine saison
 
-Rédige un bilan de 4-5 paragraphes qui :
-1. Compare les performances entre Goalball et Torball
-2. Analyse les tendances mensuelles vs annuelles
-3. Identifie les succès et les points d'amélioration
-4. Propose des recommandations concrètes pour améliorer les taux de présence
-
-Ton analyse doit être professionnelle, constructive et adaptée à un contexte associatif sportif.
+Ton analyse doit être bienveillante, motivante et adaptée à un contexte sportif personnel. Utilise un ton encourageant et positif.
 `;
 
     console.log('Envoi de la requête à DeepSeek...');
@@ -67,7 +79,7 @@ Ton analyse doit être professionnelle, constructive et adaptée à un contexte 
         messages: [
           {
             role: 'system',
-            content: 'Tu es un expert en analyse sportive et en gestion associative. Tu rédiges des bilans clairs et constructifs pour des clubs de sport adapté.'
+            content: 'Tu es un coach sportif bienveillant spécialisé dans les sports adaptés (Goalball et Torball). Tu rédiges des bilans personnels motivants et constructifs pour les joueurs.'
           },
           {
             role: 'user',
@@ -98,7 +110,7 @@ Ton analyse doit être professionnelle, constructive et adaptée à un contexte 
     }
 
     console.log('Rapport généré avec succès, longueur:', generatedReport.length);
-    console.log('=== FIN GÉNÉRATION RAPPORT ===');
+    console.log('=== FIN GÉNÉRATION RAPPORT UTILISATEUR ===');
 
     return new Response(JSON.stringify({ report: generatedReport }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
