@@ -14,6 +14,92 @@ export type Database = {
   }
   public: {
     Tables: {
+      championship_rounds: {
+        Row: {
+          created_at: string
+          id: string
+          round_date: string | null
+          round_number: number
+          season_year: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          round_date?: string | null
+          round_number: number
+          season_year: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          round_date?: string | null
+          round_number?: number
+          season_year?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      championship_standings: {
+        Row: {
+          created_at: string
+          draws: number | null
+          goal_difference: number | null
+          goals_against: number | null
+          goals_for: number | null
+          id: string
+          losses: number | null
+          matches_played: number | null
+          points: number | null
+          position: number | null
+          season_year: string
+          team_id: string
+          updated_at: string
+          wins: number | null
+        }
+        Insert: {
+          created_at?: string
+          draws?: number | null
+          goal_difference?: number | null
+          goals_against?: number | null
+          goals_for?: number | null
+          id?: string
+          losses?: number | null
+          matches_played?: number | null
+          points?: number | null
+          position?: number | null
+          season_year: string
+          team_id: string
+          updated_at?: string
+          wins?: number | null
+        }
+        Update: {
+          created_at?: string
+          draws?: number | null
+          goal_difference?: number | null
+          goals_against?: number | null
+          goals_for?: number | null
+          id?: string
+          losses?: number | null
+          matches_played?: number | null
+          points?: number | null
+          position?: number | null
+          season_year?: string
+          team_id?: string
+          updated_at?: string
+          wins?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "championship_standings_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams_championship"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contacts: {
         Row: {
           created_at: string
@@ -79,6 +165,97 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      excel_imports: {
+        Row: {
+          error_message: string | null
+          file_name: string
+          file_path: string
+          id: string
+          import_date: string
+          imported_by: string
+          records_imported: number | null
+          status: string | null
+        }
+        Insert: {
+          error_message?: string | null
+          file_name: string
+          file_path: string
+          id?: string
+          import_date?: string
+          imported_by: string
+          records_imported?: number | null
+          status?: string | null
+        }
+        Update: {
+          error_message?: string | null
+          file_name?: string
+          file_path?: string
+          id?: string
+          import_date?: string
+          imported_by?: string
+          records_imported?: number | null
+          status?: string | null
+        }
+        Relationships: []
+      }
+      matches: {
+        Row: {
+          away_score: number | null
+          away_team_id: string
+          created_at: string
+          home_score: number | null
+          home_team_id: string
+          id: string
+          match_date: string | null
+          round_id: string
+          updated_at: string
+        }
+        Insert: {
+          away_score?: number | null
+          away_team_id: string
+          created_at?: string
+          home_score?: number | null
+          home_team_id: string
+          id?: string
+          match_date?: string | null
+          round_id: string
+          updated_at?: string
+        }
+        Update: {
+          away_score?: number | null
+          away_team_id?: string
+          created_at?: string
+          home_score?: number | null
+          home_team_id?: string
+          id?: string
+          match_date?: string | null
+          round_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matches_away_team_id_fkey"
+            columns: ["away_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams_championship"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matches_home_team_id_fkey"
+            columns: ["home_team_id"]
+            isOneToOne: false
+            referencedRelation: "teams_championship"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matches_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "championship_rounds"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       news: {
         Row: {
@@ -150,6 +327,38 @@ export type Database = {
           title?: string | null
         }
         Relationships: []
+      }
+      players: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          team_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          team_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          team_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "players_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams_championship"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -225,6 +434,47 @@ export type Database = {
             columns: ["training_id"]
             isOneToOne: false
             referencedRelation: "trainings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scorer_standings: {
+        Row: {
+          created_at: string
+          goals: number | null
+          id: string
+          matches_played: number | null
+          player_id: string
+          position: number | null
+          season_year: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          goals?: number | null
+          id?: string
+          matches_played?: number | null
+          player_id: string
+          position?: number | null
+          season_year: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          goals?: number | null
+          id?: string
+          matches_played?: number | null
+          player_id?: string
+          position?: number | null
+          season_year?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scorer_standings_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
             referencedColumns: ["id"]
           },
         ]
@@ -364,6 +614,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      teams_championship: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       template_settings: {
         Row: {

@@ -1,3 +1,4 @@
+
 import { Route } from "react-router-dom";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import AdminDashboard from "@/pages/AdminDashboard";
@@ -6,6 +7,7 @@ import AdminUserEdit from "@/pages/AdminUserEdit";
 import AdminTrainings from "@/pages/AdminTrainings";
 import AdminDocuments from "@/pages/AdminDocuments";
 import AdminSettings from "@/pages/AdminSettings";
+import AdminChampionship from "@/pages/AdminChampionship";
 
 export const AdminRoutes = () => {
   return (
@@ -55,6 +57,14 @@ export const AdminRoutes = () => {
         element={
           <ProtectedRoute requireAdmin>
             <AdminSettings />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/championship"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminChampionship />
           </ProtectedRoute>
         }
       />
