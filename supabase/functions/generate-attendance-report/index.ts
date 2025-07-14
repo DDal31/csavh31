@@ -28,39 +28,35 @@ serve(async (req) => {
     
     console.log('Clé API trouvée, longueur:', deepSeekApiKey.length);
     
-    // Créer un rapport global pour les deux sports
+    // Variables pour le prompt
     const currentYear = new Date().getFullYear();
     const currentMonth = new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
     
-    // Préparation du prompt pour DeepSeek
+    // Prompt optimisé pour l'administration
     const prompt = `
-Analyse les statistiques de présence globales du club de sports adaptés et génère un bilan administratif complet :
+Analyse ces stats de participation club et rédige un bilan administratif concis en 3-4 paragraphes :
 
-STATISTIQUES ACTUELLES (${currentMonth}) :
-- Goalball : ${monthlyStats.goalball.present}% de présence moyenne
-- Torball : ${monthlyStats.torball.present}% de présence moyenne
+ACTUELLES (${currentMonth}) :
+- Goalball : ${monthlyStats.goalball.present}%
+- Torball : ${monthlyStats.torball.present}%
 
-STATISTIQUES ANNUELLES (${currentYear}) :
-- Goalball : ${yearlyStats.goalball.present}% de présence moyenne
-- Torball : ${yearlyStats.torball.present}% de présence moyenne
+ANNUELLES (${currentYear}) :
+- Goalball : ${yearlyStats.goalball.present}%  
+- Torball : ${yearlyStats.torball.present}%
 
-MEILLEURS MOIS :
-- Goalball : ${bestMonthStats.goalball.month || 'Non défini'} (${bestMonthStats.goalball.percentage || 0}%)
-- Torball : ${bestMonthStats.torball.month || 'Non défini'} (${bestMonthStats.torball.percentage || 0}%)
+PICS : Goalball ${bestMonthStats.goalball.month || 'N/A'} (${bestMonthStats.goalball.percentage || 0}%) | Torball ${bestMonthStats.torball.month || 'N/A'} (${bestMonthStats.torball.percentage || 0}%)
 
-Rédige un bilan administratif de 4-5 paragraphes qui :
-1. Fait un résumé général de la participation aux entraînements
-2. Compare les performances entre Goalball et Torball
-3. Analyse les tendances et les périodes de forte/faible participation
-4. Identifie les points d'amélioration et les réussites
-5. Propose des recommandations pour optimiser la participation
+STRUCTURE :
+1. Vue d'ensemble et comparaison sports
+2. Tendances et analyses
+3. Recommandations concrètes
 
-Ton analyse doit être professionnelle, constructive et orientée vers l'amélioration de la gestion du club.
+Style : Professionnel, factuel, actionnable. Maximum 700 mots.
 `;
 
     console.log('Envoi de la requête à DeepSeek...');
     
-    // Appel à l'API DeepSeek
+    // Appel optimisé à l'API DeepSeek
     const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: {
@@ -72,15 +68,18 @@ Ton analyse doit être professionnelle, constructive et orientée vers l'amélio
         messages: [
           {
             role: 'system',
-            content: 'Tu es un consultant spécialisé dans la gestion de clubs sportifs adaptés (Goalball et Torball). Tu analyses les données de participation pour fournir des bilans administratifs professionnels et des recommandations.'
+            content: 'Tu es un consultant spécialisé dans la gestion de clubs sportifs adaptés (Goalball et Torball). Réponds de manière concise et structurée.'
           },
           {
             role: 'user',
             content: prompt
           }
         ],
-        temperature: 0.7,
-        max_tokens: 1500,
+        temperature: 0.4, // Réduit pour plus de cohérence et vitesse
+        max_tokens: 1200, // Réduit pour des réponses plus rapides
+        top_p: 0.9, // Optimise la sélection des tokens
+        frequency_penalty: 0.1, // Évite les répétitions
+        stream: false // Pas de streaming pour simplifier
       }),
     });
 

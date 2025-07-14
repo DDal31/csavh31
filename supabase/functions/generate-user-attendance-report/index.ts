@@ -42,31 +42,26 @@ serve(async (req) => {
       .map((month: any) => `${month.month}: ${month.present}/${month.total} entraînements (${month.percentage}%)`)
       .join('\n');
     
-    // Préparation du prompt pour DeepSeek
+    // Prompt optimisé pour DeepSeek
     const prompt = `
-Analyse les statistiques de présence suivantes pour un joueur de ${sport} sur l'année sportive ${sportsYear} et génère un bilan personnel et constructif :
+Analyse ces stats de présence ${sport} (${sportsYear}) et rédige un bilan personnel motivant en 3-4 paragraphes :
 
-DONNÉES MENSUELLES DE PRÉSENCE :
+DONNÉES :
 ${monthlyDataText}
 
-STATISTIQUES GLOBALES :
-- Taux de présence moyen sur l'année : ${averageAttendance}%
-- Meilleur mois : ${bestMonth.month} avec ${bestMonth.percentage}%
-- Total : ${totalPresent} présences sur ${totalTrainings} entraînements
+GLOBAL : ${averageAttendance}% présence | Meilleur mois : ${bestMonth.month} (${bestMonth.percentage}%)
 
-Rédige un bilan personnel de 4-5 paragraphes qui :
-1. Fait un résumé de l'année sportive avec les points forts
-2. Analyse l'évolution de la présence au fil des mois
-3. Identifie les périodes de forte et faible participation
-4. Donne des encouragements et des conseils personnalisés pour progresser
-5. Propose des objectifs pour la prochaine saison
+STRUCTURE :
+1. Bilan général et points forts
+2. Évolution mensuelle 
+3. Conseils et objectifs futurs
 
-Ton analyse doit être bienveillante, motivante et adaptée à un contexte sportif personnel. Utilise un ton encourageant et positif.
+Ton style : Bienveillant, encourageant, constructif. Maximum 800 mots.
 `;
 
-    console.log('Envoi de la requête à DeepSeek...');
+    console.log('Envoi de la requête optimisée à DeepSeek...');
     
-    // Appel à l'API DeepSeek
+    // Appel optimisé à l'API DeepSeek  
     const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: {
@@ -78,15 +73,18 @@ Ton analyse doit être bienveillante, motivante et adaptée à un contexte sport
         messages: [
           {
             role: 'system',
-            content: 'Tu es un coach sportif bienveillant spécialisé dans les sports adaptés (Goalball et Torball). Tu rédiges des bilans personnels motivants et constructifs pour les joueurs.'
+            content: 'Tu es un coach sportif spécialisé dans les sports adaptés. Rédige des bilans personnels motivants et concis.'
           },
           {
             role: 'user',
             content: prompt
           }
         ],
-        temperature: 0.7,
-        max_tokens: 1500,
+        temperature: 0.4, // Réduit pour plus de cohérence et vitesse
+        max_tokens: 1200, // Réduit pour des réponses plus rapides
+        top_p: 0.9, // Optimise la sélection des tokens
+        frequency_penalty: 0.1, // Évite les répétitions
+        stream: false // Pas de streaming pour simplifier
       }),
     });
 
