@@ -14,8 +14,8 @@ serve(async (req) => {
   try {
     console.log('=== DÉBUT GÉNÉRATION RAPPORT UTILISATEUR ===');
     
-    const body = await req.json();
-    console.log('Données reçues:', body);
+    const { monthlyStats, sport, sportsYear } = await req.json();
+    console.log('Données reçues:', { monthlyStats, sport, sportsYear });
     
     // Récupération de la clé API Google AI
     const googleApiKey = Deno.env.get('GOOGLE_AI_API_KEY');
@@ -27,86 +27,23 @@ serve(async (req) => {
     
     console.log('Clé API Google AI trouvée, longueur:', googleApiKey.length);
     
-    let prompt = '';
+    // Trouver le meilleur mois
+    const bestMonth = monthlyStats.reduce((best: any, current: any) => 
+      current.percentage > best.percentage ? current : best
+    );
     
-    // Gestion du nouveau format avec tous les sports
-    if (body.allSportsStats && body.userSports) {
-      const { allSportsStats, sportsYear, userSports } = body;
-      
-      console.log('Mode multi-sports détecté pour:', userSports);
-      
-      // Calculer les statistiques globales pour tous les sports
-      let globalTotalPresent = 0;
-      let globalTotalTrainings = 0;
-      let bestOverallMonth = { month: '', percentage: 0, sport: '' };
-      let sportsSummary = '';
-      
-      for (const sport of userSports) {
-        const monthlyStats = allSportsStats[sport] || [];
-        const totalPresent = monthlyStats.reduce((sum: number, month: any) => sum + month.present, 0);
-        const totalTrainings = monthlyStats.reduce((sum: number, month: any) => sum + month.total, 0);
-        const averageAttendance = totalTrainings > 0 ? Math.round((totalPresent / totalTrainings) * 100) : 0;
-        
-        // Trouver le meilleur mois pour ce sport
-        const bestMonth = monthlyStats.reduce((best: any, current: any) => 
-          current.percentage > best.percentage ? current : best
-        );
-        
-        if (bestMonth.percentage > bestOverallMonth.percentage) {
-          bestOverallMonth = { ...bestMonth, sport };
-        }
-        
-        globalTotalPresent += totalPresent;
-        globalTotalTrainings += totalTrainings;
-        
-        const monthlyDataText = monthlyStats
-          .filter((month: any) => month.total > 0)
-          .map((month: any) => `  ${month.month}: ${month.present}/${month.total} (${month.percentage}%)`)
-          .join('\n');
-        
-        if (monthlyDataText) {
-          sportsSummary += `\n${sport.toUpperCase()}:\n${monthlyDataText}\nMoyenne: ${averageAttendance}%\n`;
-        }
-      }
-      
-      const globalAverage = globalTotalTrainings > 0 ? Math.round((globalTotalPresent / globalTotalTrainings) * 100) : 0;
-      
-      prompt = `
-Analyse ces statistiques de présence multi-sports (${sportsYear}) et rédige un bilan personnel motivant en 3-4 paragraphes :
-
-SPORTS PRATIQUÉS : ${userSports.join(', ')}
-
-DONNÉES DÉTAILLÉES :${sportsSummary}
-
-BILAN GLOBAL : ${globalAverage}% de présence | Meilleur mois : ${bestOverallMonth.month} en ${bestOverallMonth.sport} (${bestOverallMonth.percentage}%)
-
-STRUCTURE :
-1. Bilan général de votre assiduité multi-sports
-2. Points forts et évolution par sport
-3. Conseils personnalisés et objectifs futurs
-
-Ton style : Bienveillant, encourageant, constructif. Maximum 800 mots. Ne mentionnez pas de sport spécifique dans le titre.
-`;
-    } else {
-      // Ancien format pour compatibilité (single sport)
-      const { monthlyStats, sport, sportsYear } = body;
-      
-      // Trouver le meilleur mois
-      const bestMonth = monthlyStats.reduce((best: any, current: any) => 
-        current.percentage > best.percentage ? current : best
-      );
-      
-      // Calculer les statistiques globales
-      const totalPresent = monthlyStats.reduce((sum: number, month: any) => sum + month.present, 0);
-      const totalTrainings = monthlyStats.reduce((sum: number, month: any) => sum + month.total, 0);
-      const averageAttendance = totalTrainings > 0 ? Math.round((totalPresent / totalTrainings) * 100) : 0;
-      
-      // Créer le résumé des données mensuelles pour le prompt
-      const monthlyDataText = monthlyStats
-        .map((month: any) => `${month.month}: ${month.present}/${month.total} entraînements (${month.percentage}%)`)
-        .join('\n');
-      
-      prompt = `
+    // Calculer les statistiques globales
+    const totalPresent = monthlyStats.reduce((sum: number, month: any) => sum + month.present, 0);
+    const totalTrainings = monthlyStats.reduce((sum: number, month: any) => sum + month.total, 0);
+    const averageAttendance = totalTrainings > 0 ? Math.round((totalPresent / totalTrainings) * 100) : 0;
+    
+    // Créer le résumé des données mensuelles pour le prompt
+    const monthlyDataText = monthlyStats
+      .map((month: any) => `${month.month}: ${month.present}/${month.total} entraînements (${month.percentage}%)`)
+      .join('\n');
+    
+    // Prompt optimisé pour Gemini
+    const prompt = `
 Analyse ces stats de présence ${sport} (${sportsYear}) et rédige un bilan personnel motivant en 3-4 paragraphes :
 
 DONNÉES :
@@ -121,7 +58,6 @@ STRUCTURE :
 
 Ton style : Bienveillant, encourageant, constructif. Maximum 800 mots.
 `;
-    }
 
     console.log('Envoi de la requête optimisée à Gemini 2.5 Flash...');
     

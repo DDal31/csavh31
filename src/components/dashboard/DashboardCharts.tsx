@@ -31,7 +31,6 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
   const [report, setReport] = useState<string>("");
   const [generatingReport, setGeneratingReport] = useState(false);
   const [error, setError] = useState<string>("");
-  const [allSportsStats, setAllSportsStats] = useState<{[key: string]: MonthlyStats[]}>({});
   const navigate = useNavigate();
 
   const fetchStatsAndGenerateReport = async () => {
@@ -47,33 +46,15 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
         return;
       }
 
-      console.log(`Récupération des stats globales pour l'utilisateur: ${session.user.id}`);
+      console.log(`Récupération des stats pour le sport: ${sport} et l'utilisateur: ${session.user.id}`);
+      const normalizedSport = sport.toLowerCase() as TrainingType;
       
-      // Récupérer le profil pour connaître les sports pratiqués
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("sport")
-        .eq("id", session.user.id)
-        .single();
-
-      if (profileError) {
-        console.error("Erreur lors de la récupération du profil:", profileError);
-        setError("Impossible de récupérer votre profil");
+      if (!isValidTrainingType(normalizedSport)) {
+        console.error("Type de sport invalide:", sport);
+        setError("Type de sport invalide");
         setLoading(false);
         return;
       }
-
-      // Déterminer les sports à analyser en fonction du profil
-      let sportsToAnalyze: TrainingType[] = [];
-      if (profile.sport === 'both') {
-        sportsToAnalyze = ['goalball', 'torball'];
-      } else if (profile.sport.includes('goalball')) {
-        sportsToAnalyze.push('goalball');
-      } else if (profile.sport.includes('torball')) {
-        sportsToAnalyze.push('torball');
-      }
-
-      console.log(`Sports à analyser: ${sportsToAnalyze.join(', ')}`);
 
       // Calcul simple de l'année sportive : septembre de l'année dernière à juillet de cette année
       const now = new Date();
@@ -87,6 +68,8 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
       
       console.log(`Année sportive: septembre ${sportsYearStartYear} - juillet ${sportsYearEndYear}`);
 
+      // Collecte des statistiques mensuelles
+      const monthlyStats: MonthlyStats[] = [];
       const monthsToCheck = [
         { month: 8, year: sportsYearStartYear },  // Septembre
         { month: 9, year: sportsYearStartYear },  // Octobre
@@ -101,103 +84,92 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
         { month: 6, year: sportsYearEndYear },    // Juillet
       ];
 
-      // Collecte des statistiques pour tous les sports pratiqués
-      const allStats: {[key: string]: MonthlyStats[]} = {};
-      let allLowAttendanceTrainings: LowAttendanceTraining[] = [];
+      for (const { month, year } of monthsToCheck) {
+        const monthStart = startOfMonth(new Date(year, month, 1));
+        const monthEnd = endOfMonth(new Date(year, month, 1));
+        
+        console.log(`Vérification du mois: ${format(monthStart, 'MMMM yyyy', { locale: fr })}`);
 
-      for (const sportType of sportsToAnalyze) {
-        const monthlyStats: MonthlyStats[] = [];
-
-        for (const { month, year } of monthsToCheck) {
-          const monthStart = startOfMonth(new Date(year, month, 1));
-          const monthEnd = endOfMonth(new Date(year, month, 1));
-          
-          console.log(`Vérification du mois: ${format(monthStart, 'MMMM yyyy', { locale: fr })} pour ${sportType}`);
-
-          // Mes présences ce mois-ci
-          const { data: myAttendance, error: myError } = await supabase
-            .from("trainings")
-            .select(`
-              id,
-              date,
-              registrations!inner (
-                user_id
-              )
-            `)
-            .eq("type", sportType)
-            .eq("registrations.user_id", session.user.id)
-            .gte("date", monthStart.toISOString().split('T')[0])
-            .lte("date", monthEnd.toISOString().split('T')[0]);
-
-          if (myError) {
-            console.error(`Erreur lors de la récupération des présences pour ${format(monthStart, 'MMMM yyyy', { locale: fr })} ${sportType}:`, myError);
-            continue;
-          }
-
-          // Total des entraînements ce mois-ci
-          const { data: totalTrainings, error: totalError } = await supabase
-            .from("trainings")
-            .select("id")
-            .eq("type", sportType)
-            .gte("date", monthStart.toISOString().split('T')[0])
-            .lte("date", monthEnd.toISOString().split('T')[0]);
-
-          if (totalError) {
-            console.error(`Erreur lors de la récupération du total pour ${format(monthStart, 'MMMM yyyy', { locale: fr })} ${sportType}:`, totalError);
-            continue;
-          }
-
-          const presentCount = myAttendance?.length || 0;
-          const totalCount = totalTrainings?.length || 0;
-          const percentage = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
-
-          console.log(`${format(monthStart, 'MMMM yyyy', { locale: fr })} ${sportType}: ${presentCount}/${totalCount} (${percentage}%)`);
-
-          monthlyStats.push({
-            month: format(monthStart, 'MMMM yyyy', { locale: fr }),
-            present: presentCount,
-            total: totalCount,
-            percentage
-          });
-        }
-
-        allStats[sportType] = monthlyStats;
-
-        // Recherche des entraînements avec peu d'inscrits pour ce sport
-        const { data: lowAttendanceData, error: lowAttendanceError } = await supabase
+        // Mes présences ce mois-ci
+        const { data: myAttendance, error: myError } = await supabase
           .from("trainings")
           .select(`
             id,
             date,
-            registered_players_count
+            registrations!inner (
+              user_id
+            )
           `)
-          .eq("type", sportType)
-          .gte("date", now.toISOString().split('T')[0])
-          .lt("registered_players_count", 6)
-          .order("date", { ascending: true })
-          .limit(3);
+          .eq("type", normalizedSport)
+          .eq("registrations.user_id", session.user.id)
+          .gte("date", monthStart.toISOString().split('T')[0])
+          .lte("date", monthEnd.toISOString().split('T')[0]);
 
-        if (lowAttendanceError) {
-          console.error(`Erreur lors de la récupération des entraînements à faible participation pour ${sportType}:`, lowAttendanceError);
-        } else {
-          allLowAttendanceTrainings = [...allLowAttendanceTrainings, ...(lowAttendanceData || [])];
+        if (myError) {
+          console.error(`Erreur lors de la récupération des présences pour ${format(monthStart, 'MMMM yyyy', { locale: fr })}:`, myError);
+          continue;
         }
+
+        // Total des entraînements ce mois-ci
+        const { data: totalTrainings, error: totalError } = await supabase
+          .from("trainings")
+          .select("id")
+          .eq("type", normalizedSport)
+          .gte("date", monthStart.toISOString().split('T')[0])
+          .lte("date", monthEnd.toISOString().split('T')[0]);
+
+        if (totalError) {
+          console.error(`Erreur lors de la récupération du total pour ${format(monthStart, 'MMMM yyyy', { locale: fr })}:`, totalError);
+          continue;
+        }
+
+        const presentCount = myAttendance?.length || 0;
+        const totalCount = totalTrainings?.length || 0;
+        const percentage = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
+
+        console.log(`${format(monthStart, 'MMMM yyyy', { locale: fr })}: ${presentCount}/${totalCount} (${percentage}%)`);
+
+        monthlyStats.push({
+          month: format(monthStart, 'MMMM yyyy', { locale: fr }),
+          present: presentCount,
+          total: totalCount,
+          percentage
+        });
       }
 
-      setAllSportsStats(allStats);
-      setLowAttendanceTrainings(allLowAttendanceTrainings);
+      console.log("Statistiques mensuelles collectées:", monthlyStats);
 
-      // Génération d'un rapport global pour tous les sports
-      const hasData = Object.values(allStats).some(stats => stats.some(stat => stat.total > 0));
+      // Recherche des entraînements avec peu d'inscrits
+      const { data: lowAttendanceData, error: lowAttendanceError } = await supabase
+        .from("trainings")
+        .select(`
+          id,
+          date,
+          registered_players_count
+        `)
+        .eq("type", normalizedSport)
+        .gte("date", now.toISOString().split('T')[0])
+        .lt("registered_players_count", 6)
+        .order("date", { ascending: true })
+        .limit(5);
+
+      if (lowAttendanceError) {
+        console.error("Erreur lors de la récupération des entraînements à faible participation:", lowAttendanceError);
+      } else {
+        setLowAttendanceTrainings(lowAttendanceData || []);
+      }
+
+      // Génération du rapport IA si on a des données
+      const hasData = monthlyStats.some(stat => stat.total > 0);
       if (hasData) {
-        console.log("Génération du rapport IA global...");
+        console.log("Génération du rapport IA...");
         setGeneratingReport(true);
         
         const { data: reportData, error: reportError } = await supabase.functions.invoke('generate-user-attendance-report', {
           body: {
-            allSportsStats: allStats,
-            sportsYear: `${sportsYearStartYear}-${sportsYearEndYear}`,
-            userSports: sportsToAnalyze
+            monthlyStats,
+            sport: normalizedSport,
+            sportsYear: `${sportsYearStartYear}-${sportsYearEndYear}`
           }
         });
 
@@ -300,23 +272,23 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto mb-36">
-      <Card className="bg-card border-border">
+      <Card className="bg-gray-800 border-gray-700">
         <CardHeader>
-          <CardTitle className="text-card-foreground flex items-center gap-2">
+          <CardTitle className="text-white flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Bilan de vos présences
+            Bilan de vos présences en {sport.charAt(0).toUpperCase() + sport.slice(1)}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {generatingReport ? (
             <div className="flex items-center justify-center p-8">
               <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
-              <span className="text-card-foreground">Génération du rapport en cours...</span>
+              <span className="text-white">Génération du rapport en cours...</span>
             </div>
           ) : (
-            <div className="max-w-none">
+            <div className="prose prose-invert max-w-none">
               <div 
-                className="text-card-foreground whitespace-pre-wrap leading-relaxed"
+                className="text-gray-300 whitespace-pre-wrap leading-relaxed"
                 dangerouslySetInnerHTML={{ __html: report.replace(/\n/g, '<br/>') }}
               />
             </div>
