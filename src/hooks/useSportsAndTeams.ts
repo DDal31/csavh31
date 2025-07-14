@@ -24,12 +24,15 @@ export const useSportsAndTeams = (selectedSports: string[] = []) => {
   const { data: teams, isLoading: isLoadingTeams } = useQuery({
     queryKey: ["teams", selectedSports],
     queryFn: async () => {
-      if (!selectedSports.length) return [];
+      if (!selectedSports.length) {
+        console.log("No sports selected, returning empty array");
+        return [];
+      }
 
       console.log("Fetching teams for sports:", selectedSports);
       const { data, error } = await supabase
         .from("teams")
-        .select("*, sports!inner(*)")
+        .select("*")
         .in("sport_id", selectedSports)
         .order("name");
 
