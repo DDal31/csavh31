@@ -34,7 +34,7 @@ export const SportsTeamsManager = () => {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-white">Sports</h2>
           <Button
-            onClick={() => navigate("/admin/settings/sports-teams/sport/create")}
+            onClick={() => navigate("/admin/settings/sports-teams/add-sport")}
             className="bg-blue-600 hover:bg-blue-700"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -72,7 +72,7 @@ export const SportsTeamsManager = () => {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-white">Équipes</h2>
           <Button
-            onClick={() => navigate("/admin/settings/sports-teams/team/create")}
+            onClick={() => navigate("/admin/settings/sports-teams/add-team")}
             className="bg-blue-600 hover:bg-blue-700"
             disabled={selectedSports.length === 0}
           >
