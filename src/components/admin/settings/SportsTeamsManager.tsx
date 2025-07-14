@@ -1,13 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSportsAndTeams } from "@/hooks/useSportsAndTeams";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 export const SportsTeamsManager = () => {
   const navigate = useNavigate();
   const [selectedSports, setSelectedSports] = useState<string[]>([]);
+  const [deletingTeamId, setDeletingTeamId] = useState<string | null>(null);
   const { sports, teams, isLoadingSports, isLoadingTeams } = useSportsAndTeams(selectedSports);
 
   const handleSportToggle = (sportId: string) => {
@@ -17,6 +21,31 @@ export const SportsTeamsManager = () => {
       }
       return [...prev, sportId];
     });
+  };
+
+  const handleDeleteTeam = async (teamId: string, teamName: string) => {
+    setDeletingTeamId(teamId);
+    
+    try {
+      const { error } = await supabase
+        .from("teams")
+        .delete()
+        .eq("id", teamId);
+
+      if (error) {
+        console.error("Erreur lors de la suppression de l'équipe:", error);
+        toast.error("Erreur lors de la suppression de l'équipe");
+        return;
+      }
+
+      toast.success(`Équipe "${teamName}" supprimée avec succès`);
+      // Les données se rechargeront automatiquement grâce à React Query
+    } catch (error) {
+      console.error("Erreur:", error);
+      toast.error("Une erreur est survenue lors de la suppression");
+    } finally {
+      setDeletingTeamId(null);
+    }
   };
 
   if (isLoadingSports) {
@@ -97,6 +126,46 @@ export const SportsTeamsManager = () => {
                 className="bg-gray-700 p-4 rounded-lg flex items-center justify-between"
               >
                 <span className="text-white font-medium">{team.name}</span>
+                
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+                      disabled={deletingTeamId === team.id}
+                      aria-label={`Supprimer l'équipe ${team.name}`}
+                    >
+                      {deletingTeamId === team.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="bg-gray-800 border-gray-700">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-white">
+                        Supprimer l'équipe
+                      </AlertDialogTitle>
+                      <AlertDialogDescription className="text-gray-300">
+                        Êtes-vous sûr de vouloir supprimer l'équipe "{team.name}" ? 
+                        Cette action est irréversible.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600">
+                        Annuler
+                      </AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => handleDeleteTeam(team.id, team.name)}
+                        className="bg-red-600 hover:bg-red-700 text-white"
+                      >
+                        Supprimer
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             ))}
 
