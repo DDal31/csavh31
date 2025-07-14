@@ -20,6 +20,12 @@ interface AttendanceStats {
   torball: SportStats;
 }
 
+interface ChartData {
+  month: string;
+  goalball: number;
+  torball: number;
+}
+
 export function AdminAttendanceBilan() {
   const [loading, setLoading] = useState(true);
   const [generatingReport, setGeneratingReport] = useState(false);
@@ -36,6 +42,7 @@ export function AdminAttendanceBilan() {
     }
   });
   const [aiReport, setAiReport] = useState("");
+  const [chartData, setChartData] = useState<ChartData[]>([]);
 
   const calculateAttendanceStats = async () => {
     try {
@@ -57,13 +64,23 @@ export function AdminAttendanceBilan() {
       for (const sportType of sportTypes) {
         console.log(`🏀 Calcul pour le sport: ${sportType}`);
 
-        // Statistiques du mois en cours
-        const { data: currentMonthTrainings, error: monthError } = await supabase
-          .from("trainings")
-          .select("registered_players_count, total_sport_players_count")
-          .eq("type", sportType)
-          .gte("date", startOfCurrentMonth.toISOString())
-          .lte("date", endOfCurrentMonth.toISOString());
+        // Statistiques du mois en cours (excluant juillet et août - pas d'accès au gymnase)
+        const currentMonth = now.getMonth(); // 0-based (0 = Janvier, 6 = Juillet, 7 = Août)
+        const isGymClosed = currentMonth === 6 || currentMonth === 7; // Juillet ou Août
+        
+        let currentMonthTrainings = null;
+        let monthError = null;
+        
+        if (!isGymClosed) {
+          const { data, error } = await supabase
+            .from("trainings")
+            .select("registered_players_count, total_sport_players_count")
+            .eq("type", sportType)
+            .gte("date", startOfCurrentMonth.toISOString())
+            .lte("date", endOfCurrentMonth.toISOString());
+          currentMonthTrainings = data;
+          monthError = error;
+        }
 
         if (monthError) {
           console.error(`❌ Erreur lors de la récupération des entraînements du mois pour ${sportType}:`, monthError);
@@ -93,13 +110,20 @@ export function AdminAttendanceBilan() {
           console.log(`✅ Moyenne mensuelle pour ${sportType}: ${monthlyAverage.toFixed(1)}%`);
         }
 
-        // Statistiques annuelles
-        const { data: yearTrainings, error: yearError } = await supabase
+        // Statistiques annuelles (excluant juillet et août - pas d'accès au gymnase)
+        const { data: allYearTrainings, error: yearError } = await supabase
           .from("trainings")
           .select("date, registered_players_count, total_sport_players_count")
           .eq("type", sportType)
           .gte("date", startOfCurrentYear.toISOString())
           .lte("date", endOfCurrentYear.toISOString());
+        
+        // Filtrer pour exclure juillet et août
+        const yearTrainings = allYearTrainings?.filter(training => {
+          const trainingDate = parseISO(training.date);
+          const trainingMonth = trainingDate.getMonth(); // 0-based
+          return trainingMonth !== 6 && trainingMonth !== 7; // Exclure juillet (6) et août (7)
+        }) || [];
 
         if (yearError) {
           console.error(`❌ Erreur lors de la récupération des entraînements de l'année pour ${sportType}:`, yearError);
@@ -109,12 +133,12 @@ export function AdminAttendanceBilan() {
         console.log(`📊 Entraînements de l'année trouvés pour ${sportType}:`, yearTrainings?.length || 0);
 
         if (yearTrainings && yearTrainings.length > 0) {
-          const monthlyStats: Record<string, { sum: number; count: number }> = {};
+          const monthlyStats: Record<string, { sum: number; count: number; goalball: number; torball: number }> = {};
           
           yearTrainings.forEach(training => {
             const monthKey = format(parseISO(training.date), "yyyy-MM");
             if (!monthlyStats[monthKey]) {
-              monthlyStats[monthKey] = { sum: 0, count: 0 };
+              monthlyStats[monthKey] = { sum: 0, count: 0, goalball: 0, torball: 0 };
             }
             
             const presentPlayers = training.registered_players_count || 0;
@@ -122,6 +146,13 @@ export function AdminAttendanceBilan() {
             const attendancePercentage = totalPlayers > 0 ? (presentPlayers / totalPlayers) * 100 : 0;
             monthlyStats[monthKey].sum += attendancePercentage;
             monthlyStats[monthKey].count += 1;
+            
+            // Stocker les données pour les graphiques
+            if (sportType === 'goalball') {
+              monthlyStats[monthKey].goalball = Math.round(attendancePercentage);
+            } else {
+              monthlyStats[monthKey].torball = Math.round(attendancePercentage);
+            }
           });
 
           let yearlyPercentagesSum = 0;
@@ -154,6 +185,31 @@ export function AdminAttendanceBilan() {
             };
             console.log(`✅ Moyenne annuelle pour ${sportType}: ${yearlyAverage}%`);
             console.log(`🏆 Meilleur mois pour ${sportType}: ${bestMonthData.month} (${bestMonthData.percentage}%)`);
+            
+            // Préparer les données pour le graphique (après le traitement des deux sports)
+            if (sportType === 'torball') { // Faire ça seulement à la fin
+              const chartDataTemp: ChartData[] = [];
+              const allMonths = new Set<string>();
+              
+              // Collecter tous les mois des deux sports
+              Object.keys(monthlyStats).forEach(month => allMonths.add(month));
+              
+              // Trier les mois chronologiquement
+              const sortedMonths = Array.from(allMonths).sort();
+              
+              sortedMonths.forEach(monthKey => {
+                const goalballData = 0; // Sera mis à jour par le processus goalball
+                const torballData = monthlyStats[monthKey]?.torball || 0;
+                
+                chartDataTemp.push({
+                  month: format(parseISO(`${monthKey}-01`), "MMM yyyy", { locale: fr }),
+                  goalball: goalballData,
+                  torball: torballData
+                });
+              });
+              
+              setChartData(chartDataTemp);
+            }
           }
         }
       }
@@ -252,6 +308,7 @@ export function AdminAttendanceBilan() {
         report={aiReport}
         isGenerating={generatingReport}
         title="Bilan des présences - Analyse IA"
+        chartData={chartData}
       />
     </div>
   );

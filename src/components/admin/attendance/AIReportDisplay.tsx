@@ -1,19 +1,28 @@
 import { useState } from "react";
-import { Loader2, FileText, Copy, Check, Eye, Volume2 } from "lucide-react";
+import { Loader2, FileText, Copy, Check, Eye, Volume2, BarChart3 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+
+interface ChartData {
+  month: string;
+  goalball: number;
+  torball: number;
+}
 
 interface AIReportDisplayProps {
   report: string;
   isGenerating: boolean;
   title?: string;
+  chartData?: ChartData[];
 }
 
 export function AIReportDisplay({ 
   report, 
   isGenerating, 
-  title = "Bilan des présences - Analyse IA" 
+  title = "Bilan des présences - Analyse IA",
+  chartData 
 }: AIReportDisplayProps) {
   const [copied, setCopied] = useState(false);
   const [isReading, setIsReading] = useState(false);
@@ -176,7 +185,71 @@ export function AIReportDisplay({
             </div>
           </div>
         ) : (
-          <div className="max-w-none">
+          <div className="max-w-none space-y-6">
+            {/* Graphique d'assiduité */}
+            {chartData && chartData.length > 0 && (
+              <div className="bg-muted/30 rounded-lg p-6 border border-border">
+                <div className="flex items-center gap-2 mb-4">
+                  <BarChart3 className="h-5 w-5 text-primary" aria-hidden="true" />
+                  <h3 className="text-lg font-semibold text-card-foreground">
+                    Évolution des présences (hors juillet/août)
+                  </h3>
+                </div>
+                <div className="h-64 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                      <XAxis 
+                        dataKey="month" 
+                        className="text-sm"
+                        tick={{ fontSize: 12 }}
+                      />
+                      <YAxis 
+                        className="text-sm"
+                        tick={{ fontSize: 12 }}
+                        domain={[0, 100]}
+                        label={{ value: 'Présences (%)', angle: -90, position: 'insideLeft' }}
+                      />
+                      <Tooltip 
+                        formatter={(value, name) => [`${value}%`, name === 'goalball' ? 'Goalball' : 'Torball']}
+                        labelFormatter={(label) => `Mois: ${label}`}
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '6px'
+                        }}
+                      />
+                      <Bar 
+                        dataKey="goalball" 
+                        name="goalball"
+                        fill="hsl(var(--primary))" 
+                        radius={[2, 2, 0, 0]}
+                        opacity={0.8}
+                      />
+                      <Bar 
+                        dataKey="torball" 
+                        name="torball"
+                        fill="hsl(var(--secondary))" 
+                        radius={[2, 2, 0, 0]}
+                        opacity={0.8}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="flex items-center justify-center gap-6 mt-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-sm bg-primary opacity-80"></div>
+                    <span className="text-sm text-muted-foreground">Goalball</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-sm bg-secondary opacity-80"></div>
+                    <span className="text-sm text-muted-foreground">Torball</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Rapport textuel */}
             {report ? (
               <article 
                 className="space-y-4"
@@ -194,7 +267,7 @@ export function AIReportDisplay({
                   <FileText className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
                 </div>
                 <p className="text-muted-foreground">
-                  Aucun bilan disponible. Vérifiez que des données d'entraînement existent.
+                  Aucun bilan disponible. Vérifiez que des données d'entraînement existent (hors juillet/août).
                 </p>
               </div>
             )}
