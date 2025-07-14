@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSportsAndTeams } from "@/hooks/useSportsAndTeams";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -10,6 +11,7 @@ import { toast } from "sonner";
 
 export const SportsTeamsManager = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [selectedSports, setSelectedSports] = useState<string[]>([]);
   const [deletingTeamId, setDeletingTeamId] = useState<string | null>(null);
   const { sports, teams, isLoadingSports, isLoadingTeams } = useSportsAndTeams(selectedSports);
@@ -27,21 +29,35 @@ export const SportsTeamsManager = () => {
     setDeletingTeamId(teamId);
     
     try {
-      const { error } = await supabase
+      console.log("Tentative de suppression de l'équipe:", teamId, teamName);
+      
+      const { error, data } = await supabase
         .from("teams")
         .delete()
-        .eq("id", teamId);
+        .eq("id", teamId)
+        .select();
 
       if (error) {
-        console.error("Erreur lors de la suppression de l'équipe:", error);
-        toast.error("Erreur lors de la suppression de l'équipe");
+        console.error("Erreur Supabase lors de la suppression:", error);
+        toast.error(`Erreur lors de la suppression: ${error.message}`);
         return;
       }
 
+      console.log("Suppression réussie:", data);
+      
+      // Invalider et refetch les données
+      await queryClient.invalidateQueries({ 
+        queryKey: ["teams", selectedSports] 
+      });
+      
+      // Forcer le rechargement
+      await queryClient.refetchQueries({ 
+        queryKey: ["teams", selectedSports] 
+      });
+
       toast.success(`Équipe "${teamName}" supprimée avec succès`);
-      // Les données se rechargeront automatiquement grâce à React Query
     } catch (error) {
-      console.error("Erreur:", error);
+      console.error("Erreur catch:", error);
       toast.error("Une erreur est survenue lors de la suppression");
     } finally {
       setDeletingTeamId(null);
