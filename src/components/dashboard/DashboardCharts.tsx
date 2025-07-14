@@ -165,7 +165,7 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
         console.log("Génération du rapport IA...");
         setGeneratingReport(true);
         
-        const { data: reportData, error: reportError } = await supabase.functions.invoke('generate-attendance-report', {
+        const { data: reportData, error: reportError } = await supabase.functions.invoke('generate-user-attendance-report', {
           body: {
             monthlyStats,
             sport: normalizedSport,
