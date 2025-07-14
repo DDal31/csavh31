@@ -60,6 +60,7 @@ export function AdminAttendanceBilan() {
 
       const sportTypes: TrainingType[] = ['goalball', 'torball'];
       const newStats = { ...stats };
+      const monthlyChartData: Record<string, { month: string; goalball: number; torball: number }> = {};
 
       for (const sportType of sportTypes) {
         console.log(`🏀 Calcul pour le sport: ${sportType}`);
@@ -133,12 +134,12 @@ export function AdminAttendanceBilan() {
         console.log(`📊 Entraînements de l'année trouvés pour ${sportType}:`, yearTrainings?.length || 0);
 
         if (yearTrainings && yearTrainings.length > 0) {
-          const monthlyStats: Record<string, { sum: number; count: number; goalball: number; torball: number }> = {};
+          const monthlyStats: Record<string, { sum: number; count: number }> = {};
           
           yearTrainings.forEach(training => {
             const monthKey = format(parseISO(training.date), "yyyy-MM");
             if (!monthlyStats[monthKey]) {
-              monthlyStats[monthKey] = { sum: 0, count: 0, goalball: 0, torball: 0 };
+              monthlyStats[monthKey] = { sum: 0, count: 0 };
             }
             
             const presentPlayers = training.registered_players_count || 0;
@@ -146,19 +147,13 @@ export function AdminAttendanceBilan() {
             const attendancePercentage = totalPlayers > 0 ? (presentPlayers / totalPlayers) * 100 : 0;
             monthlyStats[monthKey].sum += attendancePercentage;
             monthlyStats[monthKey].count += 1;
-            
-            // Stocker les données pour les graphiques
-            if (sportType === 'goalball') {
-              monthlyStats[monthKey].goalball = Math.round(attendancePercentage);
-            } else {
-              monthlyStats[monthKey].torball = Math.round(attendancePercentage);
-            }
           });
 
           let yearlyPercentagesSum = 0;
           let monthCount = 0;
           let bestMonthData = { month: "", percentage: 0 };
           
+          // Traiter les données mensuelles pour les graphiques
           Object.entries(monthlyStats).forEach(([monthKey, data]) => {
             const monthlyAverage = data.sum / data.count;
             yearlyPercentagesSum += monthlyAverage;
@@ -170,6 +165,17 @@ export function AdminAttendanceBilan() {
                 percentage: Math.round(monthlyAverage)
               };
             }
+
+            // Préparer les données pour le graphique
+            const monthLabel = format(parseISO(`${monthKey}-01`), "MMM yyyy", { locale: fr });
+            if (!monthlyChartData[monthKey]) {
+              monthlyChartData[monthKey] = {
+                month: monthLabel,
+                goalball: 0,
+                torball: 0
+              };
+            }
+            monthlyChartData[monthKey][sportType] = Math.round(monthlyAverage);
           });
 
           if (monthCount > 0) {
@@ -185,34 +191,17 @@ export function AdminAttendanceBilan() {
             };
             console.log(`✅ Moyenne annuelle pour ${sportType}: ${yearlyAverage}%`);
             console.log(`🏆 Meilleur mois pour ${sportType}: ${bestMonthData.month} (${bestMonthData.percentage}%)`);
-            
-            // Préparer les données pour le graphique (après le traitement des deux sports)
-            if (sportType === 'torball') { // Faire ça seulement à la fin
-              const chartDataTemp: ChartData[] = [];
-              const allMonths = new Set<string>();
-              
-              // Collecter tous les mois des deux sports
-              Object.keys(monthlyStats).forEach(month => allMonths.add(month));
-              
-              // Trier les mois chronologiquement
-              const sortedMonths = Array.from(allMonths).sort();
-              
-              sortedMonths.forEach(monthKey => {
-                const goalballData = 0; // Sera mis à jour par le processus goalball
-                const torballData = monthlyStats[monthKey]?.torball || 0;
-                
-                chartDataTemp.push({
-                  month: format(parseISO(`${monthKey}-01`), "MMM yyyy", { locale: fr }),
-                  goalball: goalballData,
-                  torball: torballData
-                });
-              });
-              
-              setChartData(chartDataTemp);
-            }
           }
         }
       }
+
+      // Finaliser les données du graphique
+      const sortedChartData = Object.keys(monthlyChartData)
+        .sort()
+        .map(key => monthlyChartData[key]);
+      
+      console.log("📊 Données du graphique:", sortedChartData);
+      setChartData(sortedChartData);
 
       console.log("📊 Statistiques finales calculées:", newStats);
       setStats(newStats);
