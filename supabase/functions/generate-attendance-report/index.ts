@@ -18,15 +18,15 @@ serve(async (req) => {
     const { monthlyStats, yearlyStats, bestMonthStats } = await req.json();
     console.log('Données reçues:', { monthlyStats, yearlyStats, bestMonthStats });
     
-    // Récupération de la clé API DeepSeek
-    const deepSeekApiKey = Deno.env.get('DEEPSEEK_API_KEY');
+    // Récupération de la clé API Google AI
+    const googleApiKey = Deno.env.get('GOOGLE_AI_API_KEY');
     
-    if (!deepSeekApiKey) {
-      console.error('ERREUR: Clé API DeepSeek manquante');
-      throw new Error('Clé API DeepSeek non configurée');
+    if (!googleApiKey) {
+      console.error('ERREUR: Clé API Google AI manquante');
+      throw new Error('Clé API Google AI non configurée');
     }
     
-    console.log('Clé API trouvée, longueur:', deepSeekApiKey.length);
+    console.log('Clé API Google AI trouvée, longueur:', googleApiKey.length);
     
     // Variables pour le prompt
     const currentYear = new Date().getFullYear();
@@ -54,51 +54,45 @@ STRUCTURE :
 Style : Professionnel, factuel, actionnable. Maximum 700 mots.
 `;
 
-    console.log('Envoi de la requête à DeepSeek...');
+    console.log('Envoi de la requête optimisée à Gemini 2.5 Flash...');
     
-    // Appel optimisé à l'API DeepSeek
-    const response = await fetch('https://api.deepseek.com/chat/completions', {
+    // Appel optimisé à l'API Google Gemini
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${googleApiKey}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${deepSeekApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          {
-            role: 'system',
-            content: 'Tu es un consultant spécialisé dans la gestion de clubs sportifs adaptés (Goalball et Torball). Réponds de manière concise et structurée.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.4, // Réduit pour plus de cohérence et vitesse
-        max_tokens: 1200, // Réduit pour des réponses plus rapides
-        top_p: 0.9, // Optimise la sélection des tokens
-        frequency_penalty: 0.1, // Évite les répétitions
-        stream: false // Pas de streaming pour simplifier
+        contents: [{
+          parts: [{
+            text: `Tu es un consultant spécialisé dans la gestion de clubs sportifs adaptés (Goalball et Torball). Réponds de manière concise et structurée.\n\n${prompt}`
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.4,
+          topK: 40,
+          topP: 0.9,
+          maxOutputTokens: 1200,
+        }
       }),
     });
 
-    console.log('Réponse DeepSeek reçue, statut:', response.status);
+    console.log('Réponse Gemini reçue, statut:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Erreur API DeepSeek:', response.status, errorText);
-      throw new Error(`Erreur DeepSeek (${response.status}): ${errorText}`);
+      console.error('Erreur API Gemini:', response.status, errorText);
+      throw new Error(`Erreur Gemini (${response.status}): ${errorText}`);
     }
 
     const data = await response.json();
     console.log('Données décodées avec succès');
     
-    const generatedReport = data.choices?.[0]?.message?.content;
+    const generatedReport = data.candidates?.[0]?.content?.parts?.[0]?.text;
     
     if (!generatedReport) {
       console.error('Aucun contenu généré');
-      throw new Error('Aucun rapport généré par DeepSeek');
+      throw new Error('Aucun rapport généré par Gemini');
     }
 
     console.log('Rapport généré avec succès, longueur:', generatedReport.length);

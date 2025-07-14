@@ -178,7 +178,7 @@ export function AdminAttendanceBilan() {
       setGeneratingReport(true);
       
       const statsToUse = currentStats || stats;
-      console.log("📊 Données à envoyer à DeepSeek:", statsToUse);
+      console.log("📊 Données à envoyer à Gemini:", statsToUse);
       
       const monthlyStats = {
         goalball: { present: statsToUse.goalball.currentMonth.present },
@@ -262,7 +262,7 @@ export function AdminAttendanceBilan() {
               <div className="text-center">
                 <Loader2 className="h-8 w-8 animate-spin text-green-400 mx-auto mb-2" />
                 <p className="text-gray-300">Génération du bilan en cours...</p>
-                <p className="text-gray-400 text-sm mt-1">Analyse des données avec DeepSeek...</p>
+                <p className="text-gray-400 text-sm mt-1">Analyse des données avec Gemini 2.5 Flash...</p>
               </div>
             </div>
           ) : (
