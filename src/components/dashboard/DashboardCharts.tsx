@@ -8,6 +8,7 @@ import { isValidTrainingType } from "@/utils/trainingTypes";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import type { Database } from "@/integrations/supabase/types";
 
 type TrainingType = Database["public"]["Enums"]["training_type"];
@@ -25,12 +26,20 @@ type MonthlyStats = {
   percentage: number;
 };
 
+type ChartData = {
+  month: string;
+  "Présences": number;
+  "Total": number;
+  "Taux": number;
+};
+
 export function DashboardCharts({ sport }: { sport: TrainingType }) {
   const [loading, setLoading] = useState(true);
   const [lowAttendanceTrainings, setLowAttendanceTrainings] = useState<LowAttendanceTraining[]>([]);
   const [report, setReport] = useState<string>("");
   const [generatingReport, setGeneratingReport] = useState(false);
   const [error, setError] = useState<string>("");
+  const [chartData, setChartData] = useState<ChartData[]>([]);
   const navigate = useNavigate();
 
   const fetchStatsAndGenerateReport = async () => {
@@ -68,7 +77,7 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
       
       console.log(`Année sportive: septembre ${sportsYearStartYear} - juillet ${sportsYearEndYear}`);
 
-      // Collecte des statistiques mensuelles
+      // Collecte des statistiques mensuelles (excluant juillet et août - pas d'accès au gymnase)
       const monthlyStats: MonthlyStats[] = [];
       const monthsToCheck = [
         { month: 8, year: sportsYearStartYear },  // Septembre
@@ -81,7 +90,7 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
         { month: 3, year: sportsYearEndYear },    // Avril
         { month: 4, year: sportsYearEndYear },    // Mai
         { month: 5, year: sportsYearEndYear },    // Juin
-        { month: 6, year: sportsYearEndYear },    // Juillet
+        // Juillet et août exclus (pas d'accès au gymnase)
       ];
 
       for (const { month, year } of monthsToCheck) {
@@ -138,6 +147,18 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
       }
 
       console.log("Statistiques mensuelles collectées:", monthlyStats);
+
+      // Préparer les données pour le graphique
+      const chartDataFormatted: ChartData[] = monthlyStats
+        .filter(stat => stat.total > 0)
+        .map(stat => ({
+          month: stat.month.split(' ')[0], // Garder seulement le nom du mois
+          "Présences": stat.present,
+          "Total": stat.total,
+          "Taux": stat.percentage
+        }));
+      
+      setChartData(chartDataFormatted);
 
       // Recherche des entraînements avec peu d'inscrits
       const { data: lowAttendanceData, error: lowAttendanceError } = await supabase
@@ -286,11 +307,57 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
               <span className="text-white">Génération du rapport en cours...</span>
             </div>
           ) : (
-            <div className="prose prose-invert max-w-none">
-              <div 
-                className="text-gray-300 whitespace-pre-wrap leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: report.replace(/\n/g, '<br/>') }}
-              />
+            <div className="space-y-6">
+              {/* Graphique des présences */}
+              {chartData.length > 0 && (
+                <div className="bg-card/50 rounded-lg p-4 border border-border">
+                  <h3 className="text-lg font-semibold text-foreground mb-4">
+                    Évolution de vos présences
+                  </h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis 
+                        dataKey="month" 
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={12}
+                      />
+                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                      <Tooltip 
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--popover))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '6px',
+                          color: 'hsl(var(--popover-foreground))'
+                        }}
+                        formatter={(value, name) => [
+                          name === "Taux" ? `${value}%` : value,
+                          name === "Présences" ? "Vos présences" : 
+                          name === "Total" ? "Total entraînements" : "Taux de présence"
+                        ]}
+                      />
+                      <Legend 
+                        wrapperStyle={{ color: 'hsl(var(--muted-foreground))' }}
+                        formatter={(value) => 
+                          value === "Présences" ? "Vos présences" : 
+                          value === "Total" ? "Total entraînements" : "Taux (%)"
+                        }
+                      />
+                      <Bar dataKey="Présences" fill="hsl(var(--primary))" />
+                      <Bar dataKey="Total" fill="hsl(var(--muted))" />
+                      <Bar dataKey="Taux" fill="hsl(var(--accent))" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+              
+              {/* Rapport textuel */}
+              <div className="prose prose-invert max-w-none">
+                <div 
+                  className="text-muted-foreground whitespace-pre-wrap leading-relaxed bg-card/30 p-4 rounded-lg border border-border"
+                  dangerouslySetInnerHTML={{ __html: report.replace(/\n/g, '<br/>') }}
+                />
+              </div>
             </div>
           )}
         </CardContent>
