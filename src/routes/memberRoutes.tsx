@@ -1,19 +1,18 @@
-
 import { Route } from "react-router-dom";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Dashboard from "@/pages/Dashboard";
-import Training from "@/pages/Training";
 import Profile from "@/pages/Profile";
 import ProfileEdit from "@/pages/ProfileEdit";
-import Documents from "@/pages/Documents";
+import ChangePassword from "@/pages/ChangePassword";
+import Training from "@/pages/Training";
 import Attendance from "@/pages/Attendance";
-import Championship from "@/pages/Championship";
+import Documents from "@/pages/Documents";
 
 export const MemberRoutes = () => {
   return (
     <>
       <Route
-        path="/dashboard"
+        path="dashboard"
         element={
           <ProtectedRoute>
             <Dashboard />
@@ -21,15 +20,7 @@ export const MemberRoutes = () => {
         }
       />
       <Route
-        path="/training"
-        element={
-          <ProtectedRoute>
-            <Training />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/profile"
+        path="profile"
         element={
           <ProtectedRoute>
             <Profile />
@@ -37,7 +28,7 @@ export const MemberRoutes = () => {
         }
       />
       <Route
-        path="/profile/edit"
+        path="profile/edit"
         element={
           <ProtectedRoute>
             <ProfileEdit />
@@ -45,15 +36,23 @@ export const MemberRoutes = () => {
         }
       />
       <Route
-        path="/documents"
+        path="change-password"
         element={
           <ProtectedRoute>
-            <Documents />
+            <ChangePassword />
           </ProtectedRoute>
         }
       />
       <Route
-        path="/attendance"
+        path="training"
+        element={
+          <ProtectedRoute>
+            <Training />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="attendance"
         element={
           <ProtectedRoute>
             <Attendance />
@@ -61,13 +60,13 @@ export const MemberRoutes = () => {
         }
       />
       <Route
-        path="/championship"
+        path="documents"
         element={
           <ProtectedRoute>
-            <Championship />
+            <Documents />
           </ProtectedRoute>
         }
       />
     </>
   );
-}
+};
