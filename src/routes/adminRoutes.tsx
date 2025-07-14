@@ -6,6 +6,9 @@ import AdminUserEdit from "@/pages/AdminUserEdit";
 import AdminTrainings from "@/pages/AdminTrainings";
 import AdminDocuments from "@/pages/AdminDocuments";
 import AdminSettings from "@/pages/AdminSettings";
+import AdminSportsTeams from "@/pages/AdminSportsTeams";
+import AdminSportCreate from "@/pages/AdminSportCreate";
+import AdminTeamCreate from "@/pages/AdminTeamCreate";
 
 export const AdminRoutes = () => {
   return (
@@ -55,6 +58,30 @@ export const AdminRoutes = () => {
         element={
           <ProtectedRoute requireAdmin>
             <AdminSettings />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/settings/sports-teams"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminSportsTeams />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/settings/sports-teams/sport/create"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminSportCreate />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/settings/sports-teams/team/create"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminTeamCreate />
           </ProtectedRoute>
         }
       />
