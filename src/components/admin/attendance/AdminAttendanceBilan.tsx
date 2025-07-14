@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import { format, startOfMonth, endOfMonth, startOfYear, endOfYear, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, FileText } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
+import { AIReportDisplay } from "./AIReportDisplay";
 import type { Database } from "@/integrations/supabase/types";
 
 type TrainingType = Database["public"]["Enums"]["training_type"];
@@ -237,43 +237,22 @@ export function AdminAttendanceBilan() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-48">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2 text-gray-300">Calcul des statistiques...</span>
+      <div className="flex justify-center items-center min-h-48" role="status" aria-label="Chargement des statistiques">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
+          <span className="text-muted-foreground">Calcul des statistiques...</span>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <Card className="bg-gray-800 border-gray-700">
-        <CardHeader className="flex flex-row items-center space-y-0 pb-4">
-          <FileText className="h-5 w-5 text-green-400" />
-          <CardTitle className="text-xl font-medium text-white ml-2">
-            Bilan des présences - Analyse IA
-          </CardTitle>
-          {generatingReport && (
-            <Loader2 className="h-4 w-4 animate-spin text-green-400 ml-2" />
-          )}
-        </CardHeader>
-        <CardContent>
-          {generatingReport ? (
-            <div className="flex items-center justify-center p-8">
-              <div className="text-center">
-                <Loader2 className="h-8 w-8 animate-spin text-green-400 mx-auto mb-2" />
-                <p className="text-gray-300">Génération du bilan en cours...</p>
-                <p className="text-gray-400 text-sm mt-1">Analyse des données avec Gemini 2.5 Flash...</p>
-              </div>
-            </div>
-          ) : (
-            <div className="prose prose-invert max-w-none">
-              <div className="text-gray-300 leading-relaxed whitespace-pre-line text-base">
-                {aiReport || "Aucun bilan disponible. Vérifiez que des données d'entraînement existent."}
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <AIReportDisplay 
+        report={aiReport}
+        isGenerating={generatingReport}
+        title="Bilan des présences - Analyse IA"
+      />
     </div>
   );
 }
