@@ -14,6 +14,7 @@ export const SportsTeamsManager = () => {
   const queryClient = useQueryClient();
   const [selectedSports, setSelectedSports] = useState<string[]>([]);
   const [deletingTeamId, setDeletingTeamId] = useState<string | null>(null);
+  const [deletingSportId, setDeletingSportId] = useState<string | null>(null);
   const { sports, teams, isLoadingSports, isLoadingTeams } = useSportsAndTeams(selectedSports);
 
   const handleSportToggle = (sportId: string) => {
@@ -64,6 +65,65 @@ export const SportsTeamsManager = () => {
     }
   };
 
+  const handleDeleteSport = async (sportId: string, sportName: string) => {
+    setDeletingSportId(sportId);
+    
+    try {
+      console.log("Tentative de suppression du sport:", sportId, sportName);
+      
+      // Vérifier s'il y a des équipes liées à ce sport
+      const { data: relatedTeams, error: checkError } = await supabase
+        .from("teams")
+        .select("id")
+        .eq("sport_id", sportId);
+
+      if (checkError) {
+        console.error("Erreur lors de la vérification des équipes:", checkError);
+        toast.error("Erreur lors de la vérification des équipes liées");
+        return;
+      }
+
+      if (relatedTeams && relatedTeams.length > 0) {
+        toast.error(`Impossible de supprimer le sport "${sportName}". ${relatedTeams.length} équipe(s) sont encore associées à ce sport.`);
+        return;
+      }
+      
+      const { error, data } = await supabase
+        .from("sports")
+        .delete()
+        .eq("id", sportId)
+        .select();
+
+      if (error) {
+        console.error("Erreur Supabase lors de la suppression:", error);
+        toast.error(`Erreur lors de la suppression: ${error.message}`);
+        return;
+      }
+
+      console.log("Suppression réussie:", data);
+      
+      // Invalider et refetch les données
+      await queryClient.invalidateQueries({ 
+        queryKey: ["sports"] 
+      });
+      
+      // Forcer le rechargement
+      await queryClient.refetchQueries({ 
+        queryKey: ["sports"] 
+      });
+
+      // Retirer le sport des sports sélectionnés s'il y était
+      setSelectedSports(prev => prev.filter(id => id !== sportId));
+
+      toast.success(`Sport "${sportName}" supprimé avec succès`);
+    } catch (error) {
+      console.error("Erreur catch:", error);
+      toast.error("Une erreur est survenue lors de la suppression");
+    } finally {
+      setDeletingSportId(null);
+    }
+  };
+
   if (isLoadingSports) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -101,6 +161,46 @@ export const SportsTeamsManager = () => {
                 />
                 <span className="text-white font-medium">{sport.name}</span>
               </div>
+              
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+                    disabled={deletingSportId === sport.id}
+                    aria-label={`Supprimer le sport ${sport.name}`}
+                  >
+                    {deletingSportId === sport.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="bg-gray-800 border-gray-700">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-white">
+                      Supprimer le sport
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="text-gray-300">
+                      Êtes-vous sûr de vouloir supprimer le sport "{sport.name}" ? 
+                      Cette action supprimera également toutes les équipes associées et est irréversible.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="bg-gray-700 border-gray-600 text-white hover:bg-gray-600">
+                      Annuler
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => handleDeleteSport(sport.id, sport.name)}
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      Supprimer
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           ))}
 
