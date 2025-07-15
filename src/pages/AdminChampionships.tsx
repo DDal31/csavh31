@@ -227,6 +227,8 @@ export const AdminChampionships = () => {
 
       setChampionshipName(championship.name);
       setSeasonYear(championship.season_year);
+      setSelectedSportId(championship.sport_id || '');
+      setSelectedTeamId(championship.team_id || '');
       setSelectedChampionshipId(championshipId);
       setEditMode(true);
 
@@ -434,7 +436,9 @@ export const AdminChampionships = () => {
           .from('championships')
           .update({
             name: championshipName.trim(),
-            season_year: seasonYear.trim()
+            season_year: seasonYear.trim(),
+            sport_id: selectedSportId || null,
+            team_id: selectedTeamId || null
           })
           .eq('id', selectedChampionshipId)
           .select()
@@ -456,7 +460,9 @@ export const AdminChampionships = () => {
           .from('championships')
           .insert({
             name: championshipName.trim(),
-            season_year: seasonYear.trim()
+            season_year: seasonYear.trim(),
+            sport_id: selectedSportId || null,
+            team_id: selectedTeamId || null
           })
           .select()
           .single();
@@ -568,6 +574,8 @@ export const AdminChampionships = () => {
       // Reset du formulaire
       setChampionshipName('');
       setSeasonYear('2024-2025');
+      setSelectedSportId('');
+      setSelectedTeamId('');
       setMatches([]);
       setStandings([]);
       setPlayerStats([]);

@@ -324,6 +324,8 @@ export type Database = {
           id: string
           name: string
           season_year: string
+          sport_id: string | null
+          team_id: string | null
           updated_at: string
         }
         Insert: {
@@ -331,6 +333,8 @@ export type Database = {
           id?: string
           name: string
           season_year: string
+          sport_id?: string | null
+          team_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -338,9 +342,26 @@ export type Database = {
           id?: string
           name?: string
           season_year?: string
+          sport_id?: string | null
+          team_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "championships_sport_id_fkey"
+            columns: ["sport_id"]
+            isOneToOne: false
+            referencedRelation: "sports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "championships_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       contacts: {
         Row: {
