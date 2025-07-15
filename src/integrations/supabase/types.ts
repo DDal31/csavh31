@@ -14,6 +14,165 @@ export type Database = {
   }
   public: {
     Tables: {
+      championship_days: {
+        Row: {
+          championship_id: string
+          created_at: string
+          day_name: string
+          day_number: number
+          id: string
+          location: string | null
+          match_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          championship_id: string
+          created_at?: string
+          day_name: string
+          day_number: number
+          id?: string
+          location?: string | null
+          match_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          championship_id?: string
+          created_at?: string
+          day_name?: string
+          day_number?: number
+          id?: string
+          location?: string | null
+          match_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "championship_days_championship_id_fkey"
+            columns: ["championship_id"]
+            isOneToOne: false
+            referencedRelation: "championships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      championship_matches: {
+        Row: {
+          away_score: number | null
+          away_team: string
+          championship_day_id: string
+          created_at: string
+          home_score: number | null
+          home_team: string
+          id: string
+          match_number: string
+          match_time: string | null
+          referees: string | null
+          updated_at: string
+        }
+        Insert: {
+          away_score?: number | null
+          away_team: string
+          championship_day_id: string
+          created_at?: string
+          home_score?: number | null
+          home_team: string
+          id?: string
+          match_number: string
+          match_time?: string | null
+          referees?: string | null
+          updated_at?: string
+        }
+        Update: {
+          away_score?: number | null
+          away_team?: string
+          championship_day_id?: string
+          created_at?: string
+          home_score?: number | null
+          home_team?: string
+          id?: string
+          match_number?: string
+          match_time?: string | null
+          referees?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "championship_matches_championship_day_id_fkey"
+            columns: ["championship_day_id"]
+            isOneToOne: false
+            referencedRelation: "championship_days"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      championship_player_stats: {
+        Row: {
+          championship_id: string
+          created_at: string
+          first_name: string | null
+          goals_j1: number | null
+          goals_j2: number | null
+          goals_j3: number | null
+          goals_j4: number | null
+          goals_j5: number | null
+          goals_j6: number | null
+          id: string
+          match_1: number | null
+          match_2: number | null
+          match_3: number | null
+          player_name: string
+          team_name: string
+          total_goals: number | null
+          updated_at: string
+        }
+        Insert: {
+          championship_id: string
+          created_at?: string
+          first_name?: string | null
+          goals_j1?: number | null
+          goals_j2?: number | null
+          goals_j3?: number | null
+          goals_j4?: number | null
+          goals_j5?: number | null
+          goals_j6?: number | null
+          id?: string
+          match_1?: number | null
+          match_2?: number | null
+          match_3?: number | null
+          player_name: string
+          team_name: string
+          total_goals?: number | null
+          updated_at?: string
+        }
+        Update: {
+          championship_id?: string
+          created_at?: string
+          first_name?: string | null
+          goals_j1?: number | null
+          goals_j2?: number | null
+          goals_j3?: number | null
+          goals_j4?: number | null
+          goals_j5?: number | null
+          goals_j6?: number | null
+          id?: string
+          match_1?: number | null
+          match_2?: number | null
+          match_3?: number | null
+          player_name?: string
+          team_name?: string
+          total_goals?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "championship_player_stats_championship_id_fkey"
+            columns: ["championship_id"]
+            isOneToOne: false
+            referencedRelation: "championships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       championship_rounds: {
         Row: {
           created_at: string
@@ -99,6 +258,89 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      championship_team_standings: {
+        Row: {
+          championship_id: string
+          created_at: string
+          draws: number | null
+          goal_difference: number | null
+          goals_against: number | null
+          goals_for: number | null
+          id: string
+          losses: number | null
+          matches_played: number | null
+          points: number | null
+          position: number | null
+          team_name: string
+          updated_at: string
+          wins: number | null
+        }
+        Insert: {
+          championship_id: string
+          created_at?: string
+          draws?: number | null
+          goal_difference?: number | null
+          goals_against?: number | null
+          goals_for?: number | null
+          id?: string
+          losses?: number | null
+          matches_played?: number | null
+          points?: number | null
+          position?: number | null
+          team_name: string
+          updated_at?: string
+          wins?: number | null
+        }
+        Update: {
+          championship_id?: string
+          created_at?: string
+          draws?: number | null
+          goal_difference?: number | null
+          goals_against?: number | null
+          goals_for?: number | null
+          id?: string
+          losses?: number | null
+          matches_played?: number | null
+          points?: number | null
+          position?: number | null
+          team_name?: string
+          updated_at?: string
+          wins?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "championship_team_standings_championship_id_fkey"
+            columns: ["championship_id"]
+            isOneToOne: false
+            referencedRelation: "championships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      championships: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          season_year: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          season_year: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          season_year?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       contacts: {
         Row: {

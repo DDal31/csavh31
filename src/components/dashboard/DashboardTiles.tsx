@@ -2,6 +2,7 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { User, Activity, Calendar, Shield, Key, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { DashboardCharts } from "./DashboardCharts";
+import { ChampionshipResults } from "../championship/ChampionshipResults";
 import type { Database } from "@/integrations/supabase/types";
 
 type TrainingType = Database["public"]["Enums"]["training_type"];
@@ -126,6 +127,11 @@ export function DashboardTiles({ isAdmin, userSports = [] }: DashboardTilesProps
           ))}
         </div>
       )}
+      
+      {/* Résultats des championnats */}
+      <div className="mt-8">
+        <ChampionshipResults />
+      </div>
     </div>
   );
 }
