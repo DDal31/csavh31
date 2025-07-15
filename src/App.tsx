@@ -45,6 +45,7 @@ import AdminSettingsAttendanceSheets from "@/pages/AdminAttendanceSheets";
 import AdminSettingsPresentation from "@/pages/AdminPresentation";
 import AdminNews from "@/pages/AdminNews";
 import AdminContacts from "@/pages/AdminContacts";
+import { AdminChampionships } from "@/pages/AdminChampionships";
 
 import "./App.css";
 
@@ -171,6 +172,14 @@ function AnimatedRoutes() {
             element={
               <ProtectedRoute requireAdmin>
                 <AdminDocuments />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/championships"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminChampionships />
               </ProtectedRoute>
             }
           />
