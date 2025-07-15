@@ -102,6 +102,62 @@ export const AdminChampionships = () => {
     }
   };
 
+  // Supprimer un championnat
+  const deleteChampionship = async (championshipId: string, championshipName: string) => {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer le championnat "${championshipName}" ? Cette action est irréversible.`)) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Supprimer toutes les données liées
+      const { data: days } = await supabase
+        .from('championship_days')
+        .select('id')
+        .eq('championship_id', championshipId);
+
+      if (days && days.length > 0) {
+        const dayIds = days.map(day => day.id);
+        await supabase.from('championship_matches').delete().in('championship_day_id', dayIds);
+        await supabase.from('championship_days').delete().eq('championship_id', championshipId);
+      }
+
+      await supabase.from('championship_team_standings').delete().eq('championship_id', championshipId);
+      await supabase.from('championship_player_stats').delete().eq('championship_id', championshipId);
+      
+      // Supprimer le championnat
+      const { error } = await supabase
+        .from('championships')
+        .delete()
+        .eq('id', championshipId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Championnat supprimé",
+        description: `Le championnat "${championshipName}" a été supprimé avec succès`,
+      });
+
+      // Recharger la liste
+      await fetchChampionships();
+
+      // Si c'était le championnat en cours d'édition, réinitialiser
+      if (selectedChampionshipId === championshipId) {
+        createNewChampionship();
+      }
+
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer le championnat",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Charger les données d'un championnat existant
   const loadChampionship = async (championshipId: string) => {
     setLoading(true);
@@ -525,6 +581,14 @@ export const AdminChampionships = () => {
                             >
                               <Edit className="h-3 w-3 mr-1" />
                               Modifier
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="destructive"
+                              onClick={() => deleteChampionship(championship.id, championship.name)}
+                              disabled={loading}
+                            >
+                              <Trash2 className="h-3 w-3" />
                             </Button>
                           </div>
                         </div>
