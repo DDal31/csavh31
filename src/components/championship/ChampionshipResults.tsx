@@ -122,17 +122,23 @@ export const ChampionshipResults = ({ sportId, teamId }: ChampionshipResultsProp
   const loadChampionshipData = async (championshipId: string) => {
     setLoading(true);
     try {
-      // Charger les matchs
+      console.log('Chargement des données pour le championnat:', championshipId);
+
+      // Charger les matchs - corriger la requête
       const { data: matchesData, error: matchesError } = await supabase
         .from('championship_matches')
         .select(`
           *,
-          championship_day:championship_days(day_name, day_number, match_date)
+          championship_day:championship_days!inner(*)
         `)
-        .eq('championship_day.championship_id', championshipId)
-        .order('championship_day.day_number');
+        .eq('championship_day.championship_id', championshipId);
 
-      if (matchesError) throw matchesError;
+      if (matchesError) {
+        console.error('Erreur matchs:', matchesError);
+        throw matchesError;
+      }
+
+      console.log('Matchs chargés:', matchesData);
 
       // Charger le classement
       const { data: standingsData, error: standingsError } = await supabase
@@ -141,7 +147,12 @@ export const ChampionshipResults = ({ sportId, teamId }: ChampionshipResultsProp
         .eq('championship_id', championshipId)
         .order('points', { ascending: false });
 
-      if (standingsError) throw standingsError;
+      if (standingsError) {
+        console.error('Erreur classement:', standingsError);
+        throw standingsError;
+      }
+
+      console.log('Classement chargé:', standingsData);
 
       // Charger les stats joueurs
       const { data: playerStatsData, error: playerStatsError } = await supabase
@@ -150,7 +161,12 @@ export const ChampionshipResults = ({ sportId, teamId }: ChampionshipResultsProp
         .eq('championship_id', championshipId)
         .order('total_goals', { ascending: false });
 
-      if (playerStatsError) throw playerStatsError;
+      if (playerStatsError) {
+        console.error('Erreur stats joueurs:', playerStatsError);
+        throw playerStatsError;
+      }
+
+      console.log('Stats joueurs chargées:', playerStatsData);
 
       setMatches(matchesData || []);
       setStandings(standingsData || []);
