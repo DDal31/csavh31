@@ -74,6 +74,10 @@ export const AdminChampionships = () => {
   const [teams, setTeams] = useState<{id: string, name: string, sport_id: string}[]>([]);
   const [filteredTeams, setFilteredTeams] = useState<{id: string, name: string, sport_id: string}[]>([]);
   
+  // État pour les joueurs
+  const [players, setPlayers] = useState<{id: string, first_name: string, last_name: string, sport: string, team: string, club_role: string}[]>([]);
+  const [filteredPlayers, setFilteredPlayers] = useState<{id: string, first_name: string, last_name: string, sport: string, team: string, club_role: string}[]>([]);
+  
   // États pour les matchs
   const [matches, setMatches] = useState<Match[]>([]);
   
@@ -89,6 +93,7 @@ export const AdminChampionships = () => {
   useEffect(() => {
     fetchChampionships();
     fetchSportsAndTeams();
+    fetchPlayers();
   }, []);
 
   // Filtrer les équipes selon le sport sélectionné
@@ -106,6 +111,39 @@ export const AdminChampionships = () => {
       }
     }
   }, [selectedSportId, teams, selectedTeamId]);
+
+  // Filtrer les joueurs selon le sport et l'équipe sélectionnés
+  useEffect(() => {
+    if (!selectedSportId && !selectedTeamId) {
+      setFilteredPlayers([]);
+      return;
+    }
+
+    let filtered = players.filter(player => 
+      player.club_role !== 'arbitre' && player.club_role !== 'entraineur-arbitre'
+    );
+
+    if (selectedSportId) {
+      const selectedSport = sports.find(sport => sport.id === selectedSportId);
+      if (selectedSport) {
+        filtered = filtered.filter(player => 
+          player.sport.toLowerCase().includes(selectedSport.name.toLowerCase()) ||
+          player.sport.toLowerCase() === 'both'
+        );
+      }
+    }
+
+    if (selectedTeamId) {
+      const selectedTeam = teams.find(team => team.id === selectedTeamId);
+      if (selectedTeam) {
+        filtered = filtered.filter(player => 
+          player.team.toLowerCase().includes(selectedTeam.name.toLowerCase())
+        );
+      }
+    }
+
+    setFilteredPlayers(filtered);
+  }, [selectedSportId, selectedTeamId, players, sports, teams]);
 
   const fetchSportsAndTeams = async () => {
     try {
@@ -132,6 +170,27 @@ export const AdminChampionships = () => {
       toast({
         title: "Erreur",
         description: "Impossible de charger les sports et équipes",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const fetchPlayers = async () => {
+    try {
+      const { data: playersData, error: playersError } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, sport, team, club_role')
+        .not('club_role', 'in', '("arbitre","entraineur-arbitre")')
+        .order('last_name');
+
+      if (playersError) throw playersError;
+      setPlayers(playersData || []);
+
+    } catch (error) {
+      console.error('Erreur lors du chargement des joueurs:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les joueurs",
         variant: "destructive"
       });
     }
@@ -1000,11 +1059,26 @@ export const AdminChampionships = () => {
                         <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-10 gap-4 items-end">
                           <div className="space-y-2 md:col-span-2">
                             <Label>Joueuse</Label>
-                            <Input
-                              placeholder="Prénom Nom"
+                            <Select
                               value={stat.playerName}
-                              onChange={(e) => updatePlayerStat(stat.id, 'playerName', e.target.value)}
-                            />
+                              onValueChange={(value) => updatePlayerStat(stat.id, 'playerName', value)}
+                              disabled={!selectedSportId || !selectedTeamId}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder={
+                                  !selectedSportId || !selectedTeamId 
+                                    ? "Sélectionnez d'abord sport et équipe" 
+                                    : "Sélectionner une joueuse"
+                                } />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {filteredPlayers.map((player) => (
+                                  <SelectItem key={player.id} value={`${player.first_name} ${player.last_name}`}>
+                                    {player.first_name} {player.last_name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
                           
                           <div className="space-y-2">
