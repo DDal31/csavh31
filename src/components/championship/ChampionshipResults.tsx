@@ -11,7 +11,14 @@ interface Championship {
   id: string;
   name: string;
   season_year: string;
+  sport_id?: string;
+  team_id?: string;
   created_at: string;
+}
+
+interface ChampionshipResultsProps {
+  sportId?: string;
+  teamId?: string;
 }
 
 interface Match {
@@ -58,7 +65,7 @@ interface PlayerStats {
   goals_j6: number;
 }
 
-export const ChampionshipResults = () => {
+export const ChampionshipResults = ({ sportId, teamId }: ChampionshipResultsProps = {}) => {
   const [championships, setChampionships] = useState<Championship[]>([]);
   const [selectedChampionship, setSelectedChampionship] = useState<string>('');
   const [matches, setMatches] = useState<Match[]>([]);
@@ -68,7 +75,7 @@ export const ChampionshipResults = () => {
 
   useEffect(() => {
     loadChampionships();
-  }, []);
+  }, [sportId, teamId]);
 
   useEffect(() => {
     if (selectedChampionship) {
@@ -78,9 +85,19 @@ export const ChampionshipResults = () => {
 
   const loadChampionships = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('championships')
-        .select('*')
+        .select('*');
+
+      // Filtrer par sport et équipe si fournis
+      if (sportId) {
+        query = query.eq('sport_id', sportId);
+      }
+      if (teamId) {
+        query = query.eq('team_id', teamId);
+      }
+
+      const { data, error } = await query
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -88,6 +105,12 @@ export const ChampionshipResults = () => {
       setChampionships(data || []);
       if (data && data.length > 0) {
         setSelectedChampionship(data[0].id);
+      } else {
+        // Aucun championnat trouvé, réinitialiser les données
+        setSelectedChampionship('');
+        setMatches([]);
+        setStandings([]);
+        setPlayerStats([]);
       }
     } catch (error) {
       console.error('Erreur chargement championnats:', error);

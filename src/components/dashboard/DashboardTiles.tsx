@@ -1,8 +1,8 @@
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Activity, Calendar, Shield, Key, FileText } from "lucide-react";
+import { User, Activity, Calendar, Shield, Key, FileText, Trophy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { DashboardCharts } from "./DashboardCharts";
-import { ChampionshipResults } from "../championship/ChampionshipResults";
+import { ChampionshipTile } from "../championship/ChampionshipTile";
 import type { Database } from "@/integrations/supabase/types";
 
 type TrainingType = Database["public"]["Enums"]["training_type"];
@@ -50,6 +50,13 @@ export function DashboardTiles({ isAdmin, userSports = [] }: DashboardTilesProps
       route: "/change-password",
       bgColor: "bg-pink-600 hover:bg-pink-700",
       ariaLabel: "Modifier votre mot de passe"
+    },
+    {
+      title: "Résultats Championnat",
+      icon: Trophy,
+      bgColor: "bg-yellow-600 hover:bg-yellow-700",
+      ariaLabel: "Voir les résultats des championnats",
+      special: "championship"
     }
   ];
 
@@ -76,11 +83,11 @@ export function DashboardTiles({ isAdmin, userSports = [] }: DashboardTilesProps
         {tiles.map((tile) => (
           <Card 
             key={tile.title}
-            className={`${tile.bgColor} border-none cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl focus-within:ring-2 focus-within:ring-white`}
-            onClick={() => navigate(tile.route)}
-            role="button"
+            className={`${tile.bgColor} border-none ${tile.special !== 'championship' ? 'cursor-pointer' : ''} transform transition-all duration-300 hover:scale-105 hover:shadow-xl focus-within:ring-2 focus-within:ring-white`}
+            onClick={tile.route ? () => navigate(tile.route) : undefined}
+            role={tile.route ? "button" : undefined}
             aria-label={tile.ariaLabel}
-            tabIndex={0}
+            tabIndex={tile.route ? 0 : undefined}
           >
             <CardHeader className="text-center p-4 sm:p-6">
               <tile.icon 
@@ -128,9 +135,9 @@ export function DashboardTiles({ isAdmin, userSports = [] }: DashboardTilesProps
         </div>
       )}
       
-      {/* Résultats des championnats */}
+      {/* Tuile interactive pour les résultats de championnat */}
       <div className="mt-8">
-        <ChampionshipResults />
+        <ChampionshipTile />
       </div>
     </div>
   );
