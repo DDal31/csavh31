@@ -1056,7 +1056,7 @@ export const AdminChampionships = () => {
                   <div className="space-y-4">
                     {playerStats.map((stat) => (
                       <Card key={stat.id} className="p-4">
-                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 items-end">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 items-end">
                           <div className="space-y-2 md:col-span-2">
                             <Label>Joueuse</Label>
                             <Select
@@ -1112,15 +1112,6 @@ export const AdminChampionships = () => {
                             />
                           </div>
                           
-                          <div className="space-y-2">
-                            <Label>J3</Label>
-                            <Input
-                              type="number"
-                              placeholder="0"
-                              value={stat.goals_j3}
-                              onChange={(e) => updatePlayerStat(stat.id, 'goals_j3', e.target.value ? parseInt(e.target.value) : '')}
-                            />
-                          </div>
                           
                           
                           <Button
