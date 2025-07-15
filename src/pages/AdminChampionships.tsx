@@ -896,7 +896,7 @@ export const AdminChampionships = () => {
                               type="number"
                               placeholder="0"
                               value={match.homeScore}
-                              onChange={(e) => updateMatch(match.id, 'homeScore', e.target.value ? parseInt(e.target.value) : '')}
+                              onChange={(e) => updateMatch(match.id, 'homeScore', e.target.value !== '' ? parseInt(e.target.value) : '')}
                             />
                           </div>
                           
@@ -910,7 +910,7 @@ export const AdminChampionships = () => {
                               type="number"
                               placeholder="0"
                               value={match.awayScore}
-                              onChange={(e) => updateMatch(match.id, 'awayScore', e.target.value ? parseInt(e.target.value) : '')}
+                              onChange={(e) => updateMatch(match.id, 'awayScore', e.target.value !== '' ? parseInt(e.target.value) : '')}
                             />
                           </div>
                           
@@ -1109,7 +1109,7 @@ export const AdminChampionships = () => {
                               type="number"
                               placeholder="0"
                               value={stat.totalGoals}
-                              onChange={(e) => updatePlayerStat(stat.id, 'totalGoals', e.target.value ? parseInt(e.target.value) : '')}
+                              onChange={(e) => updatePlayerStat(stat.id, 'totalGoals', e.target.value !== '' ? parseInt(e.target.value) : '')}
                             />
                           </div>
                           
@@ -1119,7 +1119,7 @@ export const AdminChampionships = () => {
                               type="number"
                               placeholder="0"
                               value={stat.goals_j1}
-                              onChange={(e) => updatePlayerStat(stat.id, 'goals_j1', e.target.value ? parseInt(e.target.value) : '')}
+                              onChange={(e) => updatePlayerStat(stat.id, 'goals_j1', e.target.value !== '' ? parseInt(e.target.value) : '')}
                             />
                           </div>
                           
@@ -1129,7 +1129,7 @@ export const AdminChampionships = () => {
                               type="number"
                               placeholder="0"
                               value={stat.goals_j2}
-                              onChange={(e) => updatePlayerStat(stat.id, 'goals_j2', e.target.value ? parseInt(e.target.value) : '')}
+                              onChange={(e) => updatePlayerStat(stat.id, 'goals_j2', e.target.value !== '' ? parseInt(e.target.value) : '')}
                             />
                           </div>
                           
