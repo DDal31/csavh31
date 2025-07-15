@@ -24,6 +24,7 @@ import ChangePassword from "@/pages/ChangePassword";
 import Training from "@/pages/Training";
 import Attendance from "@/pages/Attendance";
 import Documents from "@/pages/Documents";
+import ChampionshipResults from "@/pages/ChampionshipResults";
 
 // Admin pages
 import AdminDashboard from "@/pages/AdminDashboard";
@@ -130,6 +131,14 @@ function AnimatedRoutes() {
             element={
               <ProtectedRoute>
                 <Documents />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="championship-results"
+            element={
+              <ProtectedRoute>
+                <ChampionshipResults />
               </ProtectedRoute>
             }
           />

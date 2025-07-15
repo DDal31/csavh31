@@ -2,7 +2,6 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { User, Activity, Calendar, Shield, Key, FileText, Trophy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { DashboardCharts } from "./DashboardCharts";
-import { ChampionshipTile } from "../championship/ChampionshipTile";
 import type { Database } from "@/integrations/supabase/types";
 
 type TrainingType = Database["public"]["Enums"]["training_type"];
@@ -54,9 +53,9 @@ export function DashboardTiles({ isAdmin, userSports = [] }: DashboardTilesProps
     {
       title: "Résultats Championnat",
       icon: Trophy,
+      route: "/championship-results",
       bgColor: "bg-yellow-600 hover:bg-yellow-700",
-      ariaLabel: "Voir les résultats des championnats",
-      special: "championship"
+      ariaLabel: "Voir les résultats des championnats"
     }
   ];
 
@@ -83,11 +82,11 @@ export function DashboardTiles({ isAdmin, userSports = [] }: DashboardTilesProps
         {tiles.map((tile) => (
           <Card 
             key={tile.title}
-            className={`${tile.bgColor} border-none ${tile.special !== 'championship' ? 'cursor-pointer' : ''} transform transition-all duration-300 hover:scale-105 hover:shadow-xl focus-within:ring-2 focus-within:ring-white`}
-            onClick={tile.route ? () => navigate(tile.route) : undefined}
-            role={tile.route ? "button" : undefined}
+            className={`${tile.bgColor} border-none cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl focus-within:ring-2 focus-within:ring-white`}
+            onClick={() => navigate(tile.route)}
+            role="button"
             aria-label={tile.ariaLabel}
-            tabIndex={tile.route ? 0 : undefined}
+            tabIndex={0}
           >
             <CardHeader className="text-center p-4 sm:p-6">
               <tile.icon 
@@ -135,10 +134,6 @@ export function DashboardTiles({ isAdmin, userSports = [] }: DashboardTilesProps
         </div>
       )}
       
-      {/* Tuile interactive pour les résultats de championnat */}
-      <div className="mt-8">
-        <ChampionshipTile />
-      </div>
     </div>
   );
 }
