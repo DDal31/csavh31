@@ -394,7 +394,7 @@ export const ChampionshipResults = ({ sportId, teamId }: ChampionshipResultsProp
                           {index + 1}
                         </td>
                         <td className="p-2 font-medium">
-                          {player.first_name} {player.player_name}
+                          {player.player_name}
                         </td>
                         <td className="p-2">{player.team_name}</td>
                         <td className="text-center p-2 font-bold">{player.total_goals}</td>
