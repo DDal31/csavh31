@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
@@ -7,7 +7,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Trophy, Plus, Trash2, Save, Users, Target, Calendar } from 'lucide-react';
+import { Trophy, Plus, Trash2, Save, Users, Target, Calendar, Edit, List } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 import { supabase } from '../integrations/supabase/client';
 
@@ -48,11 +48,24 @@ interface PlayerStats {
   goals_j6: number | '';
 }
 
+interface Championship {
+  id: string;
+  name: string;
+  season_year: string;
+  created_at: string;
+}
+
 export const AdminChampionships = () => {
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [championshipName, setChampionshipName] = useState('');
   const [seasonYear, setSeasonYear] = useState('2024-2025');
   const [activeTab, setActiveTab] = useState('info');
+  const [selectedChampionshipId, setSelectedChampionshipId] = useState<string | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  
+  // États pour la liste des championnats
+  const [championships, setChampionships] = useState<Championship[]>([]);
   
   // États pour les matchs
   const [matches, setMatches] = useState<Match[]>([]);
@@ -64,6 +77,149 @@ export const AdminChampionships = () => {
   const [playerStats, setPlayerStats] = useState<PlayerStats[]>([]);
   
   const { toast } = useToast();
+
+  // Charger la liste des championnats
+  useEffect(() => {
+    fetchChampionships();
+  }, []);
+
+  const fetchChampionships = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('championships')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setChampionships(data || []);
+    } catch (error) {
+      console.error('Erreur lors du chargement des championnats:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les championnats",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Charger les données d'un championnat existant
+  const loadChampionship = async (championshipId: string) => {
+    setLoading(true);
+    try {
+      // Charger les informations du championnat
+      const { data: championship, error: champError } = await supabase
+        .from('championships')
+        .select('*')
+        .eq('id', championshipId)
+        .single();
+
+      if (champError) throw champError;
+
+      setChampionshipName(championship.name);
+      setSeasonYear(championship.season_year);
+      setSelectedChampionshipId(championshipId);
+      setEditMode(true);
+
+      // Charger les matchs
+      const { data: days, error: daysError } = await supabase
+        .from('championship_days')
+        .select(`
+          *,
+          championship_matches (*)
+        `)
+        .eq('championship_id', championshipId);
+
+      if (daysError) throw daysError;
+
+      const loadedMatches: Match[] = [];
+      days?.forEach(day => {
+        day.championship_matches?.forEach((match: any, index: number) => {
+          loadedMatches.push({
+            id: match.id,
+            homeTeam: match.home_team,
+            awayTeam: match.away_team,
+            homeScore: match.home_score || '',
+            awayScore: match.away_score || '',
+            matchTime: match.match_time || '',
+            day: day.day_number
+          });
+        });
+      });
+      setMatches(loadedMatches);
+
+      // Charger le classement
+      const { data: standingsData, error: standingsError } = await supabase
+        .from('championship_team_standings')
+        .select('*')
+        .eq('championship_id', championshipId);
+
+      if (standingsError) throw standingsError;
+
+      const loadedStandings: TeamStanding[] = standingsData?.map(standing => ({
+        id: standing.id,
+        teamName: standing.team_name,
+        position: standing.position || '',
+        matchesPlayed: standing.matches_played || '',
+        wins: standing.wins || '',
+        draws: standing.draws || '',
+        losses: standing.losses || '',
+        goalsFor: standing.goals_for || '',
+        goalsAgainst: standing.goals_against || '',
+        goalDifference: standing.goal_difference || '',
+        points: standing.points || ''
+      })) || [];
+      setStandings(loadedStandings);
+
+      // Charger les statistiques des joueuses
+      const { data: statsData, error: statsError } = await supabase
+        .from('championship_player_stats')
+        .select('*')
+        .eq('championship_id', championshipId);
+
+      if (statsError) throw statsError;
+
+      const loadedStats: PlayerStats[] = statsData?.map(stat => ({
+        id: stat.id,
+        playerName: stat.player_name,
+        teamName: stat.team_name,
+        totalGoals: stat.total_goals || '',
+        goals_j1: stat.goals_j1 || '',
+        goals_j2: stat.goals_j2 || '',
+        goals_j3: stat.goals_j3 || '',
+        goals_j4: stat.goals_j4 || '',
+        goals_j5: stat.goals_j5 || '',
+        goals_j6: stat.goals_j6 || ''
+      })) || [];
+      setPlayerStats(loadedStats);
+
+      toast({
+        title: "Championnat chargé",
+        description: `Les données du championnat "${championship.name}" ont été chargées`,
+      });
+
+    } catch (error) {
+      console.error('Erreur lors du chargement du championnat:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les données du championnat",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Créer un nouveau championnat
+  const createNewChampionship = () => {
+    setEditMode(false);
+    setSelectedChampionshipId(null);
+    setChampionshipName('');
+    setSeasonYear('2024-2025');
+    setMatches([]);
+    setStandings([]);
+    setPlayerStats([]);
+    setActiveTab('info');
+  };
 
   // Gestion des matchs
   const addMatch = () => {
@@ -158,17 +314,44 @@ export const AdminChampionships = () => {
     setSaving(true);
 
     try {
-      // Créer le championnat
-      const { data: championship, error: championshipError } = await supabase
-        .from('championships')
-        .insert({
-          name: championshipName.trim(),
-          season_year: seasonYear.trim()
-        })
-        .select()
-        .single();
+      let championship;
+      
+      if (editMode && selectedChampionshipId) {
+        // Mise à jour du championnat existant
+        const { data, error: championshipError } = await supabase
+          .from('championships')
+          .update({
+            name: championshipName.trim(),
+            season_year: seasonYear.trim()
+          })
+          .eq('id', selectedChampionshipId)
+          .select()
+          .single();
 
-      if (championshipError) throw championshipError;
+        if (championshipError) throw championshipError;
+        championship = data;
+
+        // Supprimer les anciennes données avant de réinsérer
+        await supabase.from('championship_matches').delete().in('championship_day_id', 
+          await supabase.from('championship_days').select('id').eq('championship_id', selectedChampionshipId).then(r => r.data?.map(d => d.id) || [])
+        );
+        await supabase.from('championship_days').delete().eq('championship_id', selectedChampionshipId);
+        await supabase.from('championship_team_standings').delete().eq('championship_id', selectedChampionshipId);
+        await supabase.from('championship_player_stats').delete().eq('championship_id', selectedChampionshipId);
+      } else {
+        // Créer un nouveau championnat
+        const { data, error: championshipError } = await supabase
+          .from('championships')
+          .insert({
+            name: championshipName.trim(),
+            season_year: seasonYear.trim()
+          })
+          .select()
+          .single();
+
+        if (championshipError) throw championshipError;
+        championship = data;
+      }
 
       // Sauvegarder les matchs par journée
       const dayGroups = matches.reduce((acc, match) => {
@@ -263,9 +446,12 @@ export const AdminChampionships = () => {
       }
 
       toast({
-        title: "Championnat créé",
-        description: `Le championnat "${championshipName}" a été créé avec succès`,
+        title: editMode ? "Championnat mis à jour" : "Championnat créé",
+        description: `Le championnat "${championshipName}" a été ${editMode ? 'mis à jour' : 'créé'} avec succès`,
       });
+
+      // Recharger la liste des championnats
+      await fetchChampionships();
 
       // Reset du formulaire
       setChampionshipName('');
@@ -274,6 +460,8 @@ export const AdminChampionships = () => {
       setStandings([]);
       setPlayerStats([]);
       setActiveTab('info');
+      setEditMode(false);
+      setSelectedChampionshipId(null);
 
     } catch (error) {
       console.error('❌ Erreur lors de la sauvegarde:', error);
@@ -299,14 +487,68 @@ export const AdminChampionships = () => {
             <div className="flex items-center justify-center gap-3">
               <Trophy className="h-8 w-8 text-primary" />
               <h1 className="text-3xl font-bold text-foreground">
-                Création de Championnat
+                {editMode ? 'Modification du Championnat' : 'Création de Championnat'}
               </h1>
             </div>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Créez et gérez manuellement les résultats, classements et statistiques 
-              des championnats de goalball.
+              {editMode ? 'Modifiez les données du championnat sélectionné' : 'Créez et gérez manuellement les résultats, classements et statistiques des championnats de goalball.'}
             </p>
           </div>
+
+          {/* Section Championnats existants */}
+          <Card className="border-primary/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <List className="h-5 w-5" />
+                Championnats Existants
+              </CardTitle>
+              <CardDescription>
+                Sélectionnez un championnat à modifier ou créez-en un nouveau
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {championships.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {championships.map((championship) => (
+                    <Card key={championship.id} className="cursor-pointer hover:shadow-md transition-shadow">
+                      <CardContent className="p-4">
+                        <div className="space-y-2">
+                          <h3 className="font-semibold text-sm">{championship.name}</h3>
+                          <p className="text-xs text-muted-foreground">Saison: {championship.season_year}</p>
+                          <div className="flex gap-2">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => loadChampionship(championship.id)}
+                              disabled={loading}
+                              className="flex-1"
+                            >
+                              <Edit className="h-3 w-3 mr-1" />
+                              Modifier
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-muted-foreground">
+                  Aucun championnat créé pour le moment
+                </div>
+              )}
+              
+              <div className="flex justify-center pt-4">
+                <Button 
+                  onClick={createNewChampionship}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Créer un nouveau championnat
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Formulaire principal */}
           <Card className="border-primary/20">
