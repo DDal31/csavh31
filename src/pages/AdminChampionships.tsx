@@ -448,10 +448,11 @@ export const AdminChampionships = () => {
 
   // Gestion des statistiques joueuses
   const addPlayerStat = () => {
+    const selectedTeam = teams.find(team => team.id === selectedTeamId);
     const newPlayerStat: PlayerStats = {
       id: Date.now().toString(),
       playerName: '',
-      teamName: '',
+      teamName: selectedTeam ? selectedTeam.name : '',
       totalGoals: '',
       goals_j1: '',
       goals_j2: '',
@@ -599,27 +600,47 @@ export const AdminChampionships = () => {
       }
 
       // Sauvegarder les statistiques joueuses
+      console.log('📊 Données playerStats avant sauvegarde:', playerStats);
+      
       const playerStatsToInsert = playerStats
-        .filter(stat => stat.playerName && stat.teamName)
-        .map(stat => ({
-          championship_id: championship.id,
-          player_name: stat.playerName,
-          team_name: stat.teamName,
-          total_goals: stat.totalGoals || null,
-          goals_j1: stat.goals_j1 || null,
-          goals_j2: stat.goals_j2 || null,
-          goals_j3: stat.goals_j3 || null,
-          goals_j4: stat.goals_j4 || null,
-          goals_j5: stat.goals_j5 || null,
-          goals_j6: stat.goals_j6 || null
-        }));
+        .filter(stat => {
+          const hasPlayerName = stat.playerName && stat.playerName.trim() !== '';
+          console.log('🏷️ Stat playerName:', stat.playerName, 'hasPlayerName:', hasPlayerName);
+          return hasPlayerName;
+        })
+        .map(stat => {
+          const statsData = {
+            championship_id: championship.id,
+            player_name: stat.playerName,
+            team_name: stat.teamName || '', // Valeur par défaut si pas de teamName
+            first_name: stat.playerName ? stat.playerName.split(' ')[0] : '',
+            total_goals: stat.totalGoals || 0,
+            goals_j1: stat.goals_j1 || 0,
+            goals_j2: stat.goals_j2 || 0,
+            goals_j3: stat.goals_j3 || 0,
+            goals_j4: stat.goals_j4 || 0,
+            goals_j5: stat.goals_j5 || 0,
+            goals_j6: stat.goals_j6 || 0
+          };
+          console.log('📝 Stats à insérer:', statsData);
+          return statsData;
+        });
+
+      console.log('📊 PlayerStatsToInsert:', playerStatsToInsert);
 
       if (playerStatsToInsert.length > 0) {
+        console.log('💾 Insertion des statistiques joueuses...');
         const { error: playerStatsError } = await supabase
           .from('championship_player_stats')
           .insert(playerStatsToInsert);
 
-        if (playerStatsError) throw playerStatsError;
+        if (playerStatsError) {
+          console.error('❌ Erreur insertion stats joueuses:', playerStatsError);
+          throw playerStatsError;
+        }
+        console.log('✅ Statistiques joueuses sauvegardées avec succès');
+      } else {
+        console.log('⚠️ Aucune statistique joueuse à sauvegarder');
       }
 
       toast({
