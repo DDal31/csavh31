@@ -271,7 +271,7 @@ export const ChampionshipResults = ({ sportId, teamId }: ChampionshipResultsProp
             </TabsTrigger>
             <TabsTrigger value="buteuses" className="flex items-center gap-2">
               <Target className="h-4 w-4" />
-              Buteuses
+              Statistiques
             </TabsTrigger>
           </TabsList>
 
@@ -372,40 +372,50 @@ export const ChampionshipResults = ({ sportId, teamId }: ChampionshipResultsProp
             ))}
           </TabsContent>
 
-          {/* Buteuses */}
+          {/* Statistiques */}
           <TabsContent value="buteuses" className="space-y-4">
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-2 font-semibold">Pos.</th>
-                    <th className="text-left p-2 font-semibold">Joueuse</th>
-                    <th className="text-left p-2 font-semibold">Équipe</th>
-                    <th className="text-center p-2 font-semibold">Total</th>
-                    <th className="text-center p-2 font-semibold">J1</th>
-                    <th className="text-center p-2 font-semibold">J2</th>
-                    <th className="text-center p-2 font-semibold">J3</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {playerStats.slice(0, 20).map((player, index) => (
-                    <tr key={player.id} className="border-b hover:bg-muted/50">
-                      <td className={`p-2 ${getPositionColor(index + 1)}`}>
-                        {index + 1}
-                      </td>
-                      <td className="p-2 font-medium">
-                        {player.first_name} {player.player_name}
-                      </td>
-                      <td className="p-2">{player.team_name}</td>
-                      <td className="text-center p-2 font-bold">{player.total_goals}</td>
-                      <td className="text-center p-2">{player.goals_j1}</td>
-                      <td className="text-center p-2">{player.goals_j2}</td>
-                      <td className="text-center p-2">{player.goals_j3}</td>
+            {playerStats.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left p-2 font-semibold">Pos.</th>
+                      <th className="text-left p-2 font-semibold">Joueuse</th>
+                      <th className="text-left p-2 font-semibold">Équipe</th>
+                      <th className="text-center p-2 font-semibold">Total</th>
+                      <th className="text-center p-2 font-semibold">J1</th>
+                      <th className="text-center p-2 font-semibold">J2</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {playerStats.slice(0, 20).map((player, index) => (
+                      <tr key={player.id} className="border-b hover:bg-muted/50">
+                        <td className={`p-2 ${getPositionColor(index + 1)}`}>
+                          {index + 1}
+                        </td>
+                        <td className="p-2 font-medium">
+                          {player.first_name} {player.player_name}
+                        </td>
+                        <td className="p-2">{player.team_name}</td>
+                        <td className="text-center p-2 font-bold">{player.total_goals}</td>
+                        <td className="text-center p-2">{player.goals_j1}</td>
+                        <td className="text-center p-2">{player.goals_j2}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">
+                  Aucune statistique de joueuse disponible pour ce championnat.
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Les statistiques seront affichées une fois qu'elles auront été saisies dans l'administration.
+                </p>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </CardContent>
