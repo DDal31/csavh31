@@ -60,12 +60,19 @@ export const AdminChampionships = () => {
   const [loading, setLoading] = useState(false);
   const [championshipName, setChampionshipName] = useState('');
   const [seasonYear, setSeasonYear] = useState('2024-2025');
+  const [selectedSportId, setSelectedSportId] = useState<string>('');
+  const [selectedTeamId, setSelectedTeamId] = useState<string>('');
   const [activeTab, setActiveTab] = useState('info');
   const [selectedChampionshipId, setSelectedChampionshipId] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
   
   // États pour la liste des championnats
   const [championships, setChampionships] = useState<Championship[]>([]);
+  
+  // États pour les sports et équipes
+  const [sports, setSports] = useState<{id: string, name: string}[]>([]);
+  const [teams, setTeams] = useState<{id: string, name: string, sport_id: string}[]>([]);
+  const [filteredTeams, setFilteredTeams] = useState<{id: string, name: string, sport_id: string}[]>([]);
   
   // États pour les matchs
   const [matches, setMatches] = useState<Match[]>([]);
@@ -81,7 +88,54 @@ export const AdminChampionships = () => {
   // Charger la liste des championnats
   useEffect(() => {
     fetchChampionships();
+    fetchSportsAndTeams();
   }, []);
+
+  // Filtrer les équipes selon le sport sélectionné
+  useEffect(() => {
+    if (selectedSportId) {
+      setFilteredTeams(teams.filter(team => team.sport_id === selectedSportId));
+    } else {
+      setFilteredTeams([]);
+    }
+    // Réinitialiser l'équipe sélectionnée si elle ne correspond plus au sport
+    if (selectedTeamId && selectedSportId) {
+      const selectedTeam = teams.find(team => team.id === selectedTeamId);
+      if (selectedTeam && selectedTeam.sport_id !== selectedSportId) {
+        setSelectedTeamId('');
+      }
+    }
+  }, [selectedSportId, teams, selectedTeamId]);
+
+  const fetchSportsAndTeams = async () => {
+    try {
+      // Charger les sports
+      const { data: sportsData, error: sportsError } = await supabase
+        .from('sports')
+        .select('id, name')
+        .order('name');
+
+      if (sportsError) throw sportsError;
+      setSports(sportsData || []);
+
+      // Charger les équipes
+      const { data: teamsData, error: teamsError } = await supabase
+        .from('teams')
+        .select('id, name, sport_id')
+        .order('name');
+
+      if (teamsError) throw teamsError;
+      setTeams(teamsData || []);
+
+    } catch (error) {
+      console.error('Erreur lors du chargement des sports et équipes:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les sports et équipes",
+        variant: "destructive"
+      });
+    }
+  };
 
   const fetchChampionships = async () => {
     try {
@@ -271,6 +325,8 @@ export const AdminChampionships = () => {
     setSelectedChampionshipId(null);
     setChampionshipName('');
     setSeasonYear('2024-2025');
+    setSelectedSportId('');
+    setSelectedTeamId('');
     setMatches([]);
     setStandings([]);
     setPlayerStats([]);
@@ -660,6 +716,46 @@ export const AdminChampionships = () => {
                         onChange={(e) => setSeasonYear(e.target.value)}
                         disabled={saving}
                       />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="sport">Sport</Label>
+                      <Select
+                        value={selectedSportId}
+                        onValueChange={setSelectedSportId}
+                        disabled={saving}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner un sport" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {sports.map((sport) => (
+                            <SelectItem key={sport.id} value={sport.id}>
+                              {sport.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="team">Équipe</Label>
+                      <Select
+                        value={selectedTeamId}
+                        onValueChange={setSelectedTeamId}
+                        disabled={saving || !selectedSportId}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={selectedSportId ? "Sélectionner une équipe" : "Sélectionnez d'abord un sport"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {filteredTeams.map((team) => (
+                            <SelectItem key={team.id} value={team.id}>
+                              {team.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 </TabsContent>
