@@ -14,11 +14,23 @@ export const AdminChampionships = () => {
   const [importing, setImporting] = useState(false);
   const [championshipName, setChampionshipName] = useState('');
   const [seasonYear, setSeasonYear] = useState('2024-2025');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { toast } = useToast();
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    setSelectedFile(file || null);
+  };
+
+  const handleImport = async () => {
+    if (!selectedFile) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner un fichier Excel",
+        variant: "destructive"
+      });
+      return;
+    }
 
     if (!championshipName.trim()) {
       toast({
@@ -32,10 +44,10 @@ export const AdminChampionships = () => {
     setImporting(true);
 
     try {
-      console.log('📁 Lecture du fichier Excel:', file.name);
+      console.log('📁 Lecture du fichier Excel:', selectedFile.name);
       
       // Lire le fichier Excel
-      const data = await file.arrayBuffer();
+      const data = await selectedFile.arrayBuffer();
       const workbook = XLSX.read(data);
       
       // Extraire toutes les feuilles
@@ -79,7 +91,9 @@ export const AdminChampionships = () => {
       // Reset form
       setChampionshipName('');
       setSeasonYear('2024-2025');
-      event.target.value = '';
+      setSelectedFile(null);
+      const fileInput = document.getElementById('excelFile') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
 
     } catch (error) {
       console.error('❌ Erreur lors de l\'import:', error);
@@ -154,28 +168,47 @@ export const AdminChampionships = () => {
               </div>
 
               {/* File Upload */}
-              <div className="space-y-2">
-                <Label htmlFor="excelFile">Fichier Excel</Label>
-                <div className="flex items-center gap-4">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="excelFile">Fichier Excel</Label>
                   <Input
                     id="excelFile"
                     type="file"
                     accept=".xlsx,.xls"
-                    onChange={handleFileUpload}
+                    onChange={handleFileSelect}
                     disabled={importing}
                     className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
                   />
-                  
-                  {importing && (
-                    <div className="flex items-center gap-2 text-primary">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span className="text-sm">Import en cours...</span>
-                    </div>
+                  <p className="text-sm text-muted-foreground">
+                    Le fichier doit contenir les feuilles : Planning J1, Planning J2, Planning J3, Points, Buteuses
+                  </p>
+                  {selectedFile && (
+                    <p className="text-sm text-primary">
+                      Fichier sélectionné : {selectedFile.name}
+                    </p>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Le fichier doit contenir les feuilles : Planning J1, Planning J2, Planning J3, Points, Buteuses
-                </p>
+
+                {/* Import Button */}
+                <div className="flex items-center gap-4">
+                  <Button 
+                    onClick={handleImport}
+                    disabled={importing || !selectedFile || !championshipName.trim()}
+                    className="min-w-[150px]"
+                  >
+                    {importing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Import en cours...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Importer le championnat
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
 
               {/* Instructions */}
