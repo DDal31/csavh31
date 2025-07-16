@@ -559,8 +559,8 @@ export const AdminChampionships = () => {
             championship_day_id: day.id,
             home_team: match.homeTeam,
             away_team: match.awayTeam,
-            home_score: match.homeScore || null,
-            away_score: match.awayScore || null,
+            home_score: match.homeScore !== '' && match.homeScore !== undefined ? match.homeScore : null,
+            away_score: match.awayScore !== '' && match.awayScore !== undefined ? match.awayScore : null,
             match_time: match.matchTime || null,
             match_number: `M${dayMatches.indexOf(match) + 1}`
           }));
