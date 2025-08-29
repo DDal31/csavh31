@@ -180,28 +180,33 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
         setLowAttendanceTrainings(lowAttendanceData || []);
       }
 
-      // Génération du rapport IA si on a des données
+      // Génération du résumé statistique
       const hasData = monthlyStats.some(stat => stat.total > 0);
       if (hasData) {
-        console.log("Génération du rapport IA...");
-        setGeneratingReport(true);
+        const totalPresences = monthlyStats.reduce((sum, stat) => sum + stat.present, 0);
+        const totalTrainings = monthlyStats.reduce((sum, stat) => sum + stat.total, 0);
+        const globalPercentage = totalTrainings > 0 ? Math.round((totalPresences / totalTrainings) * 100) : 0;
         
-        const { data: reportData, error: reportError } = await supabase.functions.invoke('generate-user-attendance-report', {
-          body: {
-            monthlyStats,
-            sport: normalizedSport,
-            sportsYear: `${sportsYearStartYear}-${sportsYearEndYear}`
-          }
-        });
+        const bestMonth = monthlyStats.reduce((best, stat) => 
+          stat.percentage > best.percentage ? stat : best
+        , { month: '', percentage: 0 });
+        
+        const recentMonths = monthlyStats.filter(stat => stat.total > 0).slice(-3);
+        
+        setReport(`📊 Résumé de votre saison ${sportsYearStartYear}-${sportsYearEndYear} en ${normalizedSport.charAt(0).toUpperCase() + normalizedSport.slice(1)}
 
-        console.log("Réponse du rapport:", reportData, reportError);
+📈 Statistiques globales :
+• Taux de présence général : ${globalPercentage}%
+• Total des présences : ${totalPresences}/${totalTrainings} entraînements
+${bestMonth.percentage > 0 ? `• Meilleur mois : ${bestMonth.month} (${bestMonth.percentage}%)` : ''}
 
-        if (reportError) {
-          console.error("Erreur lors de la génération du rapport:", reportError);
-          setReport(`Erreur lors de la génération du rapport: ${reportError.message}`);
-        } else {
-          setReport(reportData?.report || "Aucun rapport généré");
-        }
+📅 Détail par mois :
+${monthlyStats.filter(stat => stat.total > 0).map(stat => 
+  `• ${stat.month} : ${stat.present}/${stat.total} (${stat.percentage}%)`
+).join('\n')}
+
+${recentMonths.length > 0 ? `\n🎯 Tendance récente (3 derniers mois) :
+${recentMonths.map(stat => `• ${stat.month} : ${stat.percentage}%`).join('\n')}` : ''}`);
       } else {
         setReport("Aucune donnée de présence trouvée pour cette année sportive. Inscrivez-vous à des entraînements pour voir vos statistiques !");
       }
@@ -304,7 +309,7 @@ export function DashboardCharts({ sport }: { sport: TrainingType }) {
           {generatingReport ? (
             <div className="flex items-center justify-center p-8">
               <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
-              <span className="text-white">Génération du rapport en cours...</span>
+              <span className="text-white">Calcul des statistiques en cours...</span>
             </div>
           ) : (
             <div className="space-y-6">

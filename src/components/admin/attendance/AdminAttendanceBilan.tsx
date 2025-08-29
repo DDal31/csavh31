@@ -207,9 +207,8 @@ export function AdminAttendanceBilan() {
       setStats(newStats);
       setLoading(false);
       
-      // Déclencher immédiatement la génération du rapport
-      console.log("🚀 Déclenchement de la génération du rapport IA...");
-      await generateAIReport(newStats);
+      // Génération du rapport statistique
+      generateStatsReport(newStats);
       
     } catch (error) {
       console.error("❌ Erreur lors du calcul des statistiques:", error);
@@ -217,59 +216,40 @@ export function AdminAttendanceBilan() {
     }
   };
 
-  const generateAIReport = async (currentStats?: AttendanceStats) => {
-    try {
-      console.log("🤖 DÉBUT de la génération du rapport IA");
-      setGeneratingReport(true);
-      
-      const statsToUse = currentStats || stats;
-      console.log("📊 Données à envoyer à Gemini:", statsToUse);
-      
-      const monthlyStats = {
-        goalball: { present: statsToUse.goalball.currentMonth.present },
-        torball: { present: statsToUse.torball.currentMonth.present }
-      };
-      
-      const yearlyStats = {
-        goalball: { present: statsToUse.goalball.yearlyStats.present },
-        torball: { present: statsToUse.torball.yearlyStats.present }
-      };
-      
-      const bestMonthStats = {
-        goalball: statsToUse.goalball.bestMonth,
-        torball: statsToUse.torball.bestMonth
-      };
+  const generateStatsReport = (currentStats?: AttendanceStats) => {
+    const statsToUse = currentStats || stats;
+    
+    const totalGoalball = statsToUse.goalball.currentMonth.total + statsToUse.goalball.yearlyStats.total;
+    const presentGoalball = statsToUse.goalball.currentMonth.present + statsToUse.goalball.yearlyStats.present;
+    const percentageGoalball = totalGoalball > 0 ? Math.round((presentGoalball / totalGoalball) * 100) : 0;
+    
+    const totalTorball = statsToUse.torball.currentMonth.total + statsToUse.torball.yearlyStats.total;
+    const presentTorball = statsToUse.torball.currentMonth.present + statsToUse.torball.yearlyStats.present;
+    const percentageTorball = totalTorball > 0 ? Math.round((presentTorball / totalTorball) * 100) : 0;
+    
+    const currentMonth = format(new Date(), 'MMMM yyyy', { locale: fr });
+    
+    setAiReport(`📊 Rapport des présences - ${currentMonth}
 
-      console.log("📤 Envoi vers l'edge function generate-attendance-report...");
-      console.log("📊 Données mensuelles:", monthlyStats);
-      console.log("📊 Données annuelles:", yearlyStats);
-      console.log("📊 Meilleurs mois:", bestMonthStats);
+🥍 GOALBALL
+• Taux de présence mensuel : ${statsToUse.goalball.currentMonth.present}%
+• Taux de présence annuel : ${statsToUse.goalball.yearlyStats.present}%
+${statsToUse.goalball.bestMonth.month ? `• Meilleur mois : ${statsToUse.goalball.bestMonth.month} (${statsToUse.goalball.bestMonth.percentage}%)` : ''}
 
-      const { data, error } = await supabase.functions.invoke('generate-attendance-report', {
-        body: { monthlyStats, yearlyStats, bestMonthStats }
-      });
+🎯 TORBALL  
+• Taux de présence mensuel : ${statsToUse.torball.currentMonth.present}%
+• Taux de présence annuel : ${statsToUse.torball.yearlyStats.present}%
+${statsToUse.torball.bestMonth.month ? `• Meilleur mois : ${statsToUse.torball.bestMonth.month} (${statsToUse.torball.bestMonth.percentage}%)` : ''}
 
-      console.log("📥 Réponse de l'edge function:", { data, error });
-
-      if (error) {
-        console.error("❌ Erreur lors de l'appel à l'edge function:", error);
-        throw error;
-      }
-      
-      if (data && data.report) {
-        console.log("✅ Rapport généré avec succès, longueur:", data.report.length);
-        setAiReport(data.report);
-      } else {
-        console.log("⚠️ Aucun rapport dans la réponse:", data);
-        setAiReport("Aucun rapport généré. Vérifiez les logs de la fonction.");
-      }
-    } catch (error) {
-      console.error("❌ Erreur lors de la génération du rapport:", error);
-      setAiReport(`Erreur lors de la génération du rapport: ${error.message}`);
-    } finally {
-      setGeneratingReport(false);
-      console.log("🏁 FIN de la génération du rapport IA");
-    }
+📈 ANALYSE
+${statsToUse.goalball.yearlyStats.present > statsToUse.torball.yearlyStats.present ? 
+  `• Le Goalball a un meilleur taux de présence annuel (${statsToUse.goalball.yearlyStats.present}% vs ${statsToUse.torball.yearlyStats.present}%)` : 
+  statsToUse.torball.yearlyStats.present > statsToUse.goalball.yearlyStats.present ? 
+  `• Le Torball a un meilleur taux de présence annuel (${statsToUse.torball.yearlyStats.present}% vs ${statsToUse.goalball.yearlyStats.present}%)` : 
+  `• Les deux sports ont un taux de présence identique (${statsToUse.goalball.yearlyStats.present}%)`}
+• Moyenne globale : ${Math.round((statsToUse.goalball.yearlyStats.present + statsToUse.torball.yearlyStats.present) / 2)}%`);
+    
+    setGeneratingReport(false);
   };
 
   useEffect(() => {
@@ -296,7 +276,7 @@ export function AdminAttendanceBilan() {
       <AIReportDisplay 
         report={aiReport}
         isGenerating={generatingReport}
-        title="Bilan des présences - Analyse IA"
+        title="Bilan des présences - Statistiques"
         chartData={chartData}
       />
     </div>
