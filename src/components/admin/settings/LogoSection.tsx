@@ -42,45 +42,49 @@ export const LogoSection = ({ settings, onSettingChange }: LogoSectionProps) => 
     try {
       if (!selectedFile) return;
       setUploading(true);
-      console.log("Starting unified logo upload");
+      console.log("Uploading single logo to storage (no generation)");
 
-      const arrayBuffer = await selectedFile.arrayBuffer();
-      const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-
-      const { data: result, error: uploadError } = await supabase.functions.invoke('generate-all-logos', {
-        body: {
-          fileName: selectedFile.name || 'logo.png',
-          fileBase64: base64,
-          mimeType: selectedFile.type || 'image/png'
-        }
-      });
+      const filePath = 'club-logo.png';
+      const { error: uploadError } = await supabase.storage
+        .from('site-assets')
+        .upload(filePath, selectedFile, {
+          cacheControl: '3600',
+          upsert: true,
+          contentType: selectedFile.type || 'image/png'
+        });
 
       if (uploadError) {
-        console.error("Error in generate-all-logos:", uploadError);
+        console.error("Storage upload error:", uploadError);
         throw uploadError;
       }
 
-      console.log("Logo generation result:", result);
-      setUploadResults(result);
+      const { error: settingError } = await supabase
+        .from('site_settings')
+        .upsert({ setting_key: 'logo_url', setting_value: filePath }, { onConflict: 'setting_key' });
+
+      if (settingError) {
+        console.error("Setting update error:", settingError);
+        throw settingError;
+      }
+
+      toast({
+        title: 'Succès',
+        description: 'Logo enregistré. Il sera utilisé comme icône partout.',
+        duration: 4000,
+      });
 
       setTimeout(() => {
         window.location.reload();
-      }, 1500);
-
-      toast({
-        title: "Succès",
-        description: `${result?.successful?.length || 0} formats de logo générés automatiquement`,
-        duration: 5000
-      });
+      }, 800);
     } catch (error) {
       console.error("Error in handleUploadClick:", error);
       const message = error instanceof Error
         ? error.message
-        : (error && (error as any).message) ? (error as any).message : "Vérifiez les logs pour plus de détails.";
+        : (error && (error as any).message) ? (error as any).message : 'Vérifiez les logs pour plus de détails.';
       toast({
-        title: "Erreur",
-        description: `Impossible de générer les logos : ${message}`,
-        variant: "destructive"
+        title: 'Erreur',
+        description: `Échec de l’enregistrement du logo : ${message}`,
+        variant: 'destructive',
       });
     } finally {
       setUploading(false);
@@ -105,7 +109,7 @@ export const LogoSection = ({ settings, onSettingChange }: LogoSectionProps) => 
           Logo de l'application
         </CardTitle>
         <p className="text-sm text-gray-400">
-          Uploadez un seul logo 512x512px - tous les formats nécessaires seront générés automatiquement (favicon, PWA, iOS, Android)
+          Uploadez un logo 512x512px — il sera utilisé partout (favicon, PWA, iOS, Android)
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -188,7 +192,7 @@ export const LogoSection = ({ settings, onSettingChange }: LogoSectionProps) => 
         {uploading && (
           <div className="flex items-center justify-center space-x-2 p-4 bg-blue-900/20 rounded-lg">
             <ArrowUp className="h-5 w-5 animate-spin text-blue-500" />
-            <span className="text-blue-400">Génération de tous les formats en cours...</span>
+            <span className="text-blue-400">Téléversement du logo en cours...</span>
           </div>
         )}
 
