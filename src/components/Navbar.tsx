@@ -55,10 +55,18 @@ const Navbar = () => {
 
           const logo = settings.find(s => s.setting_key === "logo_url")?.setting_value;
           if (logo) {
-            const { data: { publicUrl } } = supabase.storage
-              .from("site-assets")
-              .getPublicUrl(logo);
-            setLogoUrl(publicUrl);
+            if (logo.startsWith("http")) {
+              setLogoUrl(logo);
+            } else {
+              // Normalize to a bucket path if a full URL or prefixed path was stored
+              const normalizedPath = logo
+                .replace(/^https?:\/\/[^/]+\/storage\/v1\/object\/public\/site-assets\//, "")
+                .replace(/^site-assets\//, "");
+              const { data: { publicUrl } } = supabase.storage
+                .from("site-assets")
+                .getPublicUrl(normalizedPath);
+              setLogoUrl(publicUrl);
+            }
           }
           setIsLoading(false);
         }
@@ -103,7 +111,7 @@ const Navbar = () => {
         <div className="flex justify-between h-16">
           <Link to="/" className="flex-shrink-0 flex items-center">
             <NavbarLogo 
-              siteTitle="Club sportif AVH 31"
+              siteTitle={siteTitle}
               logoUrl={logoUrl}
               logoShape={logoShape}
             />

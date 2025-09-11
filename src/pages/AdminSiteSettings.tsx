@@ -97,6 +97,15 @@ const AdminSiteSettings = () => {
         logo_shape: "round"
       });
 
+      // Normaliser l'URL du logo: si c'est un chemin de fichier, construire l'URL publique du bucket
+      if (settingsObj.logo_url && !settingsObj.logo_url.startsWith("http")) {
+        const normalizedPath = settingsObj.logo_url.replace(/^site-assets\//, "");
+        const { data: { publicUrl } } = supabase.storage
+          .from("site-assets")
+          .getPublicUrl(normalizedPath);
+        settingsObj.logo_url = publicUrl;
+      }
+
       setSettings(settingsObj);
     } catch (error) {
       console.error("Error in loadSettings:", error);

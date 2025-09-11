@@ -86,10 +86,13 @@ const Footer = () => {
         });
 
         if (settingsObj.logo_url) {
-          const { data: { publicUrl } } = supabase.storage
-            .from("site-assets")
-            .getPublicUrl(settingsObj.logo_url);
-          settingsObj.logo_url = publicUrl;
+          if (!settingsObj.logo_url.startsWith("http")) {
+            const normalizedPath = settingsObj.logo_url.replace(/^site-assets\//, "");
+            const { data: { publicUrl } } = supabase.storage
+              .from("site-assets")
+              .getPublicUrl(normalizedPath);
+            settingsObj.logo_url = publicUrl;
+          }
         }
 
         setSettings(settingsObj);
