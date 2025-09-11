@@ -30,29 +30,43 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const formData = await req.formData();
-    const file = formData.get('file') as File;
+    const contentType = req.headers.get('content-type') || '';
+    let imageBuffer: ArrayBuffer;
+    let fileName = 'logo.png';
+    let mimeType = 'image/png';
 
-    if (!file) {
-      return new Response(
-        JSON.stringify({ error: 'Aucun fichier fourni' }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
+    if (contentType.includes('application/json')) {
+      const { fileBase64, fileName: fn, mimeType: mt } = await req.json();
+      if (!fileBase64) {
+        return new Response(
+          JSON.stringify({ error: 'Aucune donnée image fournie' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      const binary = atob(fileBase64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      imageBuffer = bytes.buffer;
+      fileName = fn || 'logo.png';
+      mimeType = mt || 'image/png';
+    } else {
+      const formData = await req.formData();
+      const file = formData.get('file') as File;
+      if (!file) {
+        return new Response(
+          JSON.stringify({ error: 'Aucun fichier fourni' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      imageBuffer = await file.arrayBuffer();
+      fileName = file.name || 'logo.png';
+      mimeType = file.type || 'image/png';
     }
 
-    console.log(`Processing logo file: ${file.name}, size: ${file.size}`);
+    console.log(`Processing logo file: ${fileName}, bytes: ${imageBuffer.byteLength}`);
 
-    // Vérifier les dimensions de l'image originale
-    const imageBuffer = await file.arrayBuffer();
-    const originalImage = new ImageData(new Uint8ClampedArray(imageBuffer), 512, 512);
-
-    // Function to resize image using Canvas API
-    const resizeImage = async (buffer: ArrayBuffer, targetSize: number): Promise<Uint8Array> => {
-      // Pour cette démo, on va juste retourner le buffer original
-      // Dans une vraie implémentation, on utiliserait une bibliothèque comme sharp ou canvas
+    // Function to resize image (placeholder: return original)
+    const resizeImage = async (buffer: ArrayBuffer, _targetSize: number): Promise<Uint8Array> => {
       return new Uint8Array(buffer);
     };
 
@@ -72,7 +86,7 @@ serve(async (req) => {
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('site-assets')
           .upload(name, finalBuffer, {
-            contentType: 'image/png',
+            contentType: mimeType,
             upsert: true
           });
 

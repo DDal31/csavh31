@@ -28,16 +28,7 @@ export const LogoSection = ({ settings, onSettingChange }: LogoSectionProps) => 
       const file = event.target.files?.[0];
       if (!file) return;
 
-      const isValidSize = await validateImageDimensions(file, 512);
-      if (!isValidSize) {
-        toast({
-          title: "Erreur de dimensions",
-          description: "L'image doit être exactement de 512x512 pixels",
-          variant: "destructive"
-        });
-        return;
-      }
-
+      // Plus de blocage sur la taille exacte: on laisse l'Edge Function gérer
       setSelectedFile(file);
       setUploadResults(null);
       const url = URL.createObjectURL(file);
