@@ -58,6 +58,7 @@ export const LogoSection = ({ settings, onSettingChange }: LogoSectionProps) => 
         throw uploadError;
       }
 
+      // Mettre à jour les références dans site_settings
       const { error: settingError } = await supabase
         .from('site_settings')
         .upsert({ setting_key: 'logo_url', setting_value: filePath }, { onConflict: 'setting_key' });
@@ -67,9 +68,21 @@ export const LogoSection = ({ settings, onSettingChange }: LogoSectionProps) => 
         throw settingError;
       }
 
+      // Mettre à jour le manifest.json
+      const logoUrl = `https://kzahxvazbthyjjzugxsy.supabase.co/storage/v1/object/public/site-assets/${filePath}`;
+      
+      // Appeler la fonction edge pour mettre à jour les fichiers système
+      const { error: updateError } = await supabase.functions.invoke('update-app-icons', {
+        body: { logoUrl }
+      });
+
+      if (updateError) {
+        console.warn("Avertissement lors de la mise à jour des icônes système:", updateError);
+      }
+
       toast({
         title: 'Succès',
-        description: 'Logo enregistré. Il sera utilisé comme icône partout.',
+        description: 'Logo enregistré et utilisé pour toutes les icônes (favicon, PWA, iOS, Android).',
         duration: 4000,
       });
 
