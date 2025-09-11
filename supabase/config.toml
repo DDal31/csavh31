@@ -21,3 +21,6 @@ enabled = true
 
 [auth]
 enabled = true
+
+[functions.generate-all-logos]
+verify_jwt = false

@@ -8,7 +8,6 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { LogoSection } from "@/components/admin/settings/LogoSection";
 import { TitleSection } from "@/components/admin/settings/TitleSection";
-import { IconsUploadSection } from "@/components/admin/settings/IconsUploadSection";
 import { SiteSettings } from "@/types/settings";
 import PageTransition from "@/components/animations/PageTransition";
 
@@ -154,8 +153,6 @@ const AdminSiteSettings = () => {
               settings={settings} 
               onSettingChange={handleSettingChange} 
             />
-
-            <IconsUploadSection />
 
             <TitleSection 
               settings={settings} 

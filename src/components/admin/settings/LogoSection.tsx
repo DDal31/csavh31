@@ -1,88 +1,78 @@
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { ArrowUp } from "lucide-react";
+import { ArrowUp, CheckCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LogoSectionProps {
   settings: {
     logo_shape: string;
+    logo_url?: string;
   };
-  onSettingChange: (key: string, value: string) => Promise<void>;
+  onSettingChange: (key: string, value: string) => void;
 }
 
 export const LogoSection = ({ settings, onSettingChange }: LogoSectionProps) => {
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
+  const [uploadResults, setUploadResults] = useState<any>(null);
 
   const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log("Handling logo upload...");
     try {
       const file = event.target.files?.[0];
       if (!file) return;
 
       setUploading(true);
+      setUploadResults(null);
+      console.log("Starting unified logo upload");
 
-      // Vérifier les dimensions de l'image
-      const img = new Image();
-      img.src = URL.createObjectURL(file);
-      await new Promise((resolve) => {
-        img.onload = () => {
-          if (img.width !== 512 || img.height !== 512) {
-            toast({
-              title: "Erreur",
-              description: "L'image doit être de 512x512 pixels",
-              variant: "destructive"
-            });
-            setUploading(false);
-            return;
-          }
-          resolve(true);
-        };
-      });
+      const isValidSize = await validateImageDimensions(file, 512);
+      if (!isValidSize) {
+        toast({
+          title: "Erreur de dimensions",
+          description: "L'image doit être exactement de 512x512 pixels",
+          variant: "destructive"
+        });
+        return;
+      }
 
       // Créer un FormData pour envoyer le fichier
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('fileName', 'club-logo.png');
 
-      // Appeler la fonction Edge en utilisant le client Supabase
-      const { error: uploadError } = await supabase.functions.invoke('save-public-icon', {
+      // Appeler la nouvelle fonction Edge pour générer tous les logos
+      const { data: result, error: uploadError } = await supabase.functions.invoke('generate-all-logos', {
         method: 'POST',
         body: formData
       });
 
       if (uploadError) {
-        console.error("Error in Edge Function:", uploadError);
+        console.error("Error in generate-all-logos:", uploadError);
         throw uploadError;
       }
 
-      // Mettre à jour le paramètre logo_url avec upsert
-      const { error: updateError } = await supabase
-        .from("site_settings")
-        .upsert({ 
-          setting_key: "logo_url", 
-          setting_value: "club-logo.png" 
-        }, {
-          onConflict: 'setting_key'
-        });
+      console.log("Logo generation result:", result);
+      setUploadResults(result);
 
-      if (updateError) {
-        console.error("Error updating logo_url setting:", updateError);
-        throw updateError;
-      }
+      // Rafraîchir la page pour afficher le nouveau logo
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
 
       toast({
         title: "Succès",
-        description: "Logo mis à jour avec succès"
+        description: `${result.successful?.length || 0} formats de logo générés automatiquement`,
+        duration: 5000
       });
+
     } catch (error) {
       console.error("Error in handleLogoUpload:", error);
       toast({
         title: "Erreur",
-        description: "Impossible de mettre à jour le logo",
+        description: "Impossible de générer les logos. Vérifiez les logs pour plus de détails.",
         variant: "destructive"
       });
     } finally {
@@ -90,46 +80,103 @@ export const LogoSection = ({ settings, onSettingChange }: LogoSectionProps) => 
     }
   };
 
+  const validateImageDimensions = (file: File, requiredSize: number): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(img.src);
+        resolve(img.width === requiredSize && img.height === requiredSize);
+      };
+    });
+  };
+
   return (
-    <Card className="bg-gray-800 p-6 rounded-lg space-y-4">
+    <Card className="bg-gray-800 border-gray-700">
       <CardHeader>
-        <CardTitle className="text-xl font-semibold text-white">Logo du site</CardTitle>
+        <CardTitle className="text-xl font-semibold text-white">
+          Logo de l'application
+        </CardTitle>
+        <p className="text-sm text-gray-400">
+          Uploadez un seul logo 512x512px - tous les formats nécessaires seront générés automatiquement (favicon, PWA, iOS, Android)
+        </p>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
+        {/* Prévisualisation du logo actuel */}
+        {settings.logo_url && (
+          <div className="flex items-center space-x-4 p-4 bg-gray-700 rounded-lg">
+            <img 
+              src={settings.logo_url}
+              alt="Logo actuel"
+              className={`h-16 w-16 object-cover ${settings.logo_shape === 'round' ? 'rounded-full' : 'rounded-lg'}`}
+              onError={(e) => {
+                e.currentTarget.src = "/club-logo.png";
+              }}
+            />
+            <div>
+              <p className="text-white font-medium">Logo actuel</p>
+              <p className="text-sm text-gray-400">Forme: {settings.logo_shape === 'round' ? 'Rond' : 'Carré'}</p>
+            </div>
+          </div>
+        )}
+
         <div className="space-y-2">
-          <Label htmlFor="logo" className="text-white">
-            Télécharger un nouveau logo (512x512 pixels)
+          <Label htmlFor="logo-upload" className="text-white">
+            Nouveau logo (512x512 pixels)
           </Label>
           <Input
-            id="logo"
+            id="logo-upload"
             type="file"
-            accept="image/*"
+            accept="image/png,image/jpg,image/jpeg"
             onChange={handleLogoUpload}
             disabled={uploading}
             className="bg-gray-700 text-white"
-            aria-label="Sélectionner un fichier pour le logo du site"
+            aria-label="Télécharger le logo principal"
           />
+          <p className="text-xs text-gray-400">
+            Formats supportés : PNG, JPG, JPEG. L'image doit être carrée (512x512px) pour un résultat optimal.
+          </p>
         </div>
-        
+
         <div className="space-y-2">
-          <Label htmlFor="logo_shape" className="text-white">
+          <Label htmlFor="logo-shape" className="text-white">
             Forme du logo
           </Label>
-          <select
-            id="logo_shape"
-            value={settings.logo_shape}
-            onChange={(e) => onSettingChange("logo_shape", e.target.value)}
-            className="w-full bg-gray-700 text-white rounded-md border-gray-600 focus:border-blue-500 focus:ring-blue-500"
-            aria-label="Sélectionner la forme du logo"
+          <Select 
+            value={settings.logo_shape} 
+            onValueChange={(value) => onSettingChange("logo_shape", value)}
           >
-            <option value="round">Rond</option>
-            <option value="square">Carré</option>
-          </select>
+            <SelectTrigger className="bg-gray-700 text-white border-gray-600">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="round">Rond</SelectItem>
+              <SelectItem value="square">Carré</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {uploading && (
-          <div className="flex justify-center">
-            <ArrowUp className="h-8 w-8 animate-spin text-blue-500" />
+          <div className="flex items-center justify-center space-x-2 p-4 bg-blue-900/20 rounded-lg">
+            <ArrowUp className="h-5 w-5 animate-spin text-blue-500" />
+            <span className="text-blue-400">Génération de tous les formats en cours...</span>
+          </div>
+        )}
+
+        {uploadResults && !uploading && (
+          <div className="p-4 bg-green-900/20 rounded-lg">
+            <div className="flex items-center space-x-2 mb-2">
+              <CheckCircle className="h-5 w-5 text-green-500" />
+              <span className="text-green-400 font-medium">Génération terminée</span>
+            </div>
+            <p className="text-sm text-gray-300">
+              {uploadResults.successful?.length || 0} formats générés avec succès
+            </p>
+            {uploadResults.failed?.length > 0 && (
+              <p className="text-sm text-red-400 mt-1">
+                {uploadResults.failed.length} formats ont échoué
+              </p>
+            )}
           </div>
         )}
       </CardContent>
