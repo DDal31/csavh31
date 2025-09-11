@@ -85,7 +85,7 @@ serve(async (req) => {
         // Upload to storage
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('site-assets')
-          .upload(name, finalBuffer, {
+          .upload(name, new Blob([finalBuffer], { type: mimeType }), {
             contentType: mimeType,
             upsert: true
           });
@@ -106,10 +106,13 @@ serve(async (req) => {
         // Update site settings
         const { error: settingError } = await supabase
           .from('site_settings')
-          .upsert({
-            setting_key: setting,
-            setting_value: publicUrl
-          });
+          .upsert(
+            {
+              setting_key: setting,
+              setting_value: publicUrl
+            },
+            { onConflict: 'setting_key' }
+          );
 
         if (settingError) {
           console.error(`Error updating setting ${setting}:`, settingError);

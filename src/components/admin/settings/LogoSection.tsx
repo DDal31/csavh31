@@ -74,9 +74,12 @@ export const LogoSection = ({ settings, onSettingChange }: LogoSectionProps) => 
       });
     } catch (error) {
       console.error("Error in handleUploadClick:", error);
+      const message = error instanceof Error
+        ? error.message
+        : (error && (error as any).message) ? (error as any).message : "Vérifiez les logs pour plus de détails.";
       toast({
         title: "Erreur",
-        description: "Impossible de générer les logos. Vérifiez les logs pour plus de détails.",
+        description: `Impossible de générer les logos : ${message}`,
         variant: "destructive"
       });
     } finally {
