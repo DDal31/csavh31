@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { ArrowUp, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -19,15 +20,13 @@ export const LogoSection = ({ settings, onSettingChange }: LogoSectionProps) => 
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
   const [uploadResults, setUploadResults] = useState<any>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const onFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
       const file = event.target.files?.[0];
       if (!file) return;
-
-      setUploading(true);
-      setUploadResults(null);
-      console.log("Starting unified logo upload");
 
       const isValidSize = await validateImageDimensions(file, 512);
       if (!isValidSize) {
@@ -39,14 +38,30 @@ export const LogoSection = ({ settings, onSettingChange }: LogoSectionProps) => 
         return;
       }
 
-      // Créer un FormData pour envoyer le fichier
-      const formData = new FormData();
-      formData.append('file', file);
+      setSelectedFile(file);
+      setUploadResults(null);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    } catch (error) {
+      console.error("Error in onFileSelect:", error);
+    }
+  };
 
-      // Appeler la nouvelle fonction Edge pour générer tous les logos
+  const handleUploadClick = async () => {
+    try {
+      if (!selectedFile) return;
+      setUploading(true);
+      console.log("Starting unified logo upload");
+
+      const arrayBuffer = await selectedFile.arrayBuffer();
+      const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+
       const { data: result, error: uploadError } = await supabase.functions.invoke('generate-all-logos', {
-        method: 'POST',
-        body: formData
+        body: {
+          fileName: selectedFile.name || 'logo.png',
+          fileBase64: base64,
+          mimeType: selectedFile.type || 'image/png'
+        }
       });
 
       if (uploadError) {
@@ -57,19 +72,17 @@ export const LogoSection = ({ settings, onSettingChange }: LogoSectionProps) => 
       console.log("Logo generation result:", result);
       setUploadResults(result);
 
-      // Rafraîchir la page pour afficher le nouveau logo
       setTimeout(() => {
         window.location.reload();
-      }, 2000);
+      }, 1500);
 
       toast({
         title: "Succès",
-        description: `${result.successful?.length || 0} formats de logo générés automatiquement`,
+        description: `${result?.successful?.length || 0} formats de logo générés automatiquement`,
         duration: 5000
       });
-
     } catch (error) {
-      console.error("Error in handleLogoUpload:", error);
+      console.error("Error in handleUploadClick:", error);
       toast({
         title: "Erreur",
         description: "Impossible de générer les logos. Vérifiez les logs pour plus de détails.",
@@ -128,7 +141,7 @@ export const LogoSection = ({ settings, onSettingChange }: LogoSectionProps) => 
             id="logo-upload"
             type="file"
             accept="image/png,image/jpg,image/jpeg"
-            onChange={handleLogoUpload}
+            onChange={onFileSelect}
             disabled={uploading}
             className="bg-gray-700 text-white"
             aria-label="Télécharger le logo principal"
@@ -136,6 +149,28 @@ export const LogoSection = ({ settings, onSettingChange }: LogoSectionProps) => 
           <p className="text-xs text-gray-400">
             Formats supportés : PNG, JPG, JPEG. L'image doit être carrée (512x512px) pour un résultat optimal.
           </p>
+
+          {previewUrl && (
+            <div className="mt-3 p-4 bg-gray-700 rounded-lg flex items-center gap-4">
+              <img
+                src={previewUrl}
+                alt="Aperçu du nouveau logo"
+                className={`h-16 w-16 object-cover ${settings.logo_shape === 'round' ? 'rounded-full' : 'rounded-lg'}`}
+              />
+              <div className="flex items-center gap-3">
+                <Button onClick={handleUploadClick} disabled={uploading} aria-label="Enregistrer le logo">
+                  {uploading ? 'Enregistrement...' : 'Enregistrer le logo'}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => { setSelectedFile(null); setPreviewUrl(null); }}
+                  disabled={uploading}
+                >
+                  Annuler
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">

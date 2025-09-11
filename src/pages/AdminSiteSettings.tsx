@@ -67,16 +67,25 @@ const AdminSiteSettings = () => {
 
       const settingsObj = settingsData.reduce<SiteSettings>((acc, curr) => {
         const key = curr.setting_key as keyof SiteSettings;
-        if (key === "show_description" || 
-            key === "show_navigation" || 
+        if (key === "show_description" ||
+            key === "show_navigation" ||
             key === "show_social_media") {
           acc[key] = curr.setting_value === "true";
-        } else if (key === "site_title" || 
-                   key === "site_description" || 
+        } else if (key === "site_title" ||
+                   key === "site_description" ||
                    key === "logo_url" ||
                    key === "logo_shape") {
           acc[key] = curr.setting_value || "";
         }
+
+        // Fallback: if icon_club-logo_png exists, prefer its full URL for logo_url when needed
+        if (curr.setting_key === "icon_club-logo_png") {
+          const url = curr.setting_value || "";
+          if (!acc.logo_url || !acc.logo_url.startsWith("http")) {
+            acc.logo_url = url;
+          }
+        }
+
         return acc;
       }, {
         site_title: "",
