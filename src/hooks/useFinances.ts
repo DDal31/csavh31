@@ -77,17 +77,27 @@ export const useFinances = () => {
         documentName = formData.document.name;
       }
 
+      const insertData: any = {
+        title: formData.title,
+        amount: formData.amount,
+        type: formData.type,
+        description: formData.description,
+        document_path: documentPath,
+        document_name: documentName,
+        created_by: user.id
+      };
+
+      // Add category based on transaction type
+      if (formData.type === 'expense' && formData.expense_category) {
+        insertData.expense_category = formData.expense_category;
+      }
+      if (formData.type === 'income' && formData.income_category) {
+        insertData.income_category = formData.income_category;
+      }
+
       const { error } = await supabase
         .from('financial_transactions')
-        .insert({
-          title: formData.title,
-          amount: formData.amount,
-          type: formData.type,
-          description: formData.description,
-          document_path: documentPath,
-          document_name: documentName,
-          created_by: user.id
-        });
+        .insert(insertData);
 
       if (error) throw error;
 

@@ -470,7 +470,11 @@ export type Database = {
           description: string | null
           document_name: string | null
           document_path: string | null
+          expense_category:
+            | Database["public"]["Enums"]["expense_category"]
+            | null
           id: string
+          income_category: Database["public"]["Enums"]["income_category"] | null
           title: string
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at: string
@@ -482,7 +486,13 @@ export type Database = {
           description?: string | null
           document_name?: string | null
           document_path?: string | null
+          expense_category?:
+            | Database["public"]["Enums"]["expense_category"]
+            | null
           id?: string
+          income_category?:
+            | Database["public"]["Enums"]["income_category"]
+            | null
           title: string
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string
@@ -494,7 +504,13 @@ export type Database = {
           description?: string | null
           document_name?: string | null
           document_path?: string | null
+          expense_category?:
+            | Database["public"]["Enums"]["expense_category"]
+            | null
           id?: string
+          income_category?:
+            | Database["public"]["Enums"]["income_category"]
+            | null
           title?: string
           type?: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string
@@ -1111,6 +1127,20 @@ export type Database = {
         | "id_card"
         | "photo"
       document_type_status: "active" | "archived"
+      expense_category:
+        | "competition"
+        | "minibus"
+        | "materiel"
+        | "organisation_championnat"
+        | "licence_affiliation"
+      income_category:
+        | "dons"
+        | "location_minibus"
+        | "remboursement_joueur"
+        | "buvette"
+        | "unadev"
+        | "inscription_championnat"
+        | "subvention"
       news_status: "draft" | "published" | "archived"
       notification_type: "training_reminder" | "missing_players" | "custom"
       site_role: "member" | "admin"
@@ -1273,6 +1303,22 @@ export const Constants = {
         "photo",
       ],
       document_type_status: ["active", "archived"],
+      expense_category: [
+        "competition",
+        "minibus",
+        "materiel",
+        "organisation_championnat",
+        "licence_affiliation",
+      ],
+      income_category: [
+        "dons",
+        "location_minibus",
+        "remboursement_joueur",
+        "buvette",
+        "unadev",
+        "inscription_championnat",
+        "subvention",
+      ],
       news_status: ["draft", "published", "archived"],
       notification_type: ["training_reminder", "missing_players", "custom"],
       site_role: ["member", "admin"],

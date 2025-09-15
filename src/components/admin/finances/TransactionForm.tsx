@@ -7,15 +7,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { Upload, FileText, Euro, TrendingUp, TrendingDown } from 'lucide-react';
-import { TransactionFormData } from '@/types/finances';
+import { Upload, FileText, Euro, TrendingUp, TrendingDown, X } from 'lucide-react';
+import { TransactionFormData, EXPENSE_CATEGORIES, INCOME_CATEGORIES, ExpenseCategory, IncomeCategory } from '@/types/finances';
 import { useFinances } from '@/hooks/useFinances';
 
 const transactionSchema = z.object({
   title: z.string().min(1, 'Le titre est requis'),
   amount: z.number().min(0.01, 'Le montant doit être positif'),
   type: z.enum(['income', 'expense'] as const),
+  expense_category: z.string().optional(),
+  income_category: z.string().optional(),
   description: z.string().optional(),
 });
 
@@ -36,11 +39,15 @@ export const TransactionForm = () => {
   } = useForm<FormData>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
-      type: 'income'
+      type: 'income',
+      expense_category: '',
+      income_category: ''
     }
   });
 
   const watchedType = watch('type');
+  const watchedExpenseCategory = watch('expense_category');
+  const watchedIncomeCategory = watch('income_category');
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -57,6 +64,14 @@ export const TransactionForm = () => {
       description: data.description,
       document: document || undefined
     };
+
+    // Add category based on transaction type
+    if (data.type === 'expense' && data.expense_category) {
+      formData.expense_category = data.expense_category as ExpenseCategory;
+    }
+    if (data.type === 'income' && data.income_category) {
+      formData.income_category = data.income_category as IncomeCategory;
+    }
 
     const success = await addTransaction(formData);
     
@@ -100,6 +115,54 @@ export const TransactionForm = () => {
           <p className="text-sm text-destructive">{errors.type.message}</p>
         )}
       </div>
+
+      {/* Category Selection */}
+      {watchedType && (
+        <div className="space-y-3 animate-fade-in">
+          <Label className="text-base font-medium">
+            Catégorie {watchedType === 'income' ? 'de recette' : 'de dépense'} (optionnel)
+          </Label>
+          {watchedType === 'expense' ? (
+            <Select
+              value={watchedExpenseCategory}
+              onValueChange={(value) => setValue('expense_category', value)}
+            >
+              <SelectTrigger 
+                className="w-full"
+                aria-label="Sélectionnez une catégorie de dépense"
+              >
+                <SelectValue placeholder="Sélectionnez une catégorie..." />
+              </SelectTrigger>
+              <SelectContent className="bg-background border shadow-lg">
+                {Object.entries(EXPENSE_CATEGORIES).map(([key, { label }]) => (
+                  <SelectItem key={key} value={key}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <Select
+              value={watchedIncomeCategory}
+              onValueChange={(value) => setValue('income_category', value)}
+            >
+              <SelectTrigger 
+                className="w-full"
+                aria-label="Sélectionnez une catégorie de recette"
+              >
+                <SelectValue placeholder="Sélectionnez une catégorie..." />
+              </SelectTrigger>
+              <SelectContent className="bg-background border shadow-lg">
+                {Object.entries(INCOME_CATEGORIES).map(([key, { label }]) => (
+                  <SelectItem key={key} value={key}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+      )}
 
       {/* Title */}
       <div className="space-y-2">
@@ -153,26 +216,40 @@ export const TransactionForm = () => {
         <Card className="border-dashed border-2 border-muted-foreground/25">
           <CardContent className="p-6">
             <div className="flex flex-col items-center gap-4">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                {document ? (
-                  <>
-                    <FileText className="h-5 w-5" />
-                    <span className="text-sm">{document.name}</span>
-                  </>
-                ) : (
-                  <>
+              {document ? (
+                <div className="flex items-center justify-between p-3 bg-muted rounded-lg w-full">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm truncate max-w-xs">
+                      {document.name}
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setDocument(null)}
+                    className="text-muted-foreground hover:text-destructive"
+                    aria-label="Supprimer le document"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 text-muted-foreground">
                     <Upload className="h-5 w-5" />
                     <span className="text-sm">Cliquez pour uploader un document</span>
-                  </>
-                )}
-              </div>
-              <Input
-                id="document"
-                type="file"
-                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                onChange={handleFileChange}
-                className="cursor-pointer"
-              />
+                  </div>
+                  <Input
+                    id="document"
+                    type="file"
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                    onChange={handleFileChange}
+                    className="cursor-pointer"
+                  />
+                </>
+              )}
               <p className="text-xs text-muted-foreground">
                 PDF, DOC, DOCX, JPG, PNG (max 10MB)
               </p>
