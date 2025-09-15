@@ -1,16 +1,62 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Euro, TrendingUp, FileText } from 'lucide-react';
+import { Euro, TrendingUp, FileText, Loader2 } from 'lucide-react';
 import { TransactionForm } from '@/components/admin/finances/TransactionForm';
 import { TransactionsList } from '@/components/admin/finances/TransactionsList';
 import { FinancialReports } from '@/components/admin/finances/FinancialReports';
 import { useFinances } from '@/hooks/useFinances';
 
 const AdminFinances = () => {
+  const navigate = useNavigate();
+  const [authLoading, setAuthLoading] = useState(true);
   const { summary, loading } = useFinances();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          navigate("/login");
+          return;
+        }
+
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("site_role")
+          .eq("id", session.user.id)
+          .single();
+
+        if (error || !profile || profile.site_role !== "admin") {
+          console.log("Accès non autorisé : l'utilisateur n'est pas admin");
+          navigate("/dashboard");
+          return;
+        }
+
+        setAuthLoading(false);
+      } catch (error) {
+        console.error("Erreur lors de la vérification des droits admin:", error);
+        navigate("/dashboard");
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10 flex items-center justify-center">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin" />
+          <span>Vérification des permissions...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/10">
