@@ -68,7 +68,7 @@ const AdminFinances = () => {
           <Button 
             variant="ghost" 
             className="mb-6 text-muted-foreground hover:text-foreground flex items-center gap-2"
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/admin')}
             aria-label="Retour au tableau de bord administrateur"
           >
             <ArrowLeft className="h-4 w-4" />
