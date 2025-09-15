@@ -10,6 +10,7 @@ import AdminSportsTeams from "@/pages/AdminSportsTeams";
 import AdminSportCreate from "@/pages/AdminSportCreate";
 import AdminTeamCreate from "@/pages/AdminTeamCreate";
 import { AdminChampionships } from "@/pages/AdminChampionships";
+import AdminFinances from "@/pages/AdminFinances";
 
 export const AdminRoutes = () => {
   return (
@@ -91,6 +92,14 @@ export const AdminRoutes = () => {
         element={
           <ProtectedRoute requireAdmin>
             <AdminChampionships />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/finances"
+        element={
+          <ProtectedRoute requireAdmin>
+            <AdminFinances />
           </ProtectedRoute>
         }
       />

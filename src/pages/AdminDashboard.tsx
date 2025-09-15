@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Users, Calendar, Shield, Settings, FileText, Trophy } from "lucide-react";
+import { Loader2, Users, Calendar, Shield, Settings, FileText, Trophy, Euro } from "lucide-react";
 import { AdminAttendanceBilan } from "@/components/admin/attendance/AdminAttendanceBilan";
 
 const AdminDashboard = () => {
@@ -71,6 +71,13 @@ const AdminDashboard = () => {
       route: "/admin/championships",
       bgColor: "bg-rose-600 hover:bg-rose-700",
       ariaLabel: "Gérer les championnats et résultats"
+    },
+    {
+      title: "Gestion Financière",
+      icon: Euro,
+      route: "/admin/finances",
+      bgColor: "bg-green-600 hover:bg-green-700",
+      ariaLabel: "Gérer les finances du club"
     },
     {
       title: "Paramètres",

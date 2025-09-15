@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -459,6 +459,45 @@ export type Database = {
           imported_by?: string
           records_imported?: number | null
           status?: string | null
+        }
+        Relationships: []
+      }
+      financial_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string
+          description: string | null
+          document_name: string | null
+          document_path: string | null
+          id: string
+          title: string
+          type: Database["public"]["Enums"]["transaction_type"]
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by: string
+          description?: string | null
+          document_name?: string | null
+          document_path?: string | null
+          id?: string
+          title: string
+          type: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          document_name?: string | null
+          document_path?: string | null
+          id?: string
+          title?: string
+          type?: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1047,8 +1086,8 @@ export type Database = {
       get_player_attendance_ranking: {
         Args: { sport_type: string }
         Returns: {
-          player_name: string
           attendance_count: number
+          player_name: string
           rank: number
         }[]
       }
@@ -1086,6 +1125,7 @@ export type Database = {
         | "playful"
         | "professional"
       training_type: "goalball" | "torball" | "other" | "showdown"
+      transaction_type: "income" | "expense"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1248,6 +1288,7 @@ export const Constants = {
         "professional",
       ],
       training_type: ["goalball", "torball", "other", "showdown"],
+      transaction_type: ["income", "expense"],
     },
   },
 } as const
