@@ -7,9 +7,9 @@ import { fr } from 'date-fns/locale';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, ExpenseCategory, IncomeCategory } from '@/types/finances';
 
 const COLORS = {
-  income: '#10b981',  // green-500
-  expense: '#ef4444', // red-500
-  balance: '#3b82f6'  // blue-500
+  income: 'hsl(var(--primary))',
+  expense: 'hsl(var(--destructive))',
+  balance: 'hsl(var(--accent))'
 };
 
 export const FinancialCharts = () => {
@@ -55,6 +55,13 @@ export const FinancialCharts = () => {
   // Expense categories data
   const expenseCategoriesData = useMemo(() => {
     const categoryMap = new Map();
+    const expenseColors = [
+      'hsl(var(--destructive))', // rouge pour compétition
+      'hsl(var(--warning))', // jaune pour minibus
+      'hsl(var(--secondary))', // gris pour matériel
+      'hsl(var(--accent))', // bleu pour organisation
+      'hsl(var(--muted))', // violet pour licence
+    ];
     
     transactions
       .filter(t => t.type === 'expense' && t.expense_category)
@@ -63,10 +70,11 @@ export const FinancialCharts = () => {
         const categoryInfo = EXPENSE_CATEGORIES[category];
         
         if (!categoryMap.has(category)) {
+          const colorIndex = Array.from(categoryMap.keys()).length % expenseColors.length;
           categoryMap.set(category, {
             name: categoryInfo.label,
             value: 0,
-            color: categoryInfo.color.replace('bg-', '#'),
+            color: expenseColors[colorIndex],
             count: 0
           });
         }
@@ -82,6 +90,15 @@ export const FinancialCharts = () => {
   // Income categories data
   const incomeCategoriesData = useMemo(() => {
     const categoryMap = new Map();
+    const incomeColors = [
+      'hsl(var(--primary))', // bleu pour dons
+      'hsl(var(--secondary))', // vert pour location minibus
+      'hsl(var(--accent))', // cyan pour remboursement
+      'hsl(var(--warning))', // orange pour buvette
+      'hsl(var(--destructive))', // violet pour UNADEV
+      'hsl(var(--muted))', // indigo pour inscription
+      'hsl(var(--success))', // vert foncé pour subvention
+    ];
     
     transactions
       .filter(t => t.type === 'income' && t.income_category)
@@ -90,10 +107,11 @@ export const FinancialCharts = () => {
         const categoryInfo = INCOME_CATEGORIES[category];
         
         if (!categoryMap.has(category)) {
+          const colorIndex = Array.from(categoryMap.keys()).length % incomeColors.length;
           categoryMap.set(category, {
             name: categoryInfo.label,
             value: 0,
-            color: categoryInfo.color.replace('bg-', '#'),
+            color: incomeColors[colorIndex],
             count: 0
           });
         }
@@ -203,7 +221,7 @@ export const FinancialCharts = () => {
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="count" />
+              <Bar dataKey="count" fill="hsl(var(--primary))" />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -223,7 +241,7 @@ export const FinancialCharts = () => {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, value }) => `${name}: ${value.toFixed(2)}€`}
+                  label={({ name, value, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
@@ -233,6 +251,13 @@ export const FinancialCharts = () => {
                   ))}
                 </Pie>
                 <Tooltip content={<CategoryTooltip />} />
+                <Legend 
+                  verticalAlign="bottom" 
+                  height={36}
+                  formatter={(value, entry) => (
+                    <span style={{ color: entry.color }}>{value}</span>
+                  )}
+                />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
@@ -253,7 +278,7 @@ export const FinancialCharts = () => {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, value }) => `${name}: ${value.toFixed(2)}€`}
+                  label={({ name, value, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
@@ -263,6 +288,13 @@ export const FinancialCharts = () => {
                   ))}
                 </Pie>
                 <Tooltip content={<CategoryTooltip />} />
+                <Legend 
+                  verticalAlign="bottom" 
+                  height={36}
+                  formatter={(value, entry) => (
+                    <span style={{ color: entry.color }}>{value}</span>
+                  )}
+                />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
