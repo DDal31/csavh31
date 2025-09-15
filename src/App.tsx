@@ -33,6 +33,7 @@ import AdminUserEdit from "@/pages/AdminUserEdit";
 import AdminTrainings from "@/pages/AdminTrainings";
 import AdminDocuments from "@/pages/AdminDocuments";
 import AdminSettings from "@/pages/AdminSettings";
+import AdminFinances from "@/pages/AdminFinances";
 
 // Admin settings pages
 import AdminSiteSettings from "@/pages/AdminSiteSettings";
@@ -189,6 +190,14 @@ function AnimatedRoutes() {
             element={
               <ProtectedRoute requireAdmin>
                 <AdminChampionships />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/finances"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminFinances />
               </ProtectedRoute>
             }
           />
