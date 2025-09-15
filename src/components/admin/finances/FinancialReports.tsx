@@ -115,34 +115,30 @@ export const FinancialReports = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
-                <div className="text-2xl font-bold text-green-600 mb-1">
+              <div className="text-center p-4 bg-card/50 rounded-lg border border-border backdrop-blur-sm">
+                <div className="text-2xl font-bold text-green-500 mb-1">
                   {summary.totalIncome.toFixed(2)} €
                 </div>
                 <div className="text-sm text-muted-foreground">Recettes Totales</div>
               </div>
               
-              <div className="text-center p-4 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-800">
-                <div className="text-2xl font-bold text-red-600 mb-1">
+              <div className="text-center p-4 bg-card/50 rounded-lg border border-border backdrop-blur-sm">
+                <div className="text-2xl font-bold text-red-500 mb-1">
                   {summary.totalExpenses.toFixed(2)} €
                 </div>
                 <div className="text-sm text-muted-foreground">Dépenses Totales</div>
               </div>
               
-              <div className={`text-center p-4 rounded-lg border ${
-                summary.balance >= 0 
-                  ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800' 
-                  : 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800'
-              }`}>
+              <div className="text-center p-4 bg-card/50 rounded-lg border border-border backdrop-blur-sm">
                 <div className={`text-2xl font-bold mb-1 ${
-                  summary.balance >= 0 ? 'text-green-600' : 'text-red-600'
+                  summary.balance >= 0 ? 'text-green-500' : 'text-red-500'
                 }`}>
                   {summary.balance.toFixed(2)} €
                 </div>
                 <div className="text-sm text-muted-foreground">Balance</div>
               </div>
               
-              <div className="text-center p-4 bg-primary/5 rounded-lg border border-primary/20">
+              <div className="text-center p-4 bg-card/50 rounded-lg border border-border backdrop-blur-sm">
                 <div className="text-2xl font-bold text-primary mb-1">
                   {summary.transactionCount}
                 </div>
