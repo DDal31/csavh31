@@ -5,7 +5,8 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Euro, TrendingUp, FileText, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Euro, TrendingUp, FileText, Loader2, ArrowLeft } from 'lucide-react';
 import { TransactionForm } from '@/components/admin/finances/TransactionForm';
 import { TransactionsList } from '@/components/admin/finances/TransactionsList';
 import { FinancialReports } from '@/components/admin/finances/FinancialReports';
@@ -64,6 +65,16 @@ const AdminFinances = () => {
       
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
+          <Button 
+            variant="ghost" 
+            className="mb-6 text-muted-foreground hover:text-foreground flex items-center gap-2"
+            onClick={() => navigate('/dashboard')}
+            aria-label="Retour au tableau de bord administrateur"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Retour au tableau de bord
+          </Button>
+          
           <h1 className="text-3xl font-bold text-foreground mb-2">Gestion Financière</h1>
           <p className="text-muted-foreground">Gérez les recettes et dépenses du club</p>
         </div>
